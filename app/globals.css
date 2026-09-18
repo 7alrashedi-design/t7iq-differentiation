@@ -1024,3 +1024,31 @@ body{
     margin-top:2mm!important;height:7mm!important
   }
 }
+
+
+/* ===== Product library v2 — choice first, fingerprint as role ===== */
+.productFilters{display:flex;gap:8px;flex-wrap:wrap;margin:0 auto 18px;max-width:1180px}
+.productFilters button{border:1px solid #dbe7e9;background:#fff;border-radius:999px;padding:9px 15px;color:#49636e;font:inherit;font-size:13px;cursor:pointer}
+.productFilters button.active{background:#e9f7f4;border-color:#70b8af;color:#176f68;font-weight:750}
+.productFilters small{margin-inline-start:5px;color:#8aa0a7}
+.productChoiceHint{max-width:1180px;margin:0 auto 18px;padding:13px 16px;border:1px solid #dcebed;border-radius:16px;background:linear-gradient(120deg,#f0faf8,#f5f9ff);display:flex;gap:11px;align-items:flex-start;color:#42606b}
+.productChoiceHint svg{color:#2f8f87;flex:0 0 auto;margin-top:2px}.productChoiceHint div{display:grid;gap:3px}.productChoiceHint b{font-size:14px;color:#244652}.productChoiceHint span{font-size:12px;line-height:1.65}
+.productCardTop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.allProductGrid{grid-template-columns:repeat(3,minmax(0,1fr));max-width:1180px;margin-inline:auto}
+.allProductGrid .productCard{min-height:230px}
+.productCard.directFit{border-color:#b9dfda;background:linear-gradient(180deg,#fff,#fbfffe)}
+.productCard .recommendedTag{position:static;display:inline-flex}
+@media(max-width:900px){.allProductGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .productPage{padding-inline:12px}
+ .productHero{padding:22px 0 14px}.productHero h1{font-size:27px!important;line-height:1.35}.productHero p{font-size:14px!important;line-height:1.75}
+ .productFilters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}.productFilters::-webkit-scrollbar{display:none}.productFilters button{flex:0 0 auto;padding:8px 13px}
+ .productChoiceHint{padding:11px 12px;margin-bottom:12px}.productChoiceHint span{font-size:12px!important}
+ .allProductGrid{grid-template-columns:1fr 1fr!important;gap:9px!important}
+ .allProductGrid .productCard{min-height:0;padding:12px!important;border-radius:16px!important}
+ .productCardTop{align-items:flex-start}.productCode{font-size:10px!important}.productCard .recommendedTag{font-size:9px!important;padding:4px 6px}
+ .allProductGrid .productCard h2{font-size:17px!important;margin:8px 0 4px!important}
+ .allProductGrid .productCard>p{font-size:11px!important;line-height:1.45!important;min-height:30px}
+ .allProductGrid .productRole{padding:8px!important;margin:8px 0!important}.allProductGrid .productRole span{font-size:9px!important}.allProductGrid .productRole b{font-size:12px!important}
+ .allProductGrid .productCard button{min-height:40px!important;font-size:12px!important;padding:8px!important}
+}
