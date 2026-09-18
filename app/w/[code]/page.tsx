@@ -16,7 +16,7 @@ type Rubric={id:string;level_no:number;section:string;subsection:string|null;cri
 const emptyScores:Scores={W:0,O:0,V:0,T:0,K1a:0,K2c:0,K3s:0,K4p:0,K5h:0,K6m:0};
 
 function codeText(code:StyleCode,primary:boolean){
-  return primary?code.toUpperCase():code.toLowerCase();
+  return primary?code:code.toLowerCase();
 }
 function calculate(answers:Record<number,number>){
   const sums:Scores={...emptyScores};
