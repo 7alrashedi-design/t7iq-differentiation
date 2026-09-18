@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
-import {ArrowLeft,BookOpenCheck,Copy,FilePlus2,FolderOpen,Search,School,Trash2} from "lucide-react";
+import {ArrowLeft,BookOpenCheck,Copy,FilePlus2,FolderOpen,MoreHorizontal,Search,School,Trash2} from "lucide-react";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 type Project={id:string;title:string;subject:string|null;grade:string|null;lesson:string|null;learning_goal:string|null;readiness_evidence:string|null;status:string;selected_tools:string[];project_data:any;parent_project_id:string|null;version_no:number;updated_at:string};
 const statusLabel:Record<string,string>={draft:"مسودة",ready:"جاهز للتطبيق",applied:"تم التطبيق",archived:"مؤرشف"};
