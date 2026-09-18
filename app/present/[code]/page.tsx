@@ -1,0 +1,29 @@
+"use client";
+import {useEffect,useMemo,useState} from "react";
+import QRCode from "qrcode";
+import {createClient} from "@supabase/supabase-js";
+import {Activity,ChevronLeft,ChevronRight,Maximize2,RefreshCw,Users} from "lucide-react";
+
+const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const names:Record<string,string>={W:"كتابي",O:"شفهي",V:"بصري",T:"تقني",K:"أدائي/عملي"};
+export default function Present({params}:{params:Promise<{code:string}>}){
+ const [code,setCode]=useState("");const [data,setData]=useState<any>(null);const [qr,setQr]=useState("");const [slide,setSlide]=useState(0);const [busy,setBusy]=useState(false);
+ useEffect(()=>{params.then(p=>setCode(p.code.toUpperCase()))},[params]);
+ async function load(){if(!code)return;setBusy(true);const {data:d}=await supabase.functions.invoke("workshop-public",{body:{action:"demo_summary",code}});if(d&&!d.error)setData(d);setBusy(false)}
+ useEffect(()=>{if(!code)return;load();const join=location.origin+"/w/"+code;QRCode.toDataURL(join,{width:500,margin:1}).then(setQr)},[code]);
+ useEffect(()=>{if(!code)return;const t=setInterval(load,15000);return()=>clearInterval(t)},[code]);
+ const max=useMemo(()=>data?Math.max(1,...Object.values(data.distribution).map(Number)):1,[data]);
+ const slides=5;const next=()=>setSlide(s=>(s+1)%slides),prev=()=>setSlide(s=>(s-1+slides)%slides);
+ useEffect(()=>{const k=(e:KeyboardEvent)=>{if(e.key==="ArrowLeft")next();if(e.key==="ArrowRight")prev();if(e.key==="f")document.documentElement.requestFullscreen?.()};addEventListener("keydown",k);return()=>removeEventListener("keydown",k)},[]);
+ if(!data)return <main className="facilitatorMode loading"><Activity/><h1>جاري تجهيز شاشة الورشة…</h1></main>;
+ const t=data.totals,l=data.levels,ei=data.evaluation_intelligence;
+ return <main className="facilitatorMode">
+  <div className="facilitatorChrome"><div><span className="liveDot"/> التمايز <small>{data.session.title}</small></div><div><button onClick={load}><RefreshCw className={busy?"spin":""}/></button><button onClick={()=>document.documentElement.requestFullscreen?.()}><Maximize2/></button></div></div>
+  {slide===0&&<section className="facSlide joinSlide"><div className="joinMessage"><span>لنبدأ التجربة</span><h1>امسح الرمز<br/>وادخل إلى الورشة.</h1><p>لا توجد إجابة صحيحة لبصمتك. أجب كما تعبّر عن نفسك فعلًا.</p><div className="sessionCode"><small>أو استخدم رمز الجلسة</small><b>{code}</b></div></div><div className="projectorQr">{qr&&<img src={qr} alt="QR"/>}<span><Users/> {t.participants} مشارك انضم</span></div></section>}
+  {slide===1&&<section className="facSlide fingerprintSlide"><div className="slideTitle"><span>01 • البصمة التعبيرية</span><h1>لا توجد بصمة واحدة في القاعة.</h1><p>{t.fingerprints} من {t.participants} أكملوا المقياس حتى الآن.</p></div><div className="projectorBars">{Object.entries(data.distribution).map(([k,v]:any)=><div key={k}><b>{k}</b><span>{names[k]}</span><div><i style={{height:(Number(v)/max*100)+"%"}}/></div><strong>{v}</strong></div>)}</div></section>}
+  {slide===2&&<section className="facSlide choiceSlide"><div className="slideTitle"><span>02 • حرية الاختيار</span><h1>البصمة تقترح دورًا.<br/>ولا تحبس المشارك في منتج.</h1><p>{t.products} مشاركًا اختاروا منتجاتهم بحرية.</p></div><div className="choiceVisual"><div><b>بصمتي</b><span>كيف أميل إلى التعبير؟</span></div><i>≠</i><div><b>منتجي</b><span>ماذا أختار أن أصنع؟</span></div><i>+</i><div className="accent"><b>دوري</b><span>كيف أضيف داخل الفريق؟</span></div></div></section>}
+  {slide===3&&<section className="facSlide progressSlide"><div className="slideTitle"><span>03 • التحدي المتدرج</span><h1>المنتج لا ينتهي عند أول نسخة.</h1><p>نرفع سقف التحدي عندما تظهر الأدلة أن المشارك مستعد.</p></div><div className="bigJourney"><div><b>L1</b><span>الأساس</span><strong>{l.L1}</strong></div><i/><div><b>L2</b><span>الإتقان</span><strong>{l.L2}</strong></div><i/><div><b>L3</b><span>الاحتراف</span><strong>{l.L3}</strong></div><i/><div className="done"><b>✓</b><span>مكتمل</span><strong>{l.completed}</strong></div></div></section>}
+  {slide===4&&<section className="facSlide decisionSlide">{ei?.attempts>0?<><div className="slideTitle"><span>04 • القرار من الدليل</span><h1>{ei.intervention?.title}</h1><p>هذه قراءة جماعية من {ei.attempts} محاولة تقييم، دون عرض أسماء المشاركين.</p></div><div className="projectorDecision"><div className="projectorAxes">{(ei.section_analysis??[]).map((s:any)=><div key={s.section}><span>{s.section}</span><div><i style={{width:s.average/6*100+"%"}}/></div><b>{s.average}<small>/6</small></b></div>)}</div><article><span>تدخل المدرب الآن • 2–4 دقائق</span><b>{ei.intervention?.prompt}</b><small>بعد التدخل يعود المشاركون إلى منتجاتهم، ثم نراقب أثر المحاولة التالية.</small></article></div></>:<><div className="slideTitle centered"><span>04 • القرار من الدليل</span><h1>ننتظر أولى محاولات التقييم.</h1><p>عندما تبدأ التقييمات ستظهر هنا الفجوة الجماعية والتدخل المقترح للمدرب.</p></div><Activity className="waitingPulse"/></>}</section>}
+  <nav className="facNav"><button onClick={prev}><ChevronRight/></button><div>{Array.from({length:slides}).map((_,i)=><i key={i} className={i===slide?"active":""}/>)}</div><button onClick={next}><ChevronLeft/></button></nav>
+ </main>
+}
