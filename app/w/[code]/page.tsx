@@ -184,6 +184,30 @@ export default function WorkshopParticipant(){
     await loadRubric(next,selectedProduct?.product_name);
   }
 
+  const rubricAnalysis=useMemo(()=>{
+    if(!rubric.length) return {sections:[] as {name:string;average:number}[],strongest:null as Rubric|null,weakest:[] as Rubric[],answered:0,average:0};
+    const scored=rubric.filter(r=>rubricScores[r.id]!==undefined);
+    const sectionNames=[...new Set(rubric.map(r=>r.section))];
+    const sections=sectionNames.map(section=>{
+      const rows=rubric.filter(r=>r.section===section&&rubricScores[r.id]!==undefined);
+      const average=rows.length?rows.reduce((sum,r)=>sum+(rubricScores[r.id]??0),0)/rows.length:0;
+      return {name:section,average:Number(average.toFixed(1))};
+    });
+    const ranked=[...scored].sort((a,b)=>(rubricScores[b.id]??0)-(rubricScores[a.id]??0));
+    const weakest=[...scored].sort((a,b)=>(rubricScores[a.id]??0)-(rubricScores[b.id]??0)).slice(0,3);
+    const average=scored.length?scored.reduce((sum,r)=>sum+(rubricScores[r.id]??0),0)/scored.length:0;
+    return {sections,strongest:ranked[0]??null,weakest,answered:scored.length,average:Number(average.toFixed(1))};
+  },[rubric,rubricScores]);
+
+  function developmentAdvice(r:Rubric){
+    const score=rubricScores[r.id]??0;
+    if(score>=5) return "حافظ على هذا المستوى، وجرّب نقله إلى بقية عناصر المنتج.";
+    if(r.section==="المحتوى") return "راجع دقة المحتوى وعمقه وتنظيمه، وأضف ما يدعم الفكرة ويجعلها أوضح للمتلقي.";
+    if(r.section==="العرض") return "طوّر هذا العنصر في النسخة القادمة، وراجع وضوحه واتساقه ومدى خدمته لغرض المنتج.";
+    if(r.section==="الإبداع") return "ابحث عن معالجة أكثر أصالة تُظهر رؤيتك الشخصية بدل الاكتفاء بالصيغة المعتادة.";
+    return "اكتب تأملًا أعمق يربط التعلم السابق بما حدث في المنتج وما ستغيره في المحاولة القادمة.";
+  }
+
   function printRubric(){ window.print(); }
 
   async function apply(e:FormEvent){
@@ -255,7 +279,7 @@ export default function WorkshopParticipant(){
     <section className="rubricPrintMeta"><div><span>المنتج</span><b>{selectedProduct?.product_name}</b></div><div><span>المشارك</span><b>{name}</b></div><div><span>المستوى</span><b>{level} من 3</b></div><div><span>التاريخ</span><b>{new Date().toLocaleDateString("ar-SA")}</b></div></section>
     <section className="rubricList">{rubric.map((r,index)=><article key={r.id} className={"rubricCriterion "+(r.essential?"essential":"")}><div className="criterionIndex">{index+1}</div><div className="criterionText"><div><span>{r.section}{r.subsection?" • "+r.subsection:""}</span>{r.essential&&<em>جوهري</em>}</div><p>{r.criterion_template}</p></div><div className="rubricScale">{[0,1,2,3,4,5,6].map(v=><button key={v} className={rubricScores[r.id]===v?"selected":""} onClick={()=>setRubricScores(s=>({...s,[r.id]:v}))}>{v}</button>)}</div></article>)}</section>
     <label className="rubricComments"><span>تعليقات وملاحظات التطوير</span><textarea value={rubricFeedback} onChange={e=>setRubricFeedback(e.target.value)} placeholder="دوّن ما الذي نجح في المنتج، وما الذي يحتاج إلى تطوير قبل المحاولة التالية."/></label><div className="performanceLegend"><span><b>0</b> ضعيف</span><span><b>1</b> متأخر</span><span><b>2</b> مبتدئ</span><span><b>3</b> متطور</span><span><b>4</b> إتقان</span><span><b>5</b> متقدم</span><span><b>6</b> احتراف</span></div>
-    {lastEval&&<section className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><div><strong>{lastEval.passed?(level===3?"اكتمل مسار تطوير المنتج":"تم اجتياز المستوى "+level):"طوّر المنتج ثم أعد التقييم"}</strong><span>المتوسط {lastEval.average_score} / 6 • المطلوب {lastEval.required_average ?? (level===1?4:level===2?4.5:5)} • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span></div>{lastEval.passed&&level<3&&<button className="primaryButton noPrint" onClick={openNextLevel}>فتح المستوى {lastEval.next_level} <ArrowLeft size={16}/></button>}</section>}
+    {lastEval&&<><section className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><div><strong>{lastEval.passed?(level===3?"اكتمل مسار تطوير المنتج":"تم اجتياز المستوى "+level):"طوّر المنتج ثم أعد التقييم"}</strong><span>المتوسط {lastEval.average_score} / 6 • المطلوب {lastEval.required_average ?? (level===1?4:level===2?4.5:5)} • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span>{lastEval.previous_average!==null&&<small>المحاولة السابقة {Number(lastEval.previous_average).toFixed(1)} • التغير {lastEval.improvement>0?"+":""}{lastEval.improvement}</small>}</div>{lastEval.passed&&level<3&&<button className="primaryButton noPrint" onClick={openNextLevel}>فتح المستوى {lastEval.next_level} <ArrowLeft size={16}/></button>}</section><section className="developmentReport"><div className="developmentHead"><div><span className="sectionKicker">تقرير التطوير</span><h2>ماذا تقول البطاقة عن منتجك؟</h2></div><strong>{rubricAnalysis.average}<small>/6</small></strong></div><div className="axisAnalysis">{rubricAnalysis.sections.map(s=><div key={s.name}><span>{s.name}</span><div><i style={{width:(s.average/6)*100+"%"}}/></div><b>{s.average}</b></div>)}</div><div className="developmentInsights">{rubricAnalysis.strongest&&<article className="strengthInsight"><span>نقطة قوة</span><b>{rubricAnalysis.strongest.section}{rubricAnalysis.strongest.subsection?" • "+rubricAnalysis.strongest.subsection:""}</b><p>{rubricAnalysis.strongest.criterion_template}</p></article>}<article className="growthInsight"><span>أولوية التطوير قبل المحاولة التالية</span>{rubricAnalysis.weakest.map(r=><div key={r.id}><b>{rubricScores[r.id]}/6</b><p>{r.criterion_template}</p><small>{developmentAdvice(r)}</small></div>)}</article></div>{!lastEval.passed&&<div className="retryPlan"><Sparkles size={18}/><div><b>خطة المحاولة القادمة</b><span>ابدأ بالمعايير الثلاثة الأقل درجة، عدّل المنتج فعليًا، ثم أعد التقييم. الهدف ليس رفع الرقم فقط؛ بل رؤية أثر التحسين في المنتج نفسه.</span></div></div>}</section></>}
     <div className="evaluationActions noPrint">
       {participantProduct?.status==="completed"?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتمل المستوى الثالث — انتقل إلى تشخيص الفصل <ArrowLeft size={17}/></button>:<button className="primaryButton" disabled={busy||!!lastEval?.passed} onClick={submitLevel}>{lastEval&&!lastEval.passed?"إعادة تقييم المستوى "+level:"تقييم المستوى "+level}</button>}
       <button className="outlineButton" onClick={printRubric}><Download size={16}/> تصدير البطاقة PDF</button><button className="outlineButton" onClick={()=>setStage("products")}>تغيير المنتج</button>
