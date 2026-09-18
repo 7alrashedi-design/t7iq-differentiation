@@ -100,3 +100,160 @@ linear-gradient(180deg,#fbfdfd 0,#f5f8fa 100%)}
 .adminGate{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#f7fbfa,#f4f7fb)}.adminGateCard{width:min(440px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;padding:30px;text-align:center;box-shadow:var(--shadow)}.adminGateCard .brandSymbol{margin:auto}.adminGateCard h1{font-size:24px;margin:16px 0 8px}.adminGateCard p{color:var(--muted);font-size:12px;line-height:1.8;margin:0 0 18px}.adminGateCard .primaryButton,.adminGateCard .outlineButton{display:inline-flex;text-decoration:none}
 @media(max-width:900px){.adminPage{padding:20px}.adminStats{grid-template-columns:1fr 1fr}.adminGrid{grid-template-columns:1fr}.wideCard{grid-column:auto}.inviteForm{grid-template-columns:1fr 1fr}.inviteForm .primaryButton{width:100%;justify-self:stretch}.adminHeader{display:block}.adminHeader .outlineButton{display:inline-block;margin-top:12px}}
 @media(max-width:560px){.adminPage{padding:14px}.adminStats{grid-template-columns:1fr 1fr;gap:8px}.adminStats article{padding:12px}.adminJourney{padding:13px}.adminGrid{gap:11px}.adminCard{padding:16px}.inviteForm{grid-template-columns:1fr}.adminNext{display:block}.nextTag{display:inline-block;margin-top:12px}.adminHeader h1{font-size:26px}}
+
+/* ===== هوية التمايز — Light Premium System ===== */
+:root{
+  --brand:#2f8f87;
+  --brand-strong:#226f69;
+  --brand-soft:#eaf7f4;
+  --sky:#6aa6dc;
+  --gold:#d7a75c;
+  --ink:#1f3545;
+  --muted:#70828f;
+  --page:#f8fbfc;
+  --line:#e6eef1;
+  --shadow:0 18px 45px rgba(42,83,99,.08);
+}
+
+body{
+  background:
+    radial-gradient(circle at 92% 0%,rgba(111,191,178,.12),transparent 24%),
+    radial-gradient(circle at 10% 12%,rgba(110,166,220,.08),transparent 24%),
+    var(--page);
+}
+
+.differenceMark{
+  width:54px;height:54px;border-radius:18px;
+  display:grid;place-items:center;position:relative;overflow:hidden;
+  background:linear-gradient(145deg,#4fb3a7,#6ca6df);
+  box-shadow:0 12px 28px rgba(55,129,131,.18);
+  color:white;font-weight:900;
+}
+.differenceMark:before,.differenceMark:after{
+  content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.18)
+}
+.differenceMark:before{width:38px;height:38px;left:-13px;top:-13px}
+.differenceMark:after{width:28px;height:28px;right:-8px;bottom:-8px}
+.differenceMark span{font-size:25px;position:relative;z-index:1;line-height:1}
+.differenceMark.small{width:44px;height:44px;border-radius:15px}.differenceMark.small span{font-size:21px}
+
+.platformBrand{display:flex;align-items:center;gap:12px}
+.platformBrand b{display:block;font-size:25px;letter-spacing:-.5px}
+.platformBrand small{display:block;color:var(--muted);margin-top:3px;font-size:11px}
+
+.sideRail{
+  background:rgba(255,255,255,.92);
+  box-shadow:-8px 0 35px rgba(59,90,103,.04);
+}
+.brandBlock strong{font-size:20px;color:var(--ink);letter-spacing:-.4px}
+.brandBlock span{font-size:10px}
+.mainNav a{border:1px solid transparent}
+.mainNav a:hover{background:#f6faf9;color:var(--brand)}
+.mainNav a.active{
+  background:linear-gradient(135deg,#edf8f5,#eef6fb);
+  border-color:#dcefeb;
+  box-shadow:0 7px 18px rgba(60,110,120,.05);
+}
+.lessonHero{
+  background:
+    radial-gradient(circle at 93% 10%,rgba(82,181,164,.14),transparent 25%),
+    radial-gradient(circle at 13% 120%,rgba(112,166,221,.10),transparent 34%),
+    #fff;
+  border:1px solid #e4eeef;
+}
+.lessonHero:before{background:#e6f5f2;opacity:.55}
+.readinessCard{
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(247,251,251,.96));
+  box-shadow:0 10px 30px rgba(54,86,101,.05)
+}
+.groupCard{box-shadow:0 8px 20px rgba(64,92,104,.04)}
+.surface{box-shadow:0 12px 34px rgba(56,86,101,.055)}
+.primaryButton{
+  background:linear-gradient(135deg,var(--brand),#4da39a);
+  box-shadow:0 9px 20px rgba(47,143,135,.16)
+}
+.primaryButton:hover{transform:translateY(-1px);background:linear-gradient(135deg,var(--brand-strong),#438f88)}
+.outlineButton:hover{border-color:#bcdad6;background:#f8fcfb}
+.softButton:hover,.iconButton:hover{background:#f6faf9;border-color:#cfe1e2}
+
+/* Login */
+.differentiationVisual{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(circle at 88% 18%,rgba(70,172,156,.20),transparent 24%),
+    radial-gradient(circle at 14% 78%,rgba(99,154,215,.14),transparent 28%),
+    linear-gradient(145deg,#f4fbf9 0%,#eef6fb 100%);
+}
+.differentiationVisual:before{
+  content:"";position:absolute;width:360px;height:360px;border:1px solid rgba(75,150,151,.10);
+  border-radius:50%;right:-120px;bottom:-170px;box-shadow:0 0 0 55px rgba(255,255,255,.24),0 0 0 110px rgba(255,255,255,.14)
+}
+.differentiationVisual>*{position:relative;z-index:1}
+.loginStory h1{color:#213b4a;max-width:620px;font-weight:800;letter-spacing:-1px}
+.loginFeatureRow{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.loginFeatureRow span{padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(119,159,166,.18);font-size:10px;color:#526d78}
+.premiumLoginCard{border-radius:30px;padding:34px;border-color:#e5eef1;box-shadow:0 28px 70px rgba(48,79,94,.10)}
+.loginCardBrand{display:flex;align-items:center;gap:12px;margin:26px 0 14px}
+.loginCardBrand>div:last-child span{font-size:10px;color:var(--muted)}
+.loginCardBrand h2{margin:2px 0 0;font-size:30px;color:var(--ink)}
+.passwordLabel{margin-top:14px}
+.passwordToggle{border:0;background:transparent;color:#8ba0aa;padding:5px;display:grid;place-items:center}
+.inputWrap:focus-within{border-color:#9dcfca;box-shadow:0 0 0 4px #eff8f6}
+.loginSubmit{min-height:45px;margin-top:18px}
+.premiumLoginCard>small{padding-top:4px;border-top:1px solid #eef2f4}
+
+/* Admin premium */
+.refinedAdminPage{
+  background:
+    radial-gradient(circle at 95% 1%,rgba(84,177,162,.12),transparent 18%),
+    radial-gradient(circle at 3% 22%,rgba(103,158,219,.08),transparent 17%);
+}
+.premiumAdminHeader{
+  background:rgba(255,255,255,.72);backdrop-filter:blur(12px);
+  border:1px solid rgba(225,236,239,.85);border-radius:25px;padding:19px 21px;
+  box-shadow:0 14px 35px rgba(56,86,101,.05)
+}
+.adminBrandLine{display:flex;gap:13px;align-items:center}
+.premiumStats article{position:relative;overflow:hidden}
+.premiumStats article:after{
+  content:"";position:absolute;width:52px;height:52px;border-radius:50%;
+  background:rgba(66,160,147,.06);left:-18px;bottom:-20px
+}
+.premiumJourney{box-shadow:0 10px 30px rgba(54,82,95,.04);border-color:#e3edef}
+.premiumCard{
+  border-color:#e4edef;
+  background:linear-gradient(180deg,#fff,#fdfefe);
+  box-shadow:0 14px 36px rgba(55,84,98,.055)
+}
+.accountCreatorCard{
+  background:
+    radial-gradient(circle at 95% 5%,rgba(101,168,219,.08),transparent 18%),
+    linear-gradient(180deg,#fff,#fcfefe)
+}
+.accountCreatorIntro{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 14px;border-radius:15px;background:#f5faf9;margin-bottom:15px
+}
+.accountCreatorIntro b{display:block;font-size:12px}.accountCreatorIntro p{margin:3px 0 0;font-size:10px;color:var(--muted)}
+.accountCreatorIntro>span{white-space:nowrap;padding:7px 10px;border-radius:999px;background:#fff;color:var(--brand);font-size:9px;font-weight:700}
+.accountForm{grid-template-columns:1.05fr 1.15fr 1fr .8fr 1fr auto;align-items:end}
+.accountForm .createAccountButton{height:42px;white-space:nowrap}
+.refinedNext{border:1px solid #deebee;box-shadow:0 11px 30px rgba(58,88,103,.04)}
+.refinedGate{border-radius:30px}
+.refinedGate .differenceMark{margin:auto}
+
+@media(max-width:1100px){
+  .accountForm{grid-template-columns:1fr 1fr 1fr}
+  .accountForm .createAccountButton{width:100%;justify-self:stretch}
+}
+@media(max-width:720px){
+  .loginFeatureRow{display:none}
+  .premiumLoginCard{padding:24px;border-radius:24px}
+  .loginCardBrand{margin-top:20px}
+  .premiumAdminHeader{padding:16px}
+  .adminBrandLine{align-items:flex-start}
+  .accountCreatorIntro{display:block}
+  .accountCreatorIntro>span{display:inline-block;margin-top:8px}
+  .accountForm{grid-template-columns:1fr}
+  .platformBrand b{font-size:22px}
+}
