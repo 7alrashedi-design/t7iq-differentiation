@@ -71,7 +71,7 @@ export default function DashboardClient() {
     <main className="appShell">
       <aside className={`sideRail ${menuOpen ? "open" : ""}`}>
         <div className="brandBlock">
-          <div className="brandSymbol">T7</div>
+          <div className="differenceMark small"><span>ت</span></div>
           <div>
             <strong>T7IQ</strong>
             <span>منصة التمايز الذكية</span>
@@ -108,7 +108,7 @@ export default function DashboardClient() {
       <section className="mainArea">
         <header className="mobileHeader">
           <button className="iconButton" onClick={() => setMenuOpen(true)} aria-label="فتح القائمة"><Menu size={21}/></button>
-          <div className="mobileBrand"><span>T7IQ</span><small>التمايز الذكي</small></div>
+          <div className="mobileBrand"><span>التمايز</span><small>مساعد التعلم الذكي</small></div>
           <button className="iconButton" aria-label="التنبيهات"><Bell size={19}/></button>
         </header>
 
@@ -116,7 +116,7 @@ export default function DashboardClient() {
           <div>
             <span className="sectionKicker">رحلة التعلم اليوم</span>
             <h1>أهلاً {teacherName}</h1>
-            <p>أعددنا لك تجربة تعلم مقترحة اعتمادًا على أحدث تقدم لطلابك.</p>
+            <p>جهزنا لك تجربة تعلم مبنية على أحدث تقدم لطلابك، لتراجعها وتبدأ الحصة بثقة.</p>
           </div>
           <div className="topActions">
             <button className="softButton">
@@ -226,7 +226,7 @@ export default function DashboardClient() {
         </section>
 
         <footer className="appFooter">
-          <span>T7IQ • Digital Lab for Research & Development</span>
+          <span>التمايز • من T7IQ Digital Lab</span>
           <Link href="/login">دخول المعلمين</Link>
         </footer>
       </section>
