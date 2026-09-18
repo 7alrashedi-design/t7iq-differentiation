@@ -32,6 +32,49 @@ Deno.serve(async (req: Request) => {
       return json({ session: data });
     }
 
+    if (action === "demo_summary") {
+      const code = String(body.code ?? "DEMO26").trim().toUpperCase();
+      const { data: demoSession } = await db.from("workshop_sessions")
+        .select("id,title,session_code,status,trainer_names,settings")
+        .eq("session_code", code).maybeSingle();
+      if (!demoSession || demoSession.settings?.test_mode !== true) {
+        return json({ error: "demo_not_found" }, 404);
+      }
+      const { data: participants } = await db.from("workshop_participants")
+        .select("id,joined_at,completed_at").eq("session_id", demoSession.id);
+      const ids = (participants ?? []).map((p:any)=>p.id);
+      const [{ data: fps }, { data: pps }, { data: apps }] = await Promise.all([
+        ids.length ? db.from("fingerprint_results").select("participant_id,fingerprint_code,primary_code").in("participant_id", ids) : Promise.resolve({ data: [] }),
+        ids.length ? db.from("participant_products").select("participant_id,product_id,current_level,status").in("participant_id", ids) : Promise.resolve({ data: [] }),
+        ids.length ? db.from("workshop_applications").select("participant_id,status").in("participant_id", ids) : Promise.resolve({ data: [] }),
+      ]);
+      const dist: Record<string,number> = { W:0,O:0,V:0,T:0,K:0 };
+      for (const fp of fps ?? []) {
+        const raw = String((fp as any).primary_code ?? "").toUpperCase();
+        const key = raw.startsWith("K") ? "K" : raw;
+        if (key in dist) dist[key] += 1;
+      }
+      const levels = { L1:0,L2:0,L3:0,completed:0 };
+      for (const pp of pps ?? []) {
+        if ((pp as any).status === "completed") levels.completed += 1;
+        else if ((pp as any).current_level === 1) levels.L1 += 1;
+        else if ((pp as any).current_level === 2) levels.L2 += 1;
+        else if ((pp as any).current_level === 3) levels.L3 += 1;
+      }
+      return json({
+        session: demoSession,
+        totals: {
+          participants: ids.length,
+          fingerprints: (fps ?? []).length,
+          products: (pps ?? []).length,
+          applications: (apps ?? []).length,
+          completed: (participants ?? []).filter((p:any)=>p.completed_at).length
+        },
+        distribution: dist,
+        levels
+      });
+    }
+
     if (action === "join") {
       const code = String(body.code ?? "").trim().toUpperCase();
       const fullName = String(body.full_name ?? "").trim();
