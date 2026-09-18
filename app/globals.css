@@ -984,3 +984,43 @@ body{
     background:transparent!important;border-top:1px solid #dbe7e9!important;color:#647d87!important
   }
 }
+
+
+/* ===== Report v7 — fix real PDF whitespace/orientation ===== */
+@media print{
+  .reportPage{
+    box-sizing:border-box!important;
+    display:flex!important;flex-direction:column!important;
+    width:210mm!important;height:297mm!important;max-height:297mm!important;
+    padding:7mm 8mm 5mm!important
+  }
+  .reportTop{flex:0 0 20mm!important}
+  .reportHero{flex:0 0 40mm!important}
+  .reportGrid{
+    flex:1 1 auto!important;height:auto!important;min-height:0!important;
+    grid-template-columns:44% 56%!important;
+    grid-template-rows:96mm 1fr!important;
+    gap:3mm!important
+  }
+  /* In RTL, force the visual order to match the reference:
+     radar on the left, ranking on the right */
+  .radarCard{grid-column:1!important;grid-row:1!important}
+  .rankingCard{grid-column:2!important;grid-row:1!important}
+  .narrativeCard{
+    grid-column:1/-1!important;grid-row:2!important;
+    min-height:0!important;height:auto!important
+  }
+  .fingerprintRadar{width:68mm!important;height:68mm!important}
+  .rankingList>div{min-height:7mm!important}
+  .narrativeCard{
+    grid-template-rows:auto auto auto auto auto!important;
+    align-content:start!important
+  }
+  .narrativeCard>p{min-height:0!important}
+  .narrativeTiles{margin-top:3mm!important}
+  .narrativeTiles>div{min-height:20mm!important}
+  .reportFooter{
+    position:static!important;flex:0 0 7mm!important;
+    margin-top:2mm!important;height:7mm!important
+  }
+}
