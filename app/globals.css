@@ -895,3 +895,92 @@ body{
     font-size:5.3pt!important
   }
 }
+
+
+/* ===== Report v6 — reference-inspired premium composition ===== */
+@media print{
+  @page{size:A4 portrait;margin:0}
+  .reportPage{
+    width:210mm!important;height:297mm!important;max-height:297mm!important;
+    padding:7mm 8mm 6mm!important;margin:0!important;overflow:hidden!important;
+    background:
+      radial-gradient(circle at 4% 1%,rgba(71,127,210,.13),transparent 22mm),
+      radial-gradient(circle at 96% 2%,rgba(40,157,149,.12),transparent 24mm),
+      #fff!important;
+  }
+  .reportTop{
+    height:22mm!important;min-height:22mm!important;margin:0 0 2.5mm!important;padding:0 0 3mm!important;
+    grid-template-columns:48mm 1fr!important;border-bottom:1px solid #dbe9ec!important
+  }
+  .reportTop .differenceMark{width:10mm!important;height:10mm!important;border-radius:3mm!important}
+  .reportTop .platformBrand b{font-size:14pt!important;color:#163a55!important}
+  .reportTop .platformBrand small{font-size:6.5pt!important}
+  .reportIdentity{
+    display:grid!important;grid-template-columns:1.35fr 1.1fr .8fr!important;
+    gap:0!important;align-items:stretch!important;text-align:center!important;border:1px solid #e2edef!important;
+    border-radius:4mm!important;overflow:hidden!important;background:#f8fbfc!important
+  }
+  .reportIdentity>*{padding:2mm!important;border-left:1px solid #e1eaed!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  .reportIdentity b{font-size:7pt!important}.reportIdentity span{font-size:6pt!important}.reportIdentity small{font-size:5.7pt!important}
+
+  .reportHero{
+    height:42mm!important;min-height:42mm!important;margin-bottom:3mm!important;padding:4mm!important;
+    grid-template-columns:1fr 29mm 45mm!important;gap:3mm!important;border-radius:5mm!important;
+    background:linear-gradient(120deg,#eaf8f5 0%,#e9f5fb 48%,#e9f1fc 100%)!important;
+    border:1px solid #d8e9ec!important
+  }
+  .fingerprintCode{
+    display:inline-block!important;background:#ffffffb8!important;border:1px solid #dcebed!important;
+    border-radius:3mm!important;padding:2.2mm 4mm!important;font-size:24pt!important;
+    -webkit-text-fill-color:#164d67!important;color:#164d67!important
+  }
+  .fingerprintTagline{font-size:6pt!important;color:#3c7478!important}
+  .fingerprintVisual{width:27mm!important;height:27mm!important;border-radius:8mm!important;background:linear-gradient(145deg,#fff,#d7f1ef)!important}
+  .fingerprintGlyph{font-size:49pt!important;color:#168d8a!important}
+  .fingerprintSummary{height:30mm!important;border:1px solid #dbe9e9!important;background:#ffffffc9!important}
+  .fingerprintSummary b{font-size:9pt!important}.fingerprintSummary strong{font-size:18pt!important}
+
+  .reportGrid{
+    height:208mm!important;display:grid!important;
+    grid-template-columns:45% 55%!important;grid-template-rows:103mm 102mm!important;gap:3mm!important
+  }
+  .reportCard{border:1px solid #dce9ec!important;border-radius:5mm!important;padding:4mm!important}
+  .reportCard:before{width:1.1mm!important;background:linear-gradient(#42aaa1,#5e91d5)!important}
+  .reportCardHead h2{font-size:11pt!important;color:#176d78!important}
+  .reportCardHead span,.sectionKicker{font-size:5.8pt!important;color:#54908c!important}
+  .radarCard{grid-column:1!important;grid-row:1!important;background:linear-gradient(180deg,#fff,#f8fcfc)!important}
+  .rankingCard{grid-column:2!important;grid-row:1!important;background:linear-gradient(180deg,#fff,#f9fbfe)!important}
+  .fingerprintRadar{width:73mm!important;height:73mm!important;margin:1.5mm auto 0!important}
+  .rankingList>div{min-height:7.55mm!important;padding:1mm 0!important}
+  .rankNo{background:#eef7f6!important;color:#267f79!important}
+  .rankBar{height:2mm!important;background:#edf2f4!important}
+  .rankBar i{background:linear-gradient(90deg,#63bdb3,#4d87ca)!important}
+
+  .narrativeCard{
+    grid-column:1/-1!important;grid-row:2!important;padding:4mm 5mm!important;
+    display:grid!important;grid-template-columns:1fr 1fr!important;
+    grid-template-rows:auto auto 1fr auto auto!important;column-gap:5mm!important;
+    background:linear-gradient(135deg,#fff,#fbfefe)!important
+  }
+  .narrativeCard>.sectionKicker,.narrativeCard>h2{grid-column:1/-1!important}
+  .narrativeCard h2{font-size:13pt!important;color:#173c55!important;margin:.5mm 0 2mm!important}
+  .narrativeCard>p{font-size:7.8pt!important;line-height:1.7!important;margin:0!important}
+  .narrativeTiles{grid-column:1/-1!important;grid-template-columns:1fr 1fr 1fr!important;gap:3mm!important;margin-top:4mm!important}
+  .narrativeTiles>div{
+    min-height:25mm!important;padding:3mm!important;border-radius:4mm!important;
+    border:1px solid #e2ecee!important
+  }
+  .roleTile{background:linear-gradient(135deg,#eef5ff,#f6f9ff)!important}
+  .growthTile{background:linear-gradient(135deg,#eef9f2,#f8fcf9)!important}
+  .topThreeTile{background:linear-gradient(135deg,#eaf8f6,#eef5ff)!important}
+  .narrativeTiles span{font-size:6.2pt!important;color:#468783!important}
+  .narrativeTiles b{font-size:7.5pt!important;line-height:1.5!important;color:#173b55!important}
+  .narrativeCard>small{
+    grid-column:1/-1!important;background:#fff8df!important;border:1px solid #f4e8b7!important;
+    color:#6e6549!important;padding:1.8mm 3mm!important;border-radius:2.5mm!important;font-size:5.8pt!important
+  }
+  .reportFooter{
+    left:8mm!important;right:8mm!important;height:7mm!important;padding:2mm 0 0!important;
+    background:transparent!important;border-top:1px solid #dbe7e9!important;color:#647d87!important
+  }
+}
