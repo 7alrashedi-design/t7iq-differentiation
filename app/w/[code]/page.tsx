@@ -131,10 +131,11 @@ export default function WorkshopParticipant(){
   }
 
   const productRoles:Record<StyleCode,string>={W:"كاتب/موثق",O:"متحدث/محاور",V:"مصمم بصري",T:"منفذ تقني",K1a:"مصمم فني",K2c:"منظم/مسوق",K3s:"منسق أثر",K4p:"مؤدٍ/ممثل",K5h:"صانع/منفذ",K6m:"صوت/إيقاع"};
-  const productGroups=useMemo(()=>[
-    {code:"W" as StyleCode,label:"كتابي"},{code:"O" as StyleCode,label:"شفهي"},{code:"V" as StyleCode,label:"مرئي/صوتي"},{code:"T" as StyleCode,label:"تقني"},{code:"K" as const,label:"حركي"}
+  type ProductFilter="ALL"|"W"|"O"|"V"|"T"|"K";
+  const productGroups=useMemo<{code:Exclude<ProductFilter,"ALL">;label:string}[]>(()=>[
+    {code:"W",label:"كتابي"},{code:"O",label:"شفهي"},{code:"V",label:"مرئي/صوتي"},{code:"T",label:"تقني"},{code:"K",label:"حركي"}
   ],[]);
-  const [productFilter,setProductFilter]=useState<"ALL"|"W"|"O"|"V"|"T"|"K">("ALL");
+  const [productFilter,setProductFilter]=useState<ProductFilter>("ALL");
   const visibleProducts=useMemo(()=>products.filter(p=>productFilter==="ALL" ? true : productFilter==="K" ? String(p[0]).startsWith("K-") : p[2]===productFilter),[productFilter]);
   const topCodes=result.top.map(t=>t.code);
   function fitLabel(p:any){return topCodes.includes(p[2] as StyleCode)?"يلائم بصمتك مباشرة":"يمكنك توظيف بصمتك داخله"}

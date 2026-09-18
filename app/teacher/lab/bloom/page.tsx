@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {Suspense,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {useTeacherProject} from "@/lib/useTeacherProject";
 import {ArrowLeft,BrainCircuit,Check,ChevronLeft,Plus,Sparkles} from "lucide-react";
@@ -13,7 +13,7 @@ const initial:BloomRow[]=[
  {level:"التقويم",meaning:"إصدار حكم مبرر وفق محكات أو أدلة.",process:"",product:""},
  {level:"الإبداع",meaning:"بناء أو إنتاج شيء جديد يحقق غرضًا واضحًا.",process:"",product:""}
 ];
-export default function BloomBuilder(){
+function BloomBuilderContent(){
  const {projectId,project,saveTool,nextHref}=useTeacherProject(); const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
  const [step,setStep]=useState(1),[subject,setSubject]=useState(""),[grade,setGrade]=useState(""),[lesson,setLesson]=useState(""),[goal,setGoal]=useState(""),[content,setContent]=useState(""),[rows,setRows]=useState(initial);
 
@@ -28,4 +28,8 @@ export default function BloomBuilder(){
   {step===3&&<section className="builderCard wideCard"><div className="builderHead"><span>03</span><div><h2>اربط العملية بالمنتج</h2><p>العملية: ماذا سيفعل الطالب ليتعلم؟ المنتج: كيف سيظهر تعلمه؟ اكتب تجربة حقيقية، لا فعلًا منفردًا.</p></div></div><div className="bloomMatrix"><div className="matrixHead"><span>المستوى</span><span>العملية / تجربة التعلم</span><span>المنتج / دليل التعلم</span></div>{rows.map((r,i)=><div className="matrixRow" key={r.level}><div><b>{r.level}</b><small>{r.meaning}</small></div><textarea value={r.process} onChange={e=>update(i,"process",e.target.value)} placeholder="ماذا سيفعل الطالب ليفكر ويتعلم؟"/><textarea value={r.product} onChange={e=>update(i,"product",e.target.value)} placeholder="كيف سيُظهر هذا التعلم؟"/></div>)}</div><div className="bloomCaution"><Sparkles/><div><b>فحص الجودة</b><span>ليس مطلوبًا استخدام المستويات الستة في كل درس. اختر ما يخدم الهدف والجاهزية، وتأكد أن اختلاف المهمة يعكس اختلافًا حقيقيًا في التفكير.</span></div></div><div className="builderActions"><button onClick={()=>setStep(2)}>السابق</button><button className="builderNext" onClick={()=>setStep(4)}>مراجعة التجربة <ChevronLeft/></button></div></section>}
   {step===4&&<section className="builderCard reviewCard"><div className="builderHead"><span>04</span><div><h2>خريطة عمق التفكير للدرس</h2><p>{subject} • {grade} • {lesson}</p></div></div><div className="goalReview"><span>ناتج التعلم</span><b>{goal}</b><small>{content}</small></div><div className="bloomReview">{rows.filter(r=>r.process||r.product).map(r=><article key={r.level}><b>{r.level}</b><div><small>العملية</small><span>{r.process||"—"}</span></div><div><small>المنتج</small><span>{r.product||"—"}</span></div></article>)}</div>{!rows.some(r=>r.process||r.product)&&<div className="emptyBloom">لم تُضف تجارب بعد. ارجع إلى المصفوفة وأضف المستويات التي تخدم هدف الدرس.</div>}<div className="builderActions"><button onClick={()=>setStep(3)}>تعديل الخريطة</button><button className="builderNext" disabled={saving} onClick={async()=>{setSaving(true);try{await saveTool("thinking",{content,rows,updated_at:new Date().toISOString()});setSaved(true)}catch(e:any){alert(e?.message||"تعذر حفظ الأداة. تحقق من الاتصال وحاول مرة أخرى.")}finally{setSaving(false)}}}><Sparkles/> {saved?"تم الحفظ":saving?"جارٍ الحفظ…":"حفظ في المشروع"}</button>{saved&&nextHref("thinking")&&<Link className="builderNext" href={nextHref("thinking")!}>التالي <ChevronLeft/></Link>}</div></section>}
  {projectId&&<div className="projectContextBar"><span>المشروع: <b>{project?.title||"الدرس المتمايز"}</b></span><Link href="/teacher/library">مكتبتي</Link></div>}</main>
+}
+
+export default function BloomBuilder(){
+ return <Suspense fallback={<main className="homeLoading"><b>عمق التفكير</b><span>جارٍ تجهيز الأداة…</span></main>}><BloomBuilderContent/></Suspense>
 }

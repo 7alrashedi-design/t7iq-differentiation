@@ -26,7 +26,7 @@ export default function IntegratedPlan(){
   {d.concepts&&<PlanSection icon={<GitCompareArrows/>} n="03" title="المقارنة وتعقيد المفاهيم"><div className="planSimple"><b>{(d.concepts.concepts||[]).slice(0,d.concepts.count).filter(Boolean).join(" × ")}</b><p>{d.concepts.prompt}</p><small>دليل التعلم: {d.concepts.evidence||"—"}</small></div></PlanSection>}
   {d.choice&&<PlanSection icon={<Grid3X3/>} n="04" title="لوحة الاختيار المقصود"><div className="planChoices">{(d.choice.choices||[]).slice(0,d.choice.size).filter((x:any)=>x.title||x.product).map((x:any,i:number)=><article key={i}><span>{x.mode||"اختيار"}</span><b>{x.title}</b><p>{x.product}</p><small>{x.challenge}</small></article>)}</div><div className="planRule">قاعدة الاختيار: {d.choice.rule}</div></PlanSection>}
   {d.operations&&<PlanSection icon={<School/>} n="05" title="خطة التشغيل الصفي"><div className="planTierGrid">{(d.operations.groups||[]).map((g:any,i:number)=><article key={i}><span>{g.minutes} دقيقة</span><h3>{g.name}</h3><p>{g.task||"—"}</p><small>دور المعلم: {g.teacher}</small></article>)}</div><div className="opsSummary"><div><b>الانتقال</b><span>{d.operations.transition}</span></div><div><b>نقطة التحقق</b><span>{d.operations.checkpoint||"—"}</span></div><div><b>الإغلاق</b><span>{d.operations.closure||"—"}</span></div><div><b>المواد</b><span>{d.operations.materials||"—"}</span></div></div></PlanSection>}
-  <section className="planReflection"><span>بعد التطبيق</span><h2>الدليل الجديد هو بداية القرار القادم</h2><p>دوّن ما أظهره الطلاب من تعلم، ثم أعد تشكيل الدعم أو التحدي أو المجموعات في الحصة التالية بدل تثبيت الطلاب في مسارات دائمة.</p><Link className="noPrint reflectCta" href={"/teacher/reflect/"+id}>{reflections.length?"إضافة تأمل جديد":"تسجيل دليل ما بعد الحصة"} <ArrowLeft/></Link></section>{reflections.length>0&&<section className="reflectionHistory"><header><span>سجل الممارسة</span><h2>كيف تطور هذا الدرس؟</h2></header>{reflections.map((r:any,i:number)=><article key={r.id}><div><b>تطبيق {reflections.length-i}</b><small>{new Date(r.created_at).toLocaleDateString("ar-SA")}</small></div><p><strong>الدليل</strong>{r.evidence}</p><p><strong>ما نجح</strong>{r.worked||"—"}</p><p><strong>يحتاج تعديلًا</strong>{r.needs_change||"—"}</p><p className="decision"><strong>القرار القادم</strong>{r.next_decision}</p></article>)}</section>
+  <section className="planReflection"><span>بعد التطبيق</span><h2>الدليل الجديد هو بداية القرار القادم</h2><p>دوّن ما أظهره الطلاب من تعلم، ثم أعد تشكيل الدعم أو التحدي أو المجموعات في الحصة التالية بدل تثبيت الطلاب في مسارات دائمة.</p><Link className="noPrint reflectCta" href={"/teacher/reflect/"+id}>{reflections.length?"إضافة تأمل جديد":"تسجيل دليل ما بعد الحصة"} <ArrowLeft/></Link></section>{reflections.length>0&&<section className="reflectionHistory"><header><span>سجل الممارسة</span><h2>كيف تطور هذا الدرس؟</h2></header>{reflections.map((r:any,i:number)=><article key={r.id}><div><b>تطبيق {reflections.length-i}</b><small>{new Date(r.created_at).toLocaleDateString("ar-SA")}</small></div><p><strong>الدليل</strong>{r.evidence}</p><p><strong>ما نجح</strong>{r.worked||"—"}</p><p><strong>يحتاج تعديلًا</strong>{r.needs_change||"—"}</p><p className="decision"><strong>القرار القادم</strong>{r.next_decision}</p></article>)}</section>}
  </main>
 }
 function ImpactJourney({versions,reflections}:{versions:any[],reflections:any[]}){
@@ -35,11 +35,11 @@ function ImpactJourney({versions,reflections}:{versions:any[],reflections:any[]}
 function VersionComparison({current,previous}:{current:any,previous:any}){
  const a=previous.project_data||{},b=current.project_data||{};
  const specs=[
-  ["tiering","التدرج والجاهزية","مستويات الدعم والتحدي",x=>JSON.stringify(x?.tiers||[])],
-  ["thinking","عمق التفكير","عمليات التفكير ونواتجها",x=>JSON.stringify(x?.rows||[])],
-  ["concepts","أشكال فن","المفاهيم والمهمة والدليل",x=>JSON.stringify({count:x?.count,concepts:x?.concepts,prompt:x?.prompt,evidence:x?.evidence})],
-  ["choice","الاختيار المقصود","الخيارات وقاعدة الاختيار",x=>JSON.stringify({size:x?.size,rule:x?.rule,choices:x?.choices})],
-  ["operations","التشغيل الصفي","المجموعات والزمن ونقاط التحقق",x=>JSON.stringify(x||{})]
+  ["tiering","التدرج والجاهزية","مستويات الدعم والتحدي",(x:any)=>JSON.stringify(x?.tiers||[])],
+  ["thinking","عمق التفكير","عمليات التفكير ونواتجها",(x:any)=>JSON.stringify(x?.rows||[])],
+  ["concepts","أشكال فن","المفاهيم والمهمة والدليل",(x:any)=>JSON.stringify({count:x?.count,concepts:x?.concepts,prompt:x?.prompt,evidence:x?.evidence})],
+  ["choice","الاختيار المقصود","الخيارات وقاعدة الاختيار",(x:any)=>JSON.stringify({size:x?.size,rule:x?.rule,choices:x?.choices})],
+  ["operations","التشغيل الصفي","المجموعات والزمن ونقاط التحقق",(x:any)=>JSON.stringify(x||{})]
  ] as const;
  const changes=specs.map(([key,title,desc,pack])=>({key,title,desc,before:!!a[key],after:!!b[key],changed:pack(a[key])!==pack(b[key])}));
  const changed=changes.filter(x=>x.changed).length;

@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {Suspense,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {useTeacherProject} from "@/lib/useTeacherProject";
 import {ArrowLeft,Check,ChevronLeft,GitCompareArrows,Sparkles} from "lucide-react";
@@ -9,7 +9,7 @@ const modes=[
  {n:3,title:"ثلاثة مفاهيم",note:"تحليل علاقات مشتركة ومتقاطعة أكثر تعقيدًا."},
  {n:4,title:"أربعة مفاهيم",note:"معالجة شبكة علاقات متعددة ورفع تعقيد المقارنة."}
 ];
-export default function VennBuilder(){
+function VennBuilderContent(){
  const {projectId,project,saveTool,nextHref}=useTeacherProject(); const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
  const [step,setStep]=useState(1),[subject,setSubject]=useState(""),[grade,setGrade]=useState(""),[lesson,setLesson]=useState(""),[goal,setGoal]=useState(""),[count,setCount]=useState(2),[concepts,setConcepts]=useState(["","","",""]),[prompt,setPrompt]=useState(""),[evidence,setEvidence]=useState("");
 
@@ -24,5 +24,9 @@ export default function VennBuilder(){
   {step===3&&<section className="builderCard wideCard"><div className="builderHead"><span>03</span><div><h2>سمِّ المفاهيم واكتب مهمة التفكير</h2><p>اجعل الطالب يبحث عن العلاقات ذات المعنى، لا مجرد قائمة صفات سطحية.</p></div></div><div className="vennWorkspace"><div className={"vennCanvas count"+count}>{active.map((c,i)=><div className={"vennCircle c"+i} key={i}><span>{c||("المفهوم "+(i+1))}</span></div>)}</div><div className="vennFields">{active.map((c,i)=><label key={i}>{"المفهوم "+(i+1)}<input value={c} onChange={e=>setConcept(i,e.target.value)} placeholder={"اكتب المفهوم "+(i+1)}/></label>)}<label className="full">مهمة الطالب<textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="قارن ثم فسّر العلاقة الأهم التي توصلت إليها وادعمها بدليل."/></label><label className="full">دليل التعلم المطلوب<textarea value={evidence} onChange={e=>setEvidence(e.target.value)} placeholder="كيف سيُظهر الطالب فهمه بعد إكمال الشكل؟"/></label></div></div><div className="builderActions"><button onClick={()=>setStep(2)}>السابق</button><button className="builderNext" onClick={()=>setStep(4)}>معاينة المخرج <ChevronLeft/></button></div></section>}
   {step===4&&<section className="builderCard reviewCard"><div className="builderHead"><span>04</span><div><h2>نشاط فن جاهز للمراجعة</h2><p>{subject} • {grade} • {lesson}</p></div></div><div className="goalReview"><span>ناتج التعلم</span><b>{goal}</b></div><div className="vennOutput"><div className={"vennCanvas count"+count}>{active.map((c,i)=><div className={"vennCircle c"+i} key={i}><span>{c||("المفهوم "+(i+1))}</span></div>)}</div><article><span>مهمة الطالب</span><b>{prompt||"لم تُكتب المهمة بعد."}</b><span>دليل التعلم</span><p>{evidence||"لم يُحدد دليل التعلم بعد."}</p></article></div><div className="vennQuality"><Check/><span>المفاهيم مرتبطة بالهدف.</span><Check/><span>زيادة الدوائر تعني معالجة علاقات أكثر، لا عملاً أكثر فقط.</span><Check/><span>المهمة تطلب تفسيرًا أو استدلالًا يتجاوز ملء الشكل.</span></div><div className="builderActions"><button onClick={()=>setStep(3)}>تعديل النشاط</button><button className="builderNext" disabled={saving} onClick={async()=>{setSaving(true);try{await saveTool("concepts",{count,concepts,prompt,evidence,updated_at:new Date().toISOString()});setSaved(true)}catch(e:any){alert(e?.message||"تعذر حفظ الأداة. تحقق من الاتصال وحاول مرة أخرى.")}finally{setSaving(false)}}}><Sparkles/> {saved?"تم الحفظ":saving?"جارٍ الحفظ…":"حفظ في المشروع"}</button>{saved&&nextHref("concepts")&&<Link className="builderNext" href={nextHref("concepts")!}>التالي <ChevronLeft/></Link>}</div></section>}
  {projectId&&<div className="projectContextBar"><span>المشروع: <b>{project?.title||"الدرس المتمايز"}</b></span><Link href="/teacher/library">مكتبتي</Link></div>}</main>
+}
+
+export default function VennBuilder(){
+ return <Suspense fallback={<main className="homeLoading"><b>أشكال فن</b><span>جارٍ تجهيز الأداة…</span></main>}><VennBuilderContent/></Suspense>
 }
 function VennMini({count}:{count:number}){return <div className={"vennMini n"+count}>{Array.from({length:count}).map((_,i)=><i key={i}/>)}</div>}

@@ -1,11 +1,11 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {Suspense,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {useTeacherProject} from "@/lib/useTeacherProject";
 import {ArrowLeft,Check,ChevronLeft,Grid3X3,Sparkles,Shuffle} from "lucide-react";
 type Choice={title:string,mode:string,challenge:string,product:string};
 const empty=()=>({title:"",mode:"",challenge:"",product:""});
-export default function XOBuilder(){
+function XOBuilderContent(){
  const {projectId,project,saveTool,nextHref}=useTeacherProject(); const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
  const [step,setStep]=useState(1),[subject,setSubject]=useState(""),[grade,setGrade]=useState(""),[lesson,setLesson]=useState(""),[goal,setGoal]=useState(""),[size,setSize]=useState(9),[rule,setRule]=useState("اختر 3 مهام تكوّن خطًا متصلًا"),[choices,setChoices]=useState<Choice[]>(Array.from({length:12},empty));
 
@@ -21,4 +21,8 @@ export default function XOBuilder(){
   {step===3&&<section className="builderCard wideCard"><div className="builderHead"><span>03</span><div><h2>صمّم خيارات متوازنة</h2><p>لكل خيار: مهمة واضحة، طريقة تعبير، مستوى تحدٍ، ومنتج أو دليل تعلم.</p></div></div><div className={"xoEditor size"+size}>{active.map((c,i)=><article key={i}><span>{String(i+1).padStart(2,"0")}</span><input value={c.title} onChange={e=>update(i,"title",e.target.value)} placeholder="عنوان المهمة"/><select value={c.mode} onChange={e=>update(i,"mode",e.target.value)}><option value="">طريقة التعبير</option><option>كتابي</option><option>شفهي</option><option>بصري</option><option>تقني</option><option>عملي / أدائي</option></select><select value={c.challenge} onChange={e=>update(i,"challenge",e.target.value)}><option value="">مستوى التحدي</option><option>L1 • دعم موجّه</option><option>L2 • إتقان</option><option>L3 • تحدٍ ممتد</option></select><textarea value={c.product} onChange={e=>update(i,"product",e.target.value)} placeholder="المهمة / المنتج المطلوب"/></article>)}</div><div className="xoBalance"><Shuffle/><div><b>مؤشر التوازن</b><span>{new Set(active.map(c=>c.mode).filter(Boolean)).size} طرق تعبير • {new Set(active.map(c=>c.challenge).filter(Boolean)).size} مستويات تحدٍ • {active.filter(c=>c.title&&c.product).length}/{size} خيارات مكتملة</span></div></div><div className="builderActions"><button onClick={()=>setStep(2)}>السابق</button><button className="builderNext" onClick={()=>setStep(4)}>معاينة اللوحة <ChevronLeft/></button></div></section>}
   {step===4&&<section className="builderCard reviewCard"><div className="builderHead"><span>04</span><div><h2>لوحة إكس / أو</h2><p>{subject} • {grade} • {lesson}</p></div></div><div className="goalReview"><span>الهدف المشترك</span><b>{goal}</b><small>قاعدة الاختيار: {rule}</small></div><div className={"xoBoard board"+size}>{active.map((c,i)=><article key={i}><span>{c.mode||"اختيار"}</span><b>{c.title||("المهمة "+(i+1))}</b><p>{c.product||"لم تُكتب المهمة بعد."}</p><div><small>{c.challenge||"التحدي غير محدد"}</small></div></article>)}</div><div className="vennQuality"><Check/><span>جميع الخيارات تخدم الهدف.</span><Check/><span>اللوحة تقدم طرق تعبير متعددة.</span><Check/><span>قاعدة الاختيار تمنع الاختيار العشوائي أو الأسهل دائمًا.</span></div><div className="builderActions"><button onClick={()=>setStep(3)}>تعديل الخيارات</button><button className="builderNext" disabled={saving} onClick={async()=>{setSaving(true);try{await saveTool("choice",{size,rule,choices,updated_at:new Date().toISOString()});setSaved(true)}catch(e:any){alert(e?.message||"تعذر حفظ الأداة. تحقق من الاتصال وحاول مرة أخرى.")}finally{setSaving(false)}}}><Sparkles/> {saved?"تم الحفظ":saving?"جارٍ الحفظ…":"حفظ في المشروع"}</button>{saved&&nextHref("choice")&&<Link className="builderNext" href={nextHref("choice")!}>التالي <ChevronLeft/></Link>}</div></section>}
  {projectId&&<div className="projectContextBar"><span>المشروع: <b>{project?.title||"الدرس المتمايز"}</b></span><Link href="/teacher/library">مكتبتي</Link></div>}</main>
+}
+
+export default function XOBuilder(){
+ return <Suspense fallback={<main className="homeLoading"><b>لوحة الاختيار</b><span>جارٍ تجهيز الأداة…</span></main>}><XOBuilderContent/></Suspense>
 }

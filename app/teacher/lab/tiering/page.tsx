@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {Suspense,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {ArrowLeft,Check,ChevronLeft,Layers3,Plus,Sparkles} from "lucide-react";
 import {useTeacherProject} from "@/lib/useTeacherProject";
@@ -9,7 +9,7 @@ const defaults:Tier[]=[
  {name:"L2",label:"الإتقان",challenge:"تحقيق الهدف بالمستوى المتوقع",support:"دعم محدود واستقلالية أكبر",task:""},
  {name:"L3",label:"تحدٍ ممتد",challenge:"عمق أو تعقيد أعلى في الهدف نفسه",support:"استقلالية وتبرير ونقل للتعلم",task:""}
 ];
-export default function TieringBuilder(){
+function TieringBuilderContent(){
  const {projectId,project,saveTool}=useTeacherProject(); const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
  const [step,setStep]=useState(1),[subject,setSubject]=useState(""),[grade,setGrade]=useState(""),[lesson,setLesson]=useState(""),[goal,setGoal]=useState(""),[evidence,setEvidence]=useState("");
  const [tiers,setTiers]=useState(defaults);
@@ -25,4 +25,8 @@ export default function TieringBuilder(){
   {step===3&&<section className="builderCard wideCard"><div className="builderHead"><span>03</span><div><h2>ابنِ ثلاث طرق نحو الهدف نفسه</h2><p>لا تجعل L3 أسئلة أكثر؛ اجعله تفكيرًا أعمق. ولا تجعل L1 هدفًا أقل؛ وفّر له مدخلًا ودعمًا مناسبين.</p></div></div><div className="tierCards">{tiers.map((t,i)=><article key={t.name} className={"tierEdit t"+(i+1)}><div><b>{t.name}</b><input value={t.label} onChange={e=>update(i,"label",e.target.value)}/></div><label>مستوى التحدي<textarea value={t.challenge} onChange={e=>update(i,"challenge",e.target.value)}/></label><label>الدعم / الاستقلالية<textarea value={t.support} onChange={e=>update(i,"support",e.target.value)}/></label><label>المهمة الفعلية<textarea value={t.task} onChange={e=>update(i,"task",e.target.value)} placeholder="اكتب المهمة التي سينفذها الطالب..."/></label></article>)}</div><div className="builderActions"><button onClick={()=>setStep(2)}>السابق</button><button className="builderNext" onClick={()=>setStep(4)}>مراجعة التصميم <ChevronLeft/></button></div></section>}
   {step===4&&<section className="builderCard reviewCard"><div className="builderHead"><span>04</span><div><h2>فحص سريع قبل التطبيق</h2><p>{subject} • {grade} • {lesson}</p></div></div><div className="goalReview"><span>الهدف المشترك</span><b>{goal}</b></div><div className="reviewChecks"><div><Check/><span>الطبقات الثلاث تعمل نحو الهدف نفسه.</span></div><div><Check/><span>الاختلاف في التحدي والدعم، وليس مجرد كمية العمل.</span></div><div><Check/><span>اختيار الطبقة يستند إلى دليل جاهزية قابل للتحديث.</span></div></div><div className="tierReview">{tiers.map(t=><article key={t.name}><b>{t.name} • {t.label}</b><span>{t.challenge}</span><p>{t.task||"لم تُكتب المهمة بعد."}</p></article>)}</div><div className="builderActions"><button onClick={()=>setStep(3)}>تعديل الطبقات</button><button className="builderNext" disabled={saving} onClick={async()=>{setSaving(true);try{await saveTool("tiering",{tiers,evidence,updated_at:new Date().toISOString()});setSaved(true)}catch(e:any){alert(e?.message||"تعذر حفظ الأداة. تحقق من الاتصال وحاول مرة أخرى.")}finally{setSaving(false)}}}><Sparkles/> {saved?"تم الحفظ":saving?"جارٍ الحفظ…":"حفظ في المشروع"}</button></div></section>}
  {projectId&&<div className="projectContextBar"><span>هذا العمل مرتبط بمشروع: <b>{project?.title||"الدرس المتمايز"}</b></span><Link href={"/teacher/library"}>مكتبتي</Link></div>}</main>
+}
+
+export default function TieringBuilder(){
+ return <Suspense fallback={<main className="homeLoading"><b>التدرج والجاهزية</b><span>جارٍ تجهيز الأداة…</span></main>}><TieringBuilderContent/></Suspense>
 }
