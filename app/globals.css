@@ -1082,3 +1082,13 @@ body{
  .performanceLegend{margin-top:3mm!important;padding:2mm!important;gap:3mm!important;font-size:5.8pt!important;break-inside:avoid!important}
  .evaluationResult{margin-top:3mm!important;padding:3mm!important;border-radius:3mm!important;break-inside:avoid!important}.evaluationResult strong{font-size:8pt!important}.evaluationResult span{font-size:6pt!important}
 }
+
+
+/* ===== Rubric comments + exact 0–6 performance scale ===== */
+.rubricComments{max-width:1180px;margin:16px auto 12px;display:grid;gap:7px}
+.rubricComments>span{font-size:12px;font-weight:800;color:#31515b}
+.rubricComments textarea{width:100%;min-height:92px;resize:vertical;border:1px solid #dce8ea;border-radius:16px;background:#fff;padding:13px 15px;font:inherit;line-height:1.75;color:#294852;outline:none;box-shadow:0 5px 18px rgba(39,79,91,.04)}
+.rubricComments textarea:focus{border-color:#77b9b1;box-shadow:0 0 0 3px rgba(47,143,135,.09)}
+.performanceLegend{grid-template-columns:repeat(7,minmax(0,1fr))}
+@media(max-width:720px){.performanceLegend{display:flex!important;overflow-x:auto;gap:7px!important;padding-bottom:4px}.performanceLegend span{flex:0 0 82px;text-align:center}.rubricComments textarea{min-height:110px}}
+@media print{.rubricComments{margin:3mm 0 2mm!important;break-inside:avoid!important}.rubricComments>span{font-size:5.8pt!important}.rubricComments textarea{min-height:15mm!important;height:15mm!important;border-radius:2.5mm!important;padding:2mm!important;font-size:6pt!important;box-shadow:none!important}.performanceLegend{grid-template-columns:repeat(7,1fr)!important;gap:1mm!important}}
