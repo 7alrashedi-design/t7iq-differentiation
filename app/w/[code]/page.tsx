@@ -102,7 +102,8 @@ export default function WorkshopParticipant(){
 
   function choose(v:number){
     setAnswers(a=>({...a,[item.id]:v}));
-    if(current<49)setCurrent(x=>x+1);
+    setNotice("");
+    if(current<49) window.setTimeout(()=>setCurrent(x=>Math.min(49,x+1)),280);
   }
 
   async function finishScale(){
@@ -199,8 +200,8 @@ export default function WorkshopParticipant(){
     <header className="scaleHeader"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>أسلوبي</b><small>مقياس أسلوب التعبير</small></div></div><div className="scaleProgressMeta"><b>{progress}%</b><span>{answered} من 50</span></div></header>
     <div className="scaleProgress"><i style={{width:progress+"%"}}/></div>
     <section className="questionShell">
-      <div className="questionNumber">العبارة {item.id} من 50</div>
-      <h1>{item.text}</h1><p>اختر أول استجابة أقرب لما يتبادر إلى ذهنك.</p>
+      <div className="questionMetaRow"><div className="questionNumber">العبارة {item.id} من 50</div><span className="questionAnswered">{answers[item.id] ? "تمت الإجابة ✓" : "اختر إجابتك"}</span></div>
+      <h1>{item.text}</h1><p>اختر الدرجة الأقرب لما تشعر به الآن، دون تفكير طويل.</p>
       <div className="answerScale">{scoreLabels.map(opt=><button key={opt.value} className={answers[item.id]===opt.value?"selected":""} onClick={()=>choose(opt.value)}><strong>{opt.value}</strong><span>{opt.label}</span>{answers[item.id]===opt.value&&<Check size={15}/>}</button>)}</div>
       <div className="scaleNav"><button className="outlineButton" disabled={current===0} onClick={()=>setCurrent(x=>Math.max(0,x-1))}><ArrowRight size={16}/> السابق</button><span>تحفظ الإجابات في هذه الجلسة</span>{current===49?<button className="primaryButton" disabled={busy||answered<50} onClick={finishScale}>إظهار بصمتي <Sparkles size={16}/></button>:<button className="outlineButton" onClick={()=>setCurrent(x=>Math.min(49,x+1))}>التالي <ArrowLeft size={16}/></button>}</div>
       {notice&&<div className="loginMessage">{notice}</div>}
