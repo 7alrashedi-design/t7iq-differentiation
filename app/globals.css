@@ -531,3 +531,78 @@ body{
   .answerScale button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .answerScale button:active{transform:scale(.985)}
 }
+
+
+/* ===== Premium fingerprint report + A4 print system ===== */
+.reportPage{font-family:var(--font-arabic),Tahoma,Arial,sans-serif}
+.reportHero{position:relative;overflow:hidden;background:linear-gradient(135deg,#eaf7f4 0%,#f4f9fb 48%,#edf4fb 100%)}
+.reportHero:after{content:"ت";position:absolute;left:-18px;bottom:-55px;font-size:190px;font-weight:900;color:rgba(47,143,135,.045);line-height:1}
+.reportHero>div{position:relative;z-index:1}
+.reportEyebrow{letter-spacing:.2px}
+.fingerprintCode{background:linear-gradient(110deg,#205f59,#397b94);-webkit-background-clip:text;background-clip:text;color:transparent}
+.fingerprintSummary{box-shadow:0 12px 35px rgba(40,91,101,.07)}
+.reportCard{position:relative;overflow:hidden}
+.reportCard:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#58afa5,#78a9dc);opacity:.55}
+.reportCardHead h2{letter-spacing:-.2px}
+.rankingList>div{padding:5px 0;border-bottom:1px solid #f0f4f5}
+.rankingList>div:last-child{border-bottom:0}
+.narrativeTiles>div{border:1px solid #e9f0f1}
+.reportFooter{border-top:1px solid #e8eef0;margin-top:18px}
+
+@media print{
+  @page{size:A4 portrait;margin:11mm 10mm 12mm}
+  html,body{background:#fff!important}
+  body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .reportPage{
+    direction:rtl;width:auto;max-width:none!important;min-height:auto!important;
+    padding:0!important;margin:0!important;color:#203641!important;
+    font-family:var(--font-arabic),Tahoma,Arial,sans-serif!important
+  }
+  .reportTop{padding:0 0 5mm!important;border-bottom:1px solid #dfe9eb;margin-bottom:5mm}
+  .reportTop .platformBrand b{font-size:15pt!important}
+  .reportTop .platformBrand small{font-size:8.5pt!important}
+  .reportActions{display:none!important}
+  .reportHero{
+    min-height:47mm;padding:7mm 8mm!important;margin:0 0 5mm!important;
+    border-radius:6mm!important;box-shadow:none!important;
+    background:linear-gradient(135deg,#eaf7f4,#edf4fb)!important
+  }
+  .reportHero:after{font-size:120pt!important;bottom:-18mm!important}
+  .reportEyebrow{font-size:8.5pt!important}
+  .fingerprintCode{font-size:34pt!important;margin:2mm 0 2.5mm!important}
+  .reportHero h1{font-size:15pt!important;margin:0 0 1mm!important}
+  .reportHero p{font-size:8.5pt!important}
+  .fingerprintSummary{min-width:48mm!important;padding:4mm!important;border-radius:4mm!important;box-shadow:none!important}
+  .fingerprintSummary span,.fingerprintSummary small{font-size:7.5pt!important}
+  .fingerprintSummary b{font-size:12pt!important;margin:1.5mm 0!important}
+
+  .reportGrid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4mm!important}
+  .reportCard{
+    padding:5mm!important;border-radius:5mm!important;box-shadow:none!important;
+    border:1px solid #dfe8ea!important;break-inside:avoid!important
+  }
+  .reportCardHead span,.sectionKicker{font-size:7.5pt!important}
+  .reportCardHead h2{font-size:12.5pt!important;margin:1mm 0!important}
+  .radarCard,.rankingCard{min-height:83mm}
+  .fingerprintRadar{width:72mm!important;max-height:64mm!important;margin:1mm auto 0!important}
+  .rankingList{gap:1mm!important;margin-top:2mm!important}
+  .rankingList>div{grid-template-columns:6mm 30mm 1fr 9mm!important;gap:2mm!important;padding:1.5mm 0!important}
+  .rankNo,.rankText b,.rankingList strong{font-size:7.5pt!important}
+  .rankText span{font-size:6.5pt!important}
+  .rankBar{height:2mm!important}
+  .narrativeCard{grid-column:1/-1!important;padding:5mm 6mm!important}
+  .narrativeCard h2{font-size:14pt!important;margin:1mm 0 2mm!important}
+  .narrativeCard>p{font-size:9pt!important;line-height:1.75!important;margin:1.5mm 0!important}
+  .narrativeTiles{grid-template-columns:1fr 1fr!important;gap:3mm!important;margin-top:3mm!important}
+  .narrativeTiles>div{padding:3mm!important;border-radius:3mm!important}
+  .narrativeTiles span{font-size:7pt!important}.narrativeTiles b{font-size:8.5pt!important;line-height:1.55!important}
+  .narrativeCard>small{font-size:7pt!important;margin-top:2mm!important}
+
+  .reportNext{display:none!important}
+  .reportFooter{
+    display:flex!important;position:fixed;bottom:0;left:0;right:0;
+    padding:3mm 0 0!important;margin:0!important;background:#fff;
+    border-top:1px solid #dfe8ea;font-size:7pt!important
+  }
+  .reportFooter span{display:block!important;margin:0!important}
+}
