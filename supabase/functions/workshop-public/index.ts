@@ -71,7 +71,25 @@ Deno.serve(async (req: Request) => {
           completed: (participants ?? []).filter((p:any)=>p.completed_at).length
         },
         distribution: dist,
-        levels
+        levels,
+        participants: (participants ?? []).map((p:any) => {
+          const fp=(fps ?? []).find((x:any)=>x.participant_id===p.id);
+          const pp=(pps ?? []).find((x:any)=>x.participant_id===p.id);
+          return {
+            id:p.id,
+            joined_at:p.joined_at,
+            completed_at:p.completed_at,
+            fingerprint_code:fp?.fingerprint_code ?? null,
+            primary_code:fp?.primary_code ?? null,
+            product_id:pp?.product_id ?? null,
+            current_level:pp?.current_level ?? null,
+            product_status:pp?.status ?? null
+          };
+        }),
+        product_counts: Object.entries((pps ?? []).reduce((acc:Record<string,number>,pp:any)=>{
+          acc[pp.product_id]=(acc[pp.product_id] ?? 0)+1;
+          return acc;
+        },{})).map(([product_id,count])=>({product_id,count}))
       });
     }
 
