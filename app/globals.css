@@ -1272,3 +1272,5 @@ body{
 .helpSteps,.helpRule{max-width:900px;margin:10px auto}.helpSteps{display:grid;gap:6px}.helpSteps article{background:#fff;border:1px solid #dce7e7;border-radius:12px;padding:11px;display:flex;gap:8px}.helpSteps svg{width:18px;color:#3d8b81}.helpSteps h2{font-size:9px;margin:0}.helpSteps p{font-size:6.5px;color:#71868a;margin:3px 0}.helpRule{background:#eaf5f2;border-radius:12px;padding:12px;display:grid}.helpRule b{font-size:8px}.helpRule span{font-size:6.5px;color:#647d81}
 @media(max-width:800px){.evidenceMeta{grid-template-columns:1fr 1fr}.impactHero,.impactFamilies,.impactGuardrail,.coachHistoryHero,.coachReviews,.helpHero,.helpSteps,.helpRule,.dueCoaching{margin-left:12px;margin-right:12px}.dueCoaching{align-items:flex-start;flex-wrap:wrap}.portfolioActions{flex-wrap:wrap}.libraryOpenActions{grid-template-columns:1fr}}
 @media print{.impactHero,.impactFamilies,.impactGuardrail,.coachHistoryHero,.coachReviews{max-width:none;margin:7mm 10mm}.impactFamilies>article{break-inside:avoid}}
+
+.saveError{margin-top:8px;border:1px solid #e6c6c2;background:#fff3f1;color:#8a4139;border-radius:9px;padding:8px 10px;font-size:7px;font-weight:800}
