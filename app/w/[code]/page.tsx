@@ -94,7 +94,7 @@ export default function WorkshopParticipant(){
     api("session",{code}).then(d=>setSession(d.session)).catch(()=>setNotice("الجلسة غير موجودة أو مغلقة حاليًا."));
   },[code]);
 
-  useEffect(()=>{const saved=typeof window!=="undefined"?localStorage.getItem("tamayoz-workshop-"+code):null;if(!saved)return;(async()=>{try{const d=await api("resume",{participant_token:saved});setToken(saved);setName(d.participant?.full_name||"");setOrg(d.participant?.organization_name||"");if(d.product){setSelectedProduct(d.product);setParticipantProduct(d.participant_product);setLevel(d.participant_product?.current_level||1);setStage("products")}else if(d.fingerprint){setStage("products")}}catch{localStorage.removeItem("tamayoz-workshop-"+code)}})()},[code]);
+  useEffect(()=>{const saved=typeof window!=="undefined"?localStorage.getItem("tamayoz-workshop-"+code):null;if(!saved)return;(async()=>{try{const d=await api("resume",{participant_token:saved});setToken(saved);const savedAnswers=localStorage.getItem("tamayoz-answers-"+code);if(savedAnswers){try{setAnswers(JSON.parse(savedAnswers))}catch{}}setName(d.participant?.full_name||"");setOrg(d.participant?.organization_name||"");if(d.product){setSelectedProduct(d.product);setParticipantProduct(d.participant_product);setLevel(d.participant_product?.current_level||1);setStage("products")}else if(d.fingerprint){setStage("products")}}catch{localStorage.removeItem("tamayoz-workshop-"+code)}})()},[code]);
 
   async function join(e:FormEvent){
     e.preventDefault();setBusy(true);setNotice("");
@@ -125,6 +125,7 @@ export default function WorkshopParticipant(){
         secondary_codes:result.top.slice(1).map(x=>x.code),
         dimension_scores:Object.fromEntries(result.rows.map(x=>[x.code,{score:x.score,mean:Number(x.mean.toFixed(2))}]))
       });
+      localStorage.setItem("tamayoz-answers-"+code,JSON.stringify(answers));
       setStage("report");
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر حفظ النتيجة.")}finally{setBusy(false)}
   }
