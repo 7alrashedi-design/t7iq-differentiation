@@ -606,3 +606,64 @@ body{
   }
   .reportFooter span{display:block!important;margin:0!important}
 }
+
+
+/* ===== Fingerprint one-page A4 executive report ===== */
+@media print{
+  @page{size:A4 portrait;margin:7mm 8mm 8mm}
+  .reportPage{height:282mm!important;overflow:hidden!important}
+  .reportTop{height:13mm!important;padding:0 0 3mm!important;margin:0 0 3mm!important}
+  .reportTop .differenceMark{width:9mm!important;height:9mm!important}
+  .reportTop .platformBrand b{font-size:13pt!important}
+  .reportTop .platformBrand small{font-size:7pt!important}
+
+  .reportHero{
+    min-height:36mm!important;height:36mm!important;padding:5mm 6mm!important;
+    margin:0 0 3mm!important;border-radius:5mm!important;
+    display:flex!important;align-items:center!important
+  }
+  .reportEyebrow{font-size:7pt!important}
+  .fingerprintCode{font-size:29pt!important;line-height:1!important;margin:1mm 0 1.5mm!important}
+  .reportHero h1{font-size:12pt!important;line-height:1.15!important}
+  .reportHero p{font-size:7pt!important;line-height:1.2!important}
+  .fingerprintSummary{min-width:43mm!important;padding:3mm!important}
+  .fingerprintSummary span,.fingerprintSummary small{font-size:6.5pt!important}
+  .fingerprintSummary b{font-size:10.5pt!important;margin:1mm 0!important}
+
+  .reportGrid{
+    display:grid!important;grid-template-columns:46% 54%!important;
+    grid-template-rows:91mm 73mm!important;gap:3mm!important
+  }
+  .reportCard{padding:4mm!important;border-radius:4mm!important}
+  .reportCardHead{margin-bottom:1mm!important}
+  .reportCardHead span,.sectionKicker{font-size:6.5pt!important}
+  .reportCardHead h2{font-size:10.5pt!important;margin:.5mm 0!important}
+  .radarCard{grid-column:1!important;grid-row:1!important;min-height:0!important}
+  .rankingCard{grid-column:2!important;grid-row:1!important;min-height:0!important}
+  .narrativeCard{grid-column:1/-1!important;grid-row:2!important;min-height:0!important}
+
+  .fingerprintRadar{width:66mm!important;height:66mm!important;max-height:66mm!important;margin:1mm auto 0!important}
+  .rankingList{gap:0!important;margin-top:1mm!important}
+  .rankingList>div{
+    grid-template-columns:5mm 27mm 1fr 8mm!important;
+    gap:1.5mm!important;padding:1.05mm 0!important;min-height:6.5mm!important
+  }
+  .rankNo{width:5mm!important;height:5mm!important}
+  .rankNo,.rankText b,.rankingList strong{font-size:6.5pt!important}
+  .rankText span{font-size:5.5pt!important}
+  .rankBar{height:1.7mm!important}
+
+  .narrativeCard h2{font-size:12pt!important;margin:.5mm 0 1mm!important}
+  .narrativeCard>p{font-size:8pt!important;line-height:1.55!important;margin:1mm 0!important}
+  .narrativeTiles{grid-template-columns:1fr 1fr!important;gap:2.5mm!important;margin-top:2mm!important}
+  .narrativeTiles>div{padding:2.5mm 3mm!important;border-radius:3mm!important}
+  .narrativeTiles span{font-size:6.5pt!important}
+  .narrativeTiles b{font-size:7.5pt!important;line-height:1.35!important}
+  .narrativeCard>small{font-size:6pt!important;line-height:1.35!important;margin-top:1.5mm!important}
+
+  .reportNext{display:none!important}
+  .reportFooter{
+    position:fixed!important;bottom:0!important;left:8mm!important;right:8mm!important;
+    height:7mm!important;padding:2mm 0 0!important;font-size:6.5pt!important
+  }
+}
