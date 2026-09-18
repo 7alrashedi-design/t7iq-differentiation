@@ -9,7 +9,7 @@ import {
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { products, scoreLabels, styleItems, styleMeta, type StyleCode } from "@/lib/workshop/styleData";
 
-type Stage="join"|"scale"|"report"|"products"|"evaluate"|"diagnosis"|"differentiate"|"lesson"|"apply"|"done";
+type Stage="join"|"scale"|"report"|"products"|"evaluate"|"journey"|"diagnosis"|"differentiate"|"lesson"|"apply"|"done";
 type Scores=Record<StyleCode,number>;
 type Rubric={id:string;level_no:number;section:string;subsection:string|null;criterion_template:string;essential:boolean;min_score:number;max_score:number;sort_order:number};
 
@@ -72,6 +72,7 @@ export default function WorkshopParticipant(){
   const [rubricFeedback,setRubricFeedback]=useState("");
   const [lastEval,setLastEval]=useState<any>(null);
   const [levelTransition,setLevelTransition]=useState<number|null>(null);
+  const [journey,setJourney]=useState<any>(null);
   const [lessonNote,setLessonNote]=useState("");
   const [applicationSent,setApplicationSent]=useState(false);
 
@@ -239,6 +240,15 @@ export default function WorkshopParticipant(){
     return "اكتب تأملًا أعمق يربط التعلم السابق بما حدث في المنتج وما ستغيره في المحاولة القادمة.";
   }
 
+  async function openJourney(){
+    if(!participantProduct?.id) return;
+    setBusy(true);setNotice("");
+    try{
+      const d=await api("product_journey",{participant_token:token,participant_product_id:participantProduct.id});
+      setJourney(d);setStage("journey");
+    }catch(e){setNotice(e instanceof Error?e.message:"تعذر تحميل سجل رحلة المنتج.")}finally{setBusy(false)}
+  }
+
   function printRubric(){ window.print(); }
 
   async function apply(e:FormEvent){
@@ -321,9 +331,18 @@ export default function WorkshopParticipant(){
     {lastEval&&<><section className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><div><strong>{lastEval.passed?(level===3?"اكتمل مسار تطوير المنتج":"تم اجتياز المستوى "+level):"طوّر المنتج ثم أعد التقييم"}</strong><span>المتوسط {lastEval.average_score} / 6 • المطلوب {lastEval.required_average ?? (level===1?4:level===2?4.5:5)} • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span>{lastEval.previous_average!==null&&<small>المحاولة السابقة {Number(lastEval.previous_average).toFixed(1)} • التغير {lastEval.improvement>0?"+":""}{lastEval.improvement}</small>}</div>{lastEval.passed&&level<3&&<button className="primaryButton noPrint" onClick={openNextLevel}>فتح المستوى {lastEval.next_level} <ArrowLeft size={16}/></button>}</section><section className="developmentReport"><div className="developmentHead"><div><span className="sectionKicker">تقرير التطوير</span><h2>ماذا تقول البطاقة عن منتجك؟</h2></div><strong>{rubricAnalysis.average}<small>/6</small></strong></div><div className="axisAnalysis">{rubricAnalysis.sections.map(s=><div key={s.name}><span>{s.name}</span><div><i style={{width:(s.average/6)*100+"%"}}/></div><b>{s.average}</b></div>)}</div><div className="developmentInsights">{rubricAnalysis.strongest&&<article className="strengthInsight"><span>نقطة قوة</span><b>{rubricAnalysis.strongest.section}{rubricAnalysis.strongest.subsection?" • "+rubricAnalysis.strongest.subsection:""}</b><p>{rubricAnalysis.strongest.criterion_template}</p></article>}<article className="growthInsight"><span>أولوية التطوير قبل المحاولة التالية</span>{rubricAnalysis.weakest.map(r=><div key={r.id}><b>{rubricScores[r.id]}/6</b><p>{r.criterion_template}</p><small>{developmentAdvice(r)}</small></div>)}</article></div>{!lastEval.passed&&<div className="retryPlan"><Sparkles size={18}/><div><b>خطة المحاولة القادمة</b><span>ابدأ بالمعايير الثلاثة الأقل درجة، عدّل المنتج فعليًا، ثم أعد التقييم. الهدف ليس رفع الرقم فقط؛ بل رؤية أثر التحسين في المنتج نفسه.</span></div></div>}</section></>}
     <div className="evaluationActions noPrint">
       {participantProduct?.status==="completed"?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتمل المستوى الثالث — انتقل إلى تشخيص الفصل <ArrowLeft size={17}/></button>:<button className="primaryButton" disabled={busy||!!lastEval?.passed} onClick={submitLevel}>{lastEval&&!lastEval.passed?"إعادة تقييم المستوى "+level:"تقييم المستوى "+level}</button>}
-      <button className="outlineButton" onClick={printRubric}><Download size={16}/> تصدير البطاقة PDF</button><button className="outlineButton" onClick={()=>setStage("products")}>تغيير المنتج</button>
+      <button className="outlineButton" onClick={openJourney}><BarChart3 size={16}/> سجل رحلة المنتج</button><button className="outlineButton" onClick={printRubric}><Download size={16}/> تصدير البطاقة PDF</button><button className="outlineButton" onClick={()=>setStage("products")}>تغيير المنتج</button>
     </div>
     {notice&&<div className="loginMessage noPrint">{notice}</div>}
+  </main>;
+
+  if(stage==="journey"&&journey) return <main className="workshopPage productJourneyPage">
+    <header className="workshopTop journeyTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>رحلة {selectedProduct?.product_name}</b><small>سجل التطوير والمحاولات</small></div></div><div className="journeyTopActions noPrint"><button className="outlineButton" onClick={()=>setStage("evaluate")}><ArrowRight size={16}/> البطاقة</button><button className="outlineButton" onClick={()=>window.print()}><Download size={16}/> PDF</button></div></header>
+    <section className="journeyHero"><div><span className="sectionKicker">أثر التطوير عبر الزمن</span><h1>من أول محاولة… إلى النسخة الأقوى.</h1><p>هذا السجل لا يعرض درجة نهائية فقط؛ بل يوثق كيف تطور المنتج مع التغذية الراجعة وارتفاع مستوى التحدي.</p></div><div className="journeySummary"><div><span>المحاولات</span><b>{journey.summary.attempts_count}</b></div><div><span>البداية</span><b>{journey.summary.first_average??"—"}<small>/6</small></b></div><div><span>الأحدث</span><b>{journey.summary.latest_average??"—"}<small>/6</small></b></div><div className={(journey.summary.total_improvement??0)>=0?"positive":"negative"}><span>التغير</span><b>{journey.summary.total_improvement!==null?(journey.summary.total_improvement>0?"+":"")+journey.summary.total_improvement:"—"}</b></div></div></section>
+    <section className="journeyLevels">{[1,2,3].map(l=>{const ats=journey.attempts.filter((a:any)=>a.level_no===l);const latest=ats[ats.length-1];return <article key={l} className={latest?.passed?"levelComplete":ats.length?"levelTried":""}><div className="journeyLevelNo">L{l}</div><div><span>{l===1?"الأساس":l===2?"الإتقان":"الاحتراف"}</span><b>{ats.length?ats.length+" محاولة":"لم يبدأ"}</b></div>{latest&&<strong>{latest.average_score}<small>/6</small></strong>}</article>})}</section>
+    <section className="journeyTimeline"><div className="journeySectionHead"><span className="sectionKicker">الخط الزمني</span><h2>محاولات التطوير</h2></div>{journey.attempts.length===0?<div className="emptyJourney">لم تُسجل محاولات بعد.</div>:journey.attempts.map((a:any,i:number)=><article key={a.id} className="journeyAttempt"><div className="attemptRail"><span>{i+1}</span><i/></div><div className="attemptCard"><div className="attemptHead"><div><span>المحاولة {i+1} • المستوى {a.level_no}</span><b>{new Date(a.created_at).toLocaleDateString("ar-SA")}</b></div><strong className={a.passed?"passed":"retry"}>{a.average_score}<small>/6</small></strong></div><div className="attemptAxes">{(a.sections??[]).map((s:any)=><div key={s.section}><span>{s.section}</span><div><i style={{width:(s.average/6)*100+"%"}}/></div><b>{s.average}</b></div>)}</div>{a.feedback&&<p className="attemptFeedback"><b>ملاحظات التطوير:</b> {a.feedback}</p>}<div className="attemptStatus">{a.passed?<><CheckCircle2 size={15}/> اجتاز هذا المستوى</>:<>يحتاج تطويرًا ثم إعادة المحاولة</>}</div></div></article>)}</section>
+    {journey.attempts.length>1&&<section className="beforeAfter"><div><span>البداية</span><strong>{journey.summary.first_average}<small>/6</small></strong></div><ArrowLeft size={25}/><div className="after"><span>أحدث محاولة</span><strong>{journey.summary.latest_average}<small>/6</small></strong></div><div className="beforeAfterMessage"><b>{(journey.summary.total_improvement??0)>0?"التحسن أصبح مرئيًا.":"التطوير عملية مستمرة."}</b><span>{(journey.summary.total_improvement??0)>0?"ارتفع متوسط المنتج "+journey.summary.total_improvement+" نقطة منذ أول محاولة.":"راجع سجل المحاولات وحدد أين يحتاج المنتج إلى تدخل جديد."}</span></div></section>}
+    <div className="journeyActions noPrint"><button className="outlineButton" onClick={()=>setStage("evaluate")}><ArrowRight size={16}/> العودة للبطاقة</button>{journey.summary.completed?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتملت رحلة المنتج — تابع الورشة <ArrowLeft size={16}/></button>:<button className="primaryButton" onClick={()=>setStage("evaluate")}>واصل تطوير المنتج <ArrowLeft size={16}/></button>}</div>
   </main>;
 
   if(stage==="diagnosis") return <main className="workshopPage learningLabPage">
