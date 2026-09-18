@@ -71,6 +71,7 @@ export default function WorkshopParticipant(){
   const [rubricScores,setRubricScores]=useState<Record<string,number>>({});
   const [rubricFeedback,setRubricFeedback]=useState("");
   const [lastEval,setLastEval]=useState<any>(null);
+  const [levelTransition,setLevelTransition]=useState<number|null>(null);
   const [lessonNote,setLessonNote]=useState("");
   const [applicationSent,setApplicationSent]=useState(false);
 
@@ -175,14 +176,44 @@ export default function WorkshopParticipant(){
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر حفظ التقييم.")}finally{setBusy(false)}
   }
 
-  async function openNextLevel(){
+  function openNextLevel(){
     if(!lastEval?.passed || !lastEval?.next_level) return;
-    const next=lastEval.next_level;
+    setLevelTransition(lastEval.next_level);
+  }
+
+  async function enterNextLevel(){
+    if(!levelTransition) return;
+    const next=levelTransition;
     setLevel(next);
     setLastEval(null);
     setNotice("");
-    await loadRubric(next,selectedProduct?.product_name);
+    setLevelTransition(null);
+    await loadRubric(next,selectedProduct?.product_name,selectedProduct?.product_id);
   }
+
+  const levelShift=levelTransition===2?{
+    eyebrow:"من التأسيس إلى الإتقان",
+    title:"لقد تغيّر سقف التحدي.",
+    lead:"في المستوى الأول كنت تتحقق من سلامة الأساس. الآن لن يكفي أن يكون المنتج صحيحًا؛ المطلوب أن يصبح أكثر تنظيمًا وعمقًا واتساقًا.",
+    threshold:"4.5",
+    moves:[
+      ["المحتوى","من صحيح ومفهوم","إلى دقيق، أعمق، ومنظم"],
+      ["العرض","من استيفاء المتطلبات","إلى تنفيذ متقن يخدم الغرض مباشرة"],
+      ["الإبداع","من فكرة جديدة","إلى ظهور رؤيتك الشخصية وحماسك"],
+      ["التأمل","من وصف ما حدث","إلى تحليل التعلم والتحسينات القادمة"]
+    ]
+  }:levelTransition===3?{
+    eyebrow:"من الإتقان إلى الاحتراف",
+    title:"الآن لا نبحث عن منتج جيد فقط.",
+    lead:"المستوى الثالث يرفع التوقعات إلى معالجة احترافية: تفاصيل أشمل، فهم أعمق، اتساق أعلى، وصوت شخصي وتأمل قادر على استشراف التطوير القادم.",
+    threshold:"5.0",
+    moves:[
+      ["المحتوى","من الدقة والتنظيم","إلى الشمول وسبر أغوار الموضوع"],
+      ["العرض","من تنفيذ متقن","إلى معالجة احترافية تعزز فهم المتلقي"],
+      ["الإبداع","من رؤية شخصية","إلى رؤية متميزة وشغف فريد في الإنتاج"],
+      ["التأمل","من تحليل التجربة","إلى تقويمها وبناء روابط مستقبلية مستنيرة"]
+    ]
+  }:null;
 
   const rubricAnalysis=useMemo(()=>{
     if(!rubric.length) return {sections:[] as {name:string;average:number}[],strongest:null as Rubric|null,weakest:[] as Rubric[],answered:0,average:0};
@@ -271,6 +302,14 @@ export default function WorkshopParticipant(){
     <div className="productChoiceHint"><UsersRound size={18}/><div><b>فكر بالمنتج أولًا، ثم بالدور.</b><span>مثال: صاحب البصمة الكتابية يمكنه اختيار «فيلم» ويكون دوره كتابة السيناريو أو توثيق المحتوى، بينما يكمل زملاؤه الأدوار البصرية والتقنية والأدائية.</span></div></div>
     <section className="productGrid allProductGrid">{visibleProducts.map((p:any)=><article key={p[0]} className={"productCard "+(topCodes.includes(p[2] as StyleCode)?"directFit":"")}><div className="productCardTop"><span className="productCode">{p[0]}</span>{topCodes.includes(p[2] as StyleCode)&&<span className="recommendedTag">قريب من بصمتك</span>}</div><h2>{p[1]}</h2><p>{fitLabel(p)}</p><div className="productRole"><span>دورك المقترح وفق بصمتك</span><b>{roleFor(p)}</b></div><button className="outlineButton" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button></article>)}</section>
     {notice&&<div className="loginMessage">{notice}</div>}
+  </main>;
+
+  if(stage==="evaluate"&&levelShift) return <main className="workshopPage levelTransitionPage">
+    <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>{selectedProduct?.product_name}</b><small>مسار تطوير المنتج</small></div></div><span className="levelBadge">L{level} → L{levelTransition}</span></header>
+    <section className="transitionHero"><div className="transitionLevelMark"><span>المستوى التالي</span><strong>{levelTransition}</strong></div><div><span className="sectionKicker">{levelShift.eyebrow}</span><h1>{levelShift.title}</h1><p>{levelShift.lead}</p></div></section>
+    <section className="challengeShift"><div className="challengeShiftHead"><div><span className="sectionKicker">ما الذي تغيّر؟</span><h2>نفس المنتج… ولكن بمعيار أداء أعلى.</h2></div><div className="newThreshold"><span>متوسط العبور الجديد</span><b>{levelShift.threshold}<small>/6</small></b></div></div><div className="shiftGrid">{levelShift.moves.map(([axis,from,to])=><article key={axis}><span>{axis}</span><div><small>{from}</small><ArrowLeft size={15}/><b>{to}</b></div></article>)}</div></section>
+    <section className="transitionMessage"><Sparkles size={20}/><div><b>لا تبدأ من الصفر.</b><span>احتفظ بما أتقنته في النسخة السابقة، ووجّه جهدك إلى رفع العمق والجودة في المتطلبات الجديدة. هذه هي فكرة التطوير المتدرج للمنتج.</span></div></section>
+    <div className="transitionActions"><button className="outlineButton" onClick={()=>setLevelTransition(null)}><ArrowRight size={16}/> العودة لنتيجة المستوى {level}</button><button className="primaryButton" onClick={enterNextLevel}>ابدأ المستوى {levelTransition} <ArrowLeft size={17}/></button></div>
   </main>;
 
   if(stage==="evaluate") return <main className="workshopPage evaluationPage">
