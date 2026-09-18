@@ -69,6 +69,7 @@ export default function WorkshopParticipant(){
   const [level,setLevel]=useState(1);
   const [rubric,setRubric]=useState<Rubric[]>([]);
   const [rubricScores,setRubricScores]=useState<Record<string,number>>({});
+  const [rubricFeedback,setRubricFeedback]=useState("");
   const [lastEval,setLastEval]=useState<any>(null);
   const [lessonNote,setLessonNote]=useState("");
   const [applicationSent,setApplicationSent]=useState(false);
@@ -139,16 +140,17 @@ export default function WorkshopParticipant(){
       setSelectedProduct(d.product);
       setParticipantProduct(d.participant_product);
       setLevel(d.participant_product.current_level);
-      await loadRubric(d.participant_product.current_level,d.product.product_name);
+      await loadRubric(d.participant_product.current_level,d.product.product_name,d.product.product_id);
       setStage("evaluate");
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر اختيار المنتج.")}finally{setBusy(false)}
   }
 
-  async function loadRubric(lvl:number,productName?:string){
-    const d=await api("rubric",{participant_token:token,level_no:lvl,product_id:selectedProduct?.product_id});
+  async function loadRubric(lvl:number,productName?:string,productId?:string){
+    const d=await api("rubric",{participant_token:token,level_no:lvl,product_id:productId??selectedProduct?.product_id});
     const rows=(d.rubric??[]).map((r:Rubric)=>({...r,criterion_template:r.criterion_template.replaceAll("{product}",productName??selectedProduct?.product_name??"المنتج")}));
     setRubric(rows);
     setRubricScores({});
+    setRubricFeedback("");
   }
 
   async function submitLevel(){
@@ -159,7 +161,8 @@ export default function WorkshopParticipant(){
         participant_token:token,
         participant_product_id:participantProduct.id,
         level_no:level,
-        scores:rubric.map(r=>({rubric_template_id:r.id,score:rubricScores[r.id]}))
+        scores:rubric.map(r=>({rubric_template_id:r.id,score:rubricScores[r.id]})),
+        feedback:rubricFeedback||null
       });
       setLastEval(d);
       if(d.passed){
@@ -251,7 +254,7 @@ export default function WorkshopParticipant(){
     <section className="evaluationHero"><div><span className="sectionKicker">مسار تطوير المنتج</span><h1>{level===1?"المستوى الأول — ابنِ الأساس":level===2?"المستوى الثاني — ارفع مستوى الإتقان":"المستوى الثالث — اصنع النسخة الاحترافية"}</h1><p>طبّق البطاقة إلكترونيًا على منتجك الحالي. يمكنك كذلك تصدير البطاقة PDF وطباعتها قبل أو بعد التعبئة.</p><div className="passRule"><b>شرط العبور:</b> متوسط لا يقل عن {level===1?"4.0":level===2?"4.5":"5.0"} من 6، مع اجتياز جميع المعايير الجوهرية.</div></div><div className="levelJourney"><span className={level>=1?"done":""}>1</span><i/><span className={level>=2?"done":""}>2</span><i/><span className={level>=3?"done":""}>3</span></div></section>
     <section className="rubricPrintMeta"><div><span>المنتج</span><b>{selectedProduct?.product_name}</b></div><div><span>المشارك</span><b>{name}</b></div><div><span>المستوى</span><b>{level} من 3</b></div><div><span>التاريخ</span><b>{new Date().toLocaleDateString("ar-SA")}</b></div></section>
     <section className="rubricList">{rubric.map((r,index)=><article key={r.id} className={"rubricCriterion "+(r.essential?"essential":"")}><div className="criterionIndex">{index+1}</div><div className="criterionText"><div><span>{r.section}{r.subsection?" • "+r.subsection:""}</span>{r.essential&&<em>جوهري</em>}</div><p>{r.criterion_template}</p></div><div className="rubricScale">{[0,1,2,3,4,5,6].map(v=><button key={v} className={rubricScores[r.id]===v?"selected":""} onClick={()=>setRubricScores(s=>({...s,[r.id]:v}))}>{v}</button>)}</div></article>)}</section>
-    <div className="performanceLegend"><span><b>0–1</b> يحتاج بناء</span><span><b>2–3</b> في طور التطور</span><span><b>4</b> إتقان</span><span><b>5</b> متقدم</span><span><b>6</b> احتراف</span></div>
+    <label className="rubricComments"><span>تعليقات وملاحظات التطوير</span><textarea value={rubricFeedback} onChange={e=>setRubricFeedback(e.target.value)} placeholder="دوّن ما الذي نجح في المنتج، وما الذي يحتاج إلى تطوير قبل المحاولة التالية."/></label><div className="performanceLegend"><span><b>0</b> ضعيف</span><span><b>1</b> متأخر</span><span><b>2</b> مبتدئ</span><span><b>3</b> متطور</span><span><b>4</b> إتقان</span><span><b>5</b> متقدم</span><span><b>6</b> احتراف</span></div>
     {lastEval&&<section className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><div><strong>{lastEval.passed?(level===3?"اكتمل مسار تطوير المنتج":"تم اجتياز المستوى "+level):"طوّر المنتج ثم أعد التقييم"}</strong><span>المتوسط {lastEval.average_score} / 6 • المطلوب {lastEval.required_average ?? (level===1?4:level===2?4.5:5)} • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span></div>{lastEval.passed&&level<3&&<button className="primaryButton noPrint" onClick={openNextLevel}>فتح المستوى {lastEval.next_level} <ArrowLeft size={16}/></button>}</section>}
     <div className="evaluationActions noPrint">
       {participantProduct?.status==="completed"?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتمل المستوى الثالث — انتقل إلى تشخيص الفصل <ArrowLeft size={17}/></button>:<button className="primaryButton" disabled={busy||!!lastEval?.passed} onClick={submitLevel}>{lastEval&&!lastEval.passed?"إعادة تقييم المستوى "+level:"تقييم المستوى "+level}</button>}
