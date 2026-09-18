@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, BookOpenCheck, Building2, CheckCircle2, GraduationCap,
-  LayoutDashboard, Plus, School, Sparkles, UserPlus, UsersRound
+  LayoutDashboard, Plus, School, ShieldCheck, Sparkles, UserPlus, UsersRound
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -26,14 +26,13 @@ export default function AdminPage() {
   const [programAudience, setProgramAudience] = useState("المعلمون");
   const [deliveryMode, setDeliveryMode] = useState("blended");
 
-  const [inviteName, setInviteName] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("teacher");
-  const [inviteOrg, setInviteOrg] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountPassword, setAccountPassword] = useState("");
+  const [accountRole, setAccountRole] = useState("teacher");
+  const [accountOrg, setAccountOrg] = useState("");
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  useEffect(() => { refresh(); }, []);
 
   async function refresh() {
     try {
@@ -51,7 +50,7 @@ export default function AdminPage() {
       setProfile(p as Profile | null);
       setOrgs((o ?? []) as Org[]);
       setPrograms((pr ?? []) as Program[]);
-      if (!inviteOrg && o?.[0]?.id) setInviteOrg(o[0].id);
+      if (!accountOrg && o?.[0]?.id) setAccountOrg(o[0].id);
     } catch {
       setNotice("تعذر تحميل بيانات الإدارة.");
     }
@@ -105,36 +104,45 @@ export default function AdminPage() {
     } finally { setBusy(false); }
   }
 
-  async function inviteUser(e: FormEvent) {
+  async function createAccount(e: FormEvent) {
     e.preventDefault();
-    if (!inviteEmail || !inviteName || !inviteOrg) return;
+    if (!accountEmail || !accountName || !accountPassword) return;
+    if (accountRole !== "platform_admin" && !accountOrg) {
+      setNotice("اختر جهة للحساب.");
+      return;
+    }
+
     setBusy(true); setNotice("");
     try {
       const supabase = getSupabaseBrowserClient();
       const { data, error } = await supabase.functions.invoke("invite-platform-user", {
         body: {
-          email: inviteEmail,
-          full_name: inviteName,
-          role: inviteRole,
-          organization_id: inviteOrg
+          email: accountEmail,
+          password: accountPassword,
+          full_name: accountName,
+          role: accountRole,
+          organization_id: accountRole === "platform_admin" ? null : accountOrg
         }
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setInviteName(""); setInviteEmail("");
-      setNotice("تم إرسال دعوة الحساب وربطه بالجهة.");
+
+      setAccountName("");
+      setAccountEmail("");
+      setAccountPassword("");
+      setNotice("تم إنشاء الحساب. يمكن للمستخدم الدخول مباشرة بالبريد الإلكتروني وكلمة المرور.");
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : "تعذر إرسال الدعوة.");
+      setNotice(e instanceof Error ? e.message : "تعذر إنشاء الحساب.");
     } finally { setBusy(false); }
   }
 
   if (!profile) {
     return (
       <main className="adminGate">
-        <div className="adminGateCard">
-          <div className="brandSymbol">T7</div>
-          <h1>إدارة منصة T7IQ</h1>
-          <p>سجّل الدخول بحساب مدير المنصة للوصول إلى إدارة الورش والمدارس والمعلمين.</p>
+        <div className="adminGateCard refinedGate">
+          <div className="differenceMark"><span>ت</span></div>
+          <h1>إدارة «التمايز»</h1>
+          <p>سجّل الدخول بحساب مدير المنصة للوصول إلى البرامج والمدارس والحسابات.</p>
           <Link className="primaryButton" href="/login">تسجيل الدخول <ArrowLeft size={17}/></Link>
         </div>
       </main>
@@ -144,48 +152,51 @@ export default function AdminPage() {
   if (!canManage) {
     return (
       <main className="adminGate">
-        <div className="adminGateCard">
+        <div className="adminGateCard refinedGate">
           <CheckCircle2 size={32}/>
           <h1>الحساب متصل</h1>
           <p>هذا الحساب لا يملك صلاحية مدير المنصة.</p>
-          <Link className="outlineButton" href="/">العودة للمنصة</Link>
+          <Link className="outlineButton" href="/">العودة</Link>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="adminPage">
-      <header className="adminHeader">
-        <div>
-          <span className="sectionKicker">T7IQ PLATFORM CONTROL</span>
-          <h1>مركز إدارة المنصة</h1>
-          <p>أنشئ البرنامج التدريبي، ثم الجهة والمعلمين، وبعدها تبدأ رحلة التطبيق داخل الفصول.</p>
+    <main className="adminPage refinedAdminPage">
+      <header className="adminHeader premiumAdminHeader">
+        <div className="adminBrandLine">
+          <div className="differenceMark small"><span>ت</span></div>
+          <div>
+            <span className="sectionKicker">إدارة منصة التمايز</span>
+            <h1>مركز القيادة</h1>
+            <p>ابدأ من البرنامج التدريبي، أنشئ المدارس والحسابات، ثم تابع رحلة التطبيق طوال العام.</p>
+          </div>
         </div>
         <Link href="/" className="outlineButton">واجهة المعلم</Link>
       </header>
 
       {notice && <div className="adminNotice">{notice}</div>}
 
-      <section className="adminStats">
+      <section className="adminStats premiumStats">
         <article><Building2 size={20}/><div><strong>{orgs.length}</strong><span>جهة ومدرسة</span></div></article>
         <article><GraduationCap size={20}/><div><strong>{programs.length}</strong><span>برنامج تدريبي</span></div></article>
-        <article><UsersRound size={20}/><div><strong>—</strong><span>المعلمون المشاركون</span></div></article>
-        <article><LayoutDashboard size={20}/><div><strong>عام</strong><span>رحلة تطبيق ممتدة</span></div></article>
+        <article><UsersRound size={20}/><div><strong>نشط</strong><span>إدارة الحسابات</span></div></article>
+        <article><ShieldCheck size={20}/><div><strong>آمن</strong><span>صلاحيات حسب الدور</span></div></article>
       </section>
 
-      <section className="adminJourney">
-        <div className="journeyStep active"><span>1</span><b>البرنامج التدريبي</b><small>صمم الورشة ومسار الاجتياز</small></div>
+      <section className="adminJourney premiumJourney">
+        <div className="journeyStep active"><span>1</span><b>البرنامج التدريبي</b><small>بناء الورشة ومسار الاجتياز</small></div>
         <div className="journeyLine"/>
-        <div className="journeyStep"><span>2</span><b>الجهات والمعلمون</b><small>مدرسة كاملة أو معلم مستقل</small></div>
+        <div className="journeyStep"><span>2</span><b>الجهات والحسابات</b><small>مدرسة أو معلم مستقل</small></div>
         <div className="journeyLine"/>
         <div className="journeyStep"><span>3</span><b>الفصول والتشخيص</b><small>بيانات التعلم وخريطة الإتقان</small></div>
         <div className="journeyLine"/>
-        <div className="journeyStep"><span>4</span><b>التطبيق السنوي</b><small>درس، تنفيذ، أثر، توصية جديدة</small></div>
+        <div className="journeyStep"><span>4</span><b>التطبيق</b><small>درس، تنفيذ، أثر، توصية جديدة</small></div>
       </section>
 
-      <section className="adminGrid">
-        <article className="adminCard">
+      <section className="adminGrid refinedAdminGrid">
+        <article className="adminCard premiumCard">
           <div className="adminCardHead">
             <div className="iconBadge mint"><GraduationCap size={20}/></div>
             <div><span>المرحلة الأولى</span><h2>إنشاء برنامج / ورشة</h2></div>
@@ -194,15 +205,15 @@ export default function AdminPage() {
             <label>اسم البرنامج<input value={programTitle} onChange={e=>setProgramTitle(e.target.value)} placeholder="مثال: التمايز في الفصل" required/></label>
             <label>الفئة المستهدفة<input value={programAudience} onChange={e=>setProgramAudience(e.target.value)} /></label>
             <label>نمط التنفيذ<select value={deliveryMode} onChange={e=>setDeliveryMode(e.target.value)}><option value="blended">مدمج</option><option value="in_person">حضوري</option><option value="online">عن بعد</option></select></label>
-            <button className="primaryButton" disabled={busy}><Plus size={17}/> إنشاء كمسودة</button>
+            <button className="primaryButton" disabled={busy}><Plus size={17}/> إنشاء البرنامج</button>
           </form>
           <div className="adminMiniList">
             {programs.slice(0,4).map(p=><div key={p.id}><BookOpenCheck size={16}/><div><b>{p.title}</b><span>{p.status === "draft" ? "مسودة" : p.status}</span></div></div>)}
-            {programs.length === 0 && <p>لا توجد برامج بعد. ابدأ بإنشاء البرنامج الأول.</p>}
+            {programs.length === 0 && <p>ابدأ بإنشاء البرنامج الأول.</p>}
           </div>
         </article>
 
-        <article className="adminCard">
+        <article className="adminCard premiumCard">
           <div className="adminCardHead">
             <div className="iconBadge blue"><School size={20}/></div>
             <div><span>المرحلة الثانية</span><h2>إنشاء جهة / مدرسة</h2></div>
@@ -218,27 +229,53 @@ export default function AdminPage() {
           </div>
         </article>
 
-        <article className="adminCard wideCard">
+        <article className="adminCard premiumCard wideCard accountCreatorCard">
           <div className="adminCardHead">
             <div className="iconBadge peachIcon"><UserPlus size={20}/></div>
-            <div><span>إدارة الوصول</span><h2>دعوة مدير مدرسة أو معلم</h2></div>
+            <div><span>إدارة الحسابات</span><h2>إنشاء حساب جديد</h2></div>
           </div>
-          <form onSubmit={inviteUser} className="adminForm inviteForm">
-            <label>الاسم<input value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="الاسم الكامل" required/></label>
-            <label>البريد<input type="email" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="name@example.com" required/></label>
-            <label>الدور<select value={inviteRole} onChange={e=>setInviteRole(e.target.value)}><option value="teacher">معلم</option><option value="school_admin">مدير مدرسة</option><option value="trainer">مدرب</option><option value="supervisor">مشرف</option></select></label>
-            <label>الجهة<select value={inviteOrg} onChange={e=>setInviteOrg(e.target.value)} required><option value="">اختر الجهة</option>{orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}</select></label>
-            <button className="primaryButton" disabled={busy || orgs.length===0}><UserPlus size={17}/> إرسال الدعوة</button>
+
+          <div className="accountCreatorIntro">
+            <div>
+              <b>بسيطة ومباشرة</b>
+              <p>الاسم + البريد الإلكتروني + كلمة المرور + الدور. بعدها يستطيع المستخدم الدخول فورًا.</p>
+            </div>
+            <span>لا دعوات بريدية</span>
+          </div>
+
+          <form onSubmit={createAccount} className="adminForm accountForm">
+            <label>الاسم<input value={accountName} onChange={e=>setAccountName(e.target.value)} placeholder="الاسم الكامل" required/></label>
+            <label>البريد الإلكتروني<input type="email" value={accountEmail} onChange={e=>setAccountEmail(e.target.value)} placeholder="name@example.com" required/></label>
+            <label>كلمة المرور<input type="password" minLength={8} value={accountPassword} onChange={e=>setAccountPassword(e.target.value)} placeholder="8 أحرف على الأقل" required/></label>
+            <label>الدور<select value={accountRole} onChange={e=>setAccountRole(e.target.value)}>
+              <option value="teacher">معلم</option>
+              <option value="school_admin">مدير مدرسة</option>
+              <option value="trainer">مدرب</option>
+              <option value="supervisor">مشرف</option>
+              <option value="platform_admin">مدير منصة</option>
+            </select></label>
+
+            {accountRole !== "platform_admin" && (
+              <label>الجهة<select value={accountOrg} onChange={e=>setAccountOrg(e.target.value)} required>
+                <option value="">اختر الجهة</option>
+                {orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}
+              </select></label>
+            )}
+
+            <button className="primaryButton createAccountButton" disabled={busy || (accountRole !== "platform_admin" && orgs.length===0)}>
+              <UserPlus size={17}/> إنشاء الحساب
+            </button>
           </form>
-          <div className="adminHint"><Sparkles size={17}/><p>بعد تفعيل الحساب يمكن ربط المعلم بالبرنامج التدريبي. وعند استيفاء شرط الاجتياز تُفتح له رحلة التطبيق السنوية.</p></div>
+
+          <div className="adminHint"><Sparkles size={17}/><p>بعد إنشاء الحساب يمكن ربط المعلم بالبرنامج التدريبي، ثم تفعيل رحلة التطبيق بعد استيفاء شروط البرنامج.</p></div>
         </article>
       </section>
 
-      <section className="adminNext">
+      <section className="adminNext refinedNext">
         <div>
-          <span className="sectionKicker">التالي في البناء</span>
+          <span className="sectionKicker">المحطة التالية</span>
           <h2>الفصول → التشخيص → خريطة الإتقان</h2>
-          <p>بعد تثبيت البرنامج والجهات والحسابات، تصبح شاشة التشخيص مرتبطة تلقائيًا بالمعلم وفصله ومادته.</p>
+          <p>عند اكتمال الحسابات والفصول، ستبني «التمايز» خطط التعلم اعتمادًا على بيانات الطلاب الفعلية.</p>
         </div>
         <span className="nextTag">Learning Intelligence</span>
       </section>
