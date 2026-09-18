@@ -257,3 +257,44 @@ body{
   .accountForm{grid-template-columns:1fr}
   .platformBrand b{font-size:22px}
 }
+
+/* ===== Public landing — Al-Tamayoz ===== */
+.homeLoading{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#f8fbfc;color:var(--ink)}
+.homeLoading b{font-size:24px}.homeLoading>span:last-child{font-size:11px;color:var(--muted)}
+
+.publicHome{min-height:100vh;background:
+  radial-gradient(circle at 90% 8%,rgba(76,171,157,.13),transparent 23%),
+  radial-gradient(circle at 8% 24%,rgba(101,156,218,.09),transparent 22%),
+  #fbfdfd;color:var(--ink);overflow:hidden}
+.publicNav{max-width:1280px;margin:auto;padding:20px 28px;display:flex;align-items:center;justify-content:space-between}
+.navLogin{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--brand);font-size:12px;font-weight:800;padding:9px 13px;border:1px solid #d9e9e7;border-radius:12px;background:rgba(255,255,255,.78);backdrop-filter:blur(8px)}
+.publicHero{max-width:1280px;margin:auto;min-height:620px;padding:52px 28px 70px;display:grid;grid-template-columns:1.05fr .95fr;gap:65px;align-items:center}
+.publicHeroCopy{max-width:680px}
+.publicHeroCopy h1{font-size:52px;line-height:1.35;letter-spacing:-2px;margin:18px 0 17px;font-weight:900;color:#1e3948}
+.publicHeroCopy h1 em{font-style:normal;color:var(--brand)}
+.publicHeroCopy>p{font-size:15px;line-height:2;color:#687d89;max-width:650px;margin:0}
+.publicHeroActions{display:flex;gap:10px;margin-top:26px}.publicHeroActions a{text-decoration:none}
+.heroLogin{padding:13px 19px}.heroOutline{display:inline-flex;align-items:center;justify-content:center;padding:13px 19px}
+.heroTrust{display:flex;flex-wrap:wrap;gap:18px;margin-top:23px;color:#718590;font-size:10px}.heroTrust span{display:flex;align-items:center;gap:5px}.heroTrust svg{color:var(--brand)}
+
+.publicVisual{position:relative;min-height:460px;display:grid;place-items:center}
+.visualGlow{position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,#dff4ee 0,rgba(227,243,250,.65) 53%,transparent 71%);filter:blur(1px)}
+.lessonPreview{position:relative;width:min(470px,100%);background:rgba(255,255,255,.94);border:1px solid #e0ecee;border-radius:29px;padding:22px;box-shadow:0 35px 80px rgba(47,87,102,.13);transform:rotate(-1.4deg)}
+.lessonPreview:before{content:"";position:absolute;right:28px;top:-12px;width:95px;height:7px;border-radius:999px;background:linear-gradient(90deg,#55ac9f,#7fa8dd);opacity:.65}
+.previewHead{display:flex;justify-content:space-between;align-items:center;padding-bottom:17px;border-bottom:1px solid #edf2f4}.previewHead span,.previewHead b{display:block}.previewHead span{font-size:10px;color:var(--muted)}.previewHead b{font-size:20px;margin-top:4px}.previewScore{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--brand) 76%,#edf2f2 0);position:relative;font-weight:900;color:#2a5f5b}.previewScore:after{content:"";position:absolute;inset:7px;border-radius:50%;background:#fff}.previewScore{font-size:13px}.previewScore{isolation:isolate}.previewScore:before{content:"76%";position:absolute;z-index:2}
+.previewGroups{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}.previewGroups>div{padding:12px;border-radius:14px}.previewGroups>div:nth-child(1){background:#fff2e9}.previewGroups>div:nth-child(2){background:#ebf8f2}.previewGroups>div:nth-child(3){background:#f3efff}.previewGroups span,.previewGroups b{display:block}.previewGroups span{font-size:9px;color:#70818d}.previewGroups b{font-size:19px;margin-top:4px}
+.previewDecision{display:flex;gap:9px;padding:13px;border-radius:15px;background:#f5faf9;align-items:flex-start}.previewDecision svg{color:var(--brand);flex:none}.previewDecision span,.previewDecision b{display:block}.previewDecision span{font-size:9px;color:var(--muted)}.previewDecision b{font-size:11px;line-height:1.6;margin-top:2px}
+.previewSteps{display:flex;align-items:center;gap:8px;margin-top:17px;color:#607581;font-size:9px}.previewSteps i{height:1px;flex:1;background:#dce7e9}
+
+.publicJourneySection{padding:82px 28px;background:#fff;border-top:1px solid #edf2f3;border-bottom:1px solid #edf2f3}
+.sectionIntro{max-width:760px;margin:0 auto 34px;text-align:center}.sectionIntro h2{font-size:31px;margin:7px 0 8px}.sectionIntro p{font-size:12px;color:var(--muted);line-height:1.8;margin:0}
+.journeyCards{max-width:1180px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.journeyCards article{padding:21px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,#fff,#fbfdfd);position:relative}.journeyCards article>span{position:absolute;left:18px;top:18px;font-size:10px;color:#9aabb3;font-weight:800}.journeyIcon{width:43px;height:43px;border-radius:14px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center}.journeyCards h3{font-size:17px;margin:15px 0 6px}.journeyCards p{font-size:10px;color:var(--muted);line-height:1.8;margin:0}
+.publicRoles{max-width:1180px;margin:65px auto;padding:26px 28px;border-radius:26px;background:linear-gradient(135deg,#edf8f5,#eef5fb);display:flex;align-items:center;justify-content:space-between;gap:30px}.publicRoles h2{font-size:25px;margin:5px 0 7px}.publicRoles p{font-size:11px;color:var(--muted);margin:0}.roleChips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.roleChips span{display:flex;align-items:center;gap:6px;padding:9px 11px;background:#fff;border:1px solid rgba(139,174,181,.16);border-radius:999px;font-size:10px;color:#58707c}
+.publicFooter{max-width:1280px;margin:auto;padding:25px 28px 34px;display:flex;justify-content:space-between;align-items:center;color:#8b9ba5;font-size:10px}.platformBrand.compact b{font-size:16px}.platformBrand.compact small{font-size:9px}
+
+@media(max-width:900px){
+  .publicHero{grid-template-columns:1fr;gap:30px;padding-top:35px}.publicHeroCopy{max-width:none;text-align:center}.publicHeroCopy h1{font-size:43px}.publicHeroCopy>p{margin:auto}.publicHeroActions,.heroTrust{justify-content:center}.publicVisual{min-height:390px}.publicJourneySection{padding:58px 20px}.journeyCards{grid-template-columns:1fr 1fr}.publicRoles{margin:45px 20px}.lessonPreview{transform:none}
+}
+@media(max-width:560px){
+  .publicNav{padding:14px 16px}.publicNav .platformBrand small{display:none}.publicHero{padding:38px 16px 52px;min-height:auto}.publicHeroCopy h1{font-size:34px;letter-spacing:-1px}.publicHeroCopy>p{font-size:12px}.publicHeroActions{display:grid;grid-template-columns:1fr}.heroTrust{gap:10px;font-size:9px}.publicVisual{min-height:330px}.lessonPreview{padding:16px;border-radius:22px}.previewGroups{gap:5px}.previewGroups>div{padding:9px 7px}.previewSteps{display:none}.journeyCards{grid-template-columns:1fr}.sectionIntro h2{font-size:25px}.publicRoles{display:block;margin:35px 14px;padding:21px}.roleChips{justify-content:flex-start;margin-top:16px}.publicFooter{padding:20px 16px;display:block}.publicFooter>span{display:block;margin-top:12px}.navLogin{font-size:10px}
+}
