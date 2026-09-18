@@ -149,9 +149,12 @@ Deno.serve(async (req: Request) => {
 
     if (action === "rubric") {
       const level = Number(body.level_no ?? 1);
-      const { data, error } = await db.from("product_rubric_templates")
-        .select("id,level_no,section,subsection,criterion_key,criterion_template,essential,min_score,max_score,sort_order")
-        .eq("level_no", level).order("sort_order");
+      const productId = body.product_id ? String(body.product_id) : null;
+      let rubricQuery = db.from("product_rubric_templates")
+        .select("id,level_no,section,subsection,criterion_key,criterion_template,essential,min_score,max_score,sort_order,product_id")
+        .eq("level_no", level);
+      if (productId) rubricQuery = rubricQuery.or(`product_id.eq.${productId},product_id.is.null`);
+      const { data, error } = await rubricQuery.order("product_id",{ascending:false,nullsFirst:false}).order("sort_order");
       if (error) throw error;
       return json({ rubric: data ?? [] });
     }
@@ -167,16 +170,22 @@ Deno.serve(async (req: Request) => {
       if (!pp) return json({ error: "product_selection_not_found" }, 404);
       if (level !== pp.current_level) return json({ error: "invalid_level" }, 400);
 
-      const { data: rubric } = await db.from("product_rubric_templates").select("id,essential").eq("level_no", level);
-      const rubricRows = rubric ?? [];
+      const { data: rubric } = await db.from("product_rubric_templates")
+        .select("id,essential,min_score,product_id")
+        .eq("level_no", level)
+        .or(`product_id.eq.${pp.product_id},product_id.is.null`)
+        .order("product_id",{ascending:false,nullsFirst:false});
+      const specificRows = (rubric ?? []).filter((r:any)=>r.product_id===pp.product_id);
+      const rubricRows = specificRows.length ? specificRows : (rubric ?? []).filter((r:any)=>!r.product_id);
       const allowed = new Set(rubricRows.map((r:any)=>r.id));
       const scoreMap = new Map(scores.filter((s:any)=>allowed.has(s.rubric_template_id)).map((s:any)=>[s.rubric_template_id, Number(s.score)]));
       if (scoreMap.size !== rubricRows.length) return json({ error: "all_criteria_required" }, 400);
 
       const values = rubricRows.map((r:any)=>scoreMap.get(r.id) ?? 0);
       const avg = values.reduce((a:number,b:number)=>a+b,0) / values.length;
-      const essentialPass = rubricRows.filter((r:any)=>r.essential).every((r:any)=>(scoreMap.get(r.id) ?? 0) >= 4);
-      const passed = avg >= 4 && essentialPass;
+      const essentialPass = rubricRows.filter((r:any)=>r.essential).every((r:any)=>(scoreMap.get(r.id) ?? 0) >= Number(r.min_score ?? 4));
+      const levelThreshold = level===1 ? 4 : level===2 ? 4.5 : 5;
+      const passed = avg >= levelThreshold && essentialPass;
 
       const { data: attempt, error: attemptError } = await db.from("product_evaluation_attempts").insert({
         participant_product_id: pp.id,
@@ -206,7 +215,7 @@ Deno.serve(async (req: Request) => {
         await db.from("participant_products").update({ current_level: nextLevel, status }).eq("id", pp.id);
       }
 
-      return json({ attempt, passed, average_score: Number(avg.toFixed(2)), essential_pass: essentialPass, next_level: nextLevel, status });
+      return json({ attempt, passed, average_score: Number(avg.toFixed(2)), essential_pass: essentialPass, required_average: levelThreshold, next_level: nextLevel, status });
     }
 
     if (action === "apply") {
