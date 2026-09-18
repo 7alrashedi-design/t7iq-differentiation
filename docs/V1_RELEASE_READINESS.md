@@ -23,3 +23,7 @@ GitHub Actions runs npm ci and npm run build on pushes and pull requests to main
 3. Trainer production access must use authenticated teacher/trainer UI; demo_summary intentionally rejects non-test sessions.
 4. Test mobile share and browser Save as PDF on target devices.
 5. Verify one end-to-end teacher account and one participant session before public launch.
+
+
+## Production redeploy marker
+- 2026-09-18: Force production redeploy after adding `/setup` and administrator bootstrap flow.
