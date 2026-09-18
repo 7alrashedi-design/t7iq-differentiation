@@ -86,7 +86,7 @@ export default function DashboardClient() {
           <Link href="/teacher/lab"><BookOpenCheck size={18}/> مختبر التمايز</Link>
           <Link href="/teacher/library"><GraduationCap size={18}/> مكتبتي</Link>
           <a><LineChart size={18}/> التقدم والأثر</a>
-          <a><GraduationCap size={18}/> مساري المهني</a>
+          <Link href="/teacher/growth"><GraduationCap size={18}/> مساري المهني</Link>
         </nav>
 
         <div className="expertNote">
