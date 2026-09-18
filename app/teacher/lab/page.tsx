@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import {ArrowLeft,BookOpenCheck,BrainCircuit,Boxes,GitCompareArrows,Grid3X3,Layers3,School,UsersRound} from "lucide-react";
+import {ArrowLeft,BookOpenCheck,BrainCircuit,Boxes,GitCompareArrows,Grid3X3,Layers3,Route,School,UsersRound} from "lucide-react";
 
 const tools=[
  {id:"tiering",icon:Layers3,title:"باني التدرج",tag:"الجاهزية",desc:"ابنِ مسارات متصاعدة في التحدي لنفس الهدف، دون تحويل التمايز إلى زيادة كمية العمل.",action:"ابدأ بناء L1 / L2 / L3",ready:true},
@@ -13,7 +13,7 @@ export default function DifferentiationLab(){
  return <main className="labPage">
   <header className="labTop"><Link href="/" className="labBack">العودة للحساب <ArrowLeft size={15}/></Link><div><b>التمايز</b><small>مختبر المعلم</small></div></header>
   <section className="labHero"><div><span>DIFFERENTIATION STUDIO</span><h1>مختبر التمايز</h1><p>حوّل قرار التمايز إلى أداة تعليمية قابلة للتطبيق، ثم احتفظ بها في حسابك وطورها مع أدلة تعلم طلابك.</p></div><div className="labFlow"><span>شخّص</span><i/><span>قرّر</span><i/><span>صمّم</span><i/><span>نفّذ</span><i/><span>تأمل</span></div></section>
-  <section className="labQuestion"><School size={22}/><div><span>ابدأ من القرار، لا من الأداة</span><h2>ما الذي يحتاج إلى التمايز في هذا الدرس؟</h2><div><button>الجاهزية</button><button>عمق التفكير</button><button>المحتوى</button><button>العملية</button><button>المنتج</button><button>إدارة التنفيذ</button></div></div></section>
+  <section className="labWizardCta"><div><Route size={22}/><div><span>لا تعرف من أين تبدأ؟</span><h2>ابنِ مسار درس متمايز من بيانات طلابك.</h2><p>المعالج يساعدك على اختيار الأداة المناسبة للحاجة بدل البدء باستراتيجية عشوائية.</p></div></div><Link href="/teacher/lab/lesson">ابدأ معالج الدرس <ArrowLeft size={15}/></Link></section><section className="labQuestion"><School size={22}/><div><span>ابدأ من القرار، لا من الأداة</span><h2>ما الذي يحتاج إلى التمايز في هذا الدرس؟</h2><div><button>الجاهزية</button><button>عمق التفكير</button><button>المحتوى</button><button>العملية</button><button>المنتج</button><button>إدارة التنفيذ</button></div></div></section>
   <section className="labTools"><div className="labSectionHead"><div><span>أدوات البناء</span><h2>خمس أدوات تعمل كمنظومة واحدة</h2></div><Boxes size={25}/></div>
    <div className="labToolGrid">{tools.map((t,i)=>{const Icon=t.icon;return <article key={t.id} className={t.ready?"labTool ready":"labTool"}><div className="labToolNo">0{i+1}</div><div className="labToolIcon"><Icon/></div><span>{t.tag}</span><h3>{t.title}</h3><p>{t.desc}</p>{t.ready?<Link href={t.id==="tiering"?"/teacher/lab/tiering":t.id==="bloom"?"/teacher/lab/bloom":t.id==="venn"?"/teacher/lab/venn":t.id==="xo"?"/teacher/lab/xo":t.id==="classroom"?"/teacher/lab/classroom":"/teacher/lab"}>{t.action}<ArrowLeft size={15}/></Link>:<button disabled>{t.action}</button>}</article>})}</div>
   </section>
