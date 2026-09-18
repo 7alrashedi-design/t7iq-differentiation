@@ -61,6 +61,7 @@ Deno.serve(async (req: Request) => {
         else if ((pp as any).current_level === 2) levels.L2 += 1;
         else if ((pp as any).current_level === 3) levels.L3 += 1;
       }
+      const productIds=[...new Set((pps??[]).map((p:any)=>p.product_id).filter(Boolean))];const {data:productRows}=productIds.length?await db.from("product_catalog").select("product_id,product_name").in("product_id",productIds):{data:[] as any[]};const productNameMap=new Map((productRows??[]).map((p:any)=>[p.product_id,p.product_name]));
       const ppIds=(pps??[]).map((p:any)=>(p as any).id).filter(Boolean);
       const {data:attempts}=ppIds.length?await db.from("product_evaluation_attempts")
         .select("id,participant_product_id,level_no,average_score,passed,created_at").in("participant_product_id",ppIds):{data:[] as any[]};
@@ -126,7 +127,7 @@ Deno.serve(async (req: Request) => {
         product_counts: Object.entries((pps ?? []).reduce((acc:Record<string,number>,pp:any)=>{
           acc[pp.product_id]=(acc[pp.product_id] ?? 0)+1;
           return acc;
-        },{})).map(([product_id,count])=>({product_id,count})),
+        },{})).map(([product_id,count])=>({product_id,product_name:productNameMap.get(product_id)??product_id,count})),
         evaluation_intelligence:{attempts:latestAttempts.length,aggregation:"latest_attempt_per_participant_product_level",section_analysis,criterion_gaps,intervention}
       });
     }
