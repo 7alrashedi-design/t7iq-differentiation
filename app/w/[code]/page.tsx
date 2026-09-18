@@ -122,10 +122,15 @@ export default function WorkshopParticipant(){
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر حفظ النتيجة.")}finally{setBusy(false)}
   }
 
-  const recommendations=useMemo(()=>{
-    const topCodes=result.top.map(t=>t.code);
-    return products.filter(p=>topCodes.includes(p[2] as StyleCode)).slice(0,9);
-  },[result]);
+  const productRoles:Record<StyleCode,string>={W:"كاتب/موثق",O:"متحدث/محاور",V:"مصمم بصري",T:"منفذ تقني",K1a:"مصمم فني",K2c:"منظم/مسوق",K3s:"منسق أثر",K4p:"مؤدٍ/ممثل",K5h:"صانع/منفذ",K6m:"صوت/إيقاع"};
+  const productGroups=useMemo(()=>[
+    {code:"W" as StyleCode,label:"كتابي"},{code:"O" as StyleCode,label:"شفهي"},{code:"V" as StyleCode,label:"مرئي/صوتي"},{code:"T" as StyleCode,label:"تقني"},{code:"K" as const,label:"حركي"}
+  ],[]);
+  const [productFilter,setProductFilter]=useState<"ALL"|"W"|"O"|"V"|"T"|"K">("ALL");
+  const visibleProducts=useMemo(()=>products.filter(p=>productFilter==="ALL" ? true : productFilter==="K" ? String(p[0]).startsWith("K-") : p[2]===productFilter),[productFilter]);
+  const topCodes=result.top.map(t=>t.code);
+  function fitLabel(p:any){return topCodes.includes(p[2] as StyleCode)?"يلائم بصمتك مباشرة":"يمكنك توظيف بصمتك داخله"}
+  function roleFor(p:any){return productRoles[result.top[0].code]}
 
   async function selectProduct(p:any){
     setBusy(true);setNotice("");
@@ -225,9 +230,10 @@ export default function WorkshopParticipant(){
 
   if(stage==="products") return <main className="workshopPage productPage">
     <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>من البصمة إلى المنتج</small></div></div><button className="outlineButton" onClick={()=>setStage("report")}><ArrowRight size={16}/> تقريري</button></header>
-    <section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي تريد أن تعبّر به.</h1><p>نعرض المنتجات الأقرب لبصمتك أولًا، لكن الاختيار مفتوح. المهم كيف توظف نقاط قوتك داخله.</p></section>
-    <section className="productGrid">{recommendations.map((p,i)=><article key={p[0]} className="productCard"><div className="productCode">{p[0]}</div><h2>{p[1]}</h2><p>يتقاطع مع بعد <b>{styleMeta[p[2] as StyleCode].shortTitle}</b>.</p><div className="productRole"><span>دور مقترح</span><b>{styleMeta[p[2] as StyleCode].role.split("،")[0]}</b></div><button className="outlineButton" disabled={busy} onClick={()=>selectProduct(p)}>اختيار وبدء L1</button>{i<3&&<span className="recommendedTag">مقترح لك</span>}</article>)}</section>
-    <div className="allProductsNote">للاختبار الحالي تعرض المنصة أعلى المنتجات ملاءمة؛ مكتبة المنصة الكاملة محفوظة في المحرك.</div>
+    <section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي يشعل فضولك.</h1><p>كل المنتجات متاحة لك. بصمتك لا تقيد اختيارك؛ بل تساعدك في تحديد <b>الدور الذي تضيف به قوتك</b> داخل المنتج أو فريق العمل.</p></section>
+    <nav className="productFilters"><button className={productFilter==="ALL"?"active":""} onClick={()=>setProductFilter("ALL")}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={productFilter===g.code?"active":""} onClick={()=>setProductFilter(g.code)}>{g.label}</button>)}</nav>
+    <div className="productChoiceHint"><UsersRound size={18}/><div><b>فكر بالمنتج أولًا، ثم بالدور.</b><span>مثال: صاحب البصمة الكتابية يمكنه اختيار «فيلم» ويكون دوره كتابة السيناريو أو توثيق المحتوى، بينما يكمل زملاؤه الأدوار البصرية والتقنية والأدائية.</span></div></div>
+    <section className="productGrid allProductGrid">{visibleProducts.map((p:any)=><article key={p[0]} className={"productCard "+(topCodes.includes(p[2] as StyleCode)?"directFit":"")}><div className="productCardTop"><span className="productCode">{p[0]}</span>{topCodes.includes(p[2] as StyleCode)&&<span className="recommendedTag">قريب من بصمتك</span>}</div><h2>{p[1]}</h2><p>{fitLabel(p)}</p><div className="productRole"><span>دورك المقترح وفق بصمتك</span><b>{roleFor(p)}</b></div><button className="outlineButton" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button></article>)}</section>
     {notice&&<div className="loginMessage">{notice}</div>}
   </main>;
 
