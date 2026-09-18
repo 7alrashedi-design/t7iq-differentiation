@@ -156,7 +156,9 @@ Deno.serve(async (req: Request) => {
       if (productId) rubricQuery = rubricQuery.or(`product_id.eq.${productId},product_id.is.null`);
       const { data, error } = await rubricQuery.order("product_id",{ascending:false,nullsFirst:false}).order("sort_order");
       if (error) throw error;
-      return json({ rubric: data ?? [] });
+      const specificRows = productId ? (data ?? []).filter((r:any)=>r.product_id===productId) : [];
+      const rubricRows = specificRows.length ? specificRows : (data ?? []).filter((r:any)=>!r.product_id);
+      return json({ rubric: rubricRows });
     }
 
     if (action === "submit_evaluation") {
