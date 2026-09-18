@@ -520,3 +520,14 @@ body{
   .lessonDraftGrid h3{font-size:14px!important;line-height:1.75}
   .teacherReviewBox span{font-size:13px}.teacherReviewBox textarea{font-size:16px}
 }
+
+
+/* Asloobi interaction feedback */
+.questionMetaRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.questionAnswered{font-size:10px;color:#71858f}
+@media(max-width:600px){
+  .questionMetaRow{align-items:center}
+  .questionAnswered{font-size:13px;color:#607781;font-weight:600}
+  .answerScale button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .answerScale button:active{transform:scale(.985)}
+}
