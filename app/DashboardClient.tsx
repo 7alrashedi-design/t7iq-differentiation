@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft, BarChart3, Bell, BookOpenCheck, BrainCircuit, CheckCircle2,
   ChevronDown, CircleUserRound, GraduationCap, House, LineChart, Menu,
-  Sparkles, Target, UsersRound
+  HelpCircle, Sparkles, Target, UsersRound
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -85,8 +85,8 @@ export default function DashboardClient() {
           <a><Target size={18}/> خريطة الإتقان</a>
           <Link href="/teacher/lab"><BookOpenCheck size={18}/> مختبر التمايز</Link>
           <Link href="/teacher/library"><GraduationCap size={18}/> مكتبتي</Link>
-          <a><LineChart size={18}/> التقدم والأثر</a>
-          <Link href="/teacher/growth"><GraduationCap size={18}/> مساري المهني</Link>
+          <Link href="/teacher/impact"><LineChart size={18}/> التقدم والأثر</Link>
+          <Link href="/teacher/growth"><GraduationCap size={18}/> مساري المهني</Link><Link href="/help"><HelpCircle size={18}/> دليل الاستخدام</Link>
         </nav>
 
         <div className="expertNote">
