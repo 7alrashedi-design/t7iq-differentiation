@@ -166,13 +166,22 @@ export default function WorkshopParticipant(){
         if(d.status==="completed"){
           setParticipantProduct({...participantProduct,current_level:3,status:"completed"});
         }else{
-          setLevel(d.next_level);
           setParticipantProduct({...participantProduct,current_level:d.next_level,status:"in_progress"});
-          await loadRubric(d.next_level,selectedProduct.product_name);
         }
       }
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر حفظ التقييم.")}finally{setBusy(false)}
   }
+
+  async function openNextLevel(){
+    if(!lastEval?.passed || !lastEval?.next_level) return;
+    const next=lastEval.next_level;
+    setLevel(next);
+    setLastEval(null);
+    setNotice("");
+    await loadRubric(next,selectedProduct?.product_name);
+  }
+
+  function printRubric(){ window.print(); }
 
   async function apply(e:FormEvent){
     e.preventDefault();setBusy(true);setNotice("");
@@ -238,16 +247,17 @@ export default function WorkshopParticipant(){
   </main>;
 
   if(stage==="evaluate") return <main className="workshopPage evaluationPage">
-    <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>{selectedProduct?.product_name}</b><small>تطوير المنتج • المستوى L{level}</small></div></div><span className="levelBadge">L{level}</span></header>
-    <section className="evaluationHero"><span className="sectionKicker">أداة تطوير المنتج</span><h1>{level===1?"ابنِ الأساس":level===2?"ارفع مستوى الإتقان":"اصنع النسخة الاحترافية"}</h1><p>قيّم منتجك من 0 إلى 6. الانتقال يتطلب متوسطًا لا يقل عن 4 وتحقيق المعايير الجوهرية في المحتوى.</p></section>
-    <section className="rubricList">{rubric.map(r=><article key={r.id} className={"rubricCriterion "+(r.essential?"essential":"")}><div className="criterionText"><div><span>{r.section}{r.subsection?" • "+r.subsection:""}</span>{r.essential&&<em>جوهري</em>}</div><p>{r.criterion_template}</p></div><div className="rubricScale">{[0,1,2,3,4,5,6].map(v=><button key={v} className={rubricScores[r.id]===v?"selected":""} onClick={()=>setRubricScores(s=>({...s,[r.id]:v}))}>{v}</button>)}</div></article>)}</section>
+    <header className="workshopTop evaluationTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>{selectedProduct?.product_name}</b><small>بطاقة تطوير المنتج • المستوى {level}</small></div></div><div className="evaluationHeaderActions"><span className="levelBadge">L{level}</span><button className="outlineButton" onClick={printRubric}><Download size={16}/> PDF / طباعة</button></div></header>
+    <section className="evaluationHero"><div><span className="sectionKicker">مسار تطوير المنتج</span><h1>{level===1?"المستوى الأول — ابنِ الأساس":level===2?"المستوى الثاني — ارفع مستوى الإتقان":"المستوى الثالث — اصنع النسخة الاحترافية"}</h1><p>طبّق البطاقة إلكترونيًا على منتجك الحالي. يمكنك كذلك تصدير البطاقة PDF وطباعتها قبل أو بعد التعبئة.</p></div><div className="levelJourney"><span className={level>=1?"done":""}>1</span><i/><span className={level>=2?"done":""}>2</span><i/><span className={level>=3?"done":""}>3</span></div></section>
+    <section className="rubricPrintMeta"><div><span>المنتج</span><b>{selectedProduct?.product_name}</b></div><div><span>المشارك</span><b>{name}</b></div><div><span>المستوى</span><b>{level} من 3</b></div><div><span>التاريخ</span><b>{new Date().toLocaleDateString("ar-SA")}</b></div></section>
+    <section className="rubricList">{rubric.map((r,index)=><article key={r.id} className={"rubricCriterion "+(r.essential?"essential":"")}><div className="criterionIndex">{index+1}</div><div className="criterionText"><div><span>{r.section}{r.subsection?" • "+r.subsection:""}</span>{r.essential&&<em>جوهري</em>}</div><p>{r.criterion_template}</p></div><div className="rubricScale">{[0,1,2,3,4,5,6].map(v=><button key={v} className={rubricScores[r.id]===v?"selected":""} onClick={()=>setRubricScores(s=>({...s,[r.id]:v}))}>{v}</button>)}</div></article>)}</section>
     <div className="performanceLegend"><span><b>0–1</b> يحتاج بناء</span><span><b>2–3</b> في طور التطور</span><span><b>4</b> إتقان</span><span><b>5</b> متقدم</span><span><b>6</b> احتراف</span></div>
-    {lastEval&&<div className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><strong>{lastEval.passed?"تم اجتياز المستوى":"طوّر المنتج ثم أعد المحاولة"}</strong><span>المتوسط {lastEval.average_score} / 6 • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span></div>}
-    <div className="evaluationActions">
-      {participantProduct?.status==="completed"?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتمل L3 — انتقل إلى تشخيص الفصل <ArrowLeft size={17}/></button>:<button className="primaryButton" disabled={busy} onClick={submitLevel}>تقييم المستوى {level}</button>}
-      <button className="outlineButton" onClick={()=>setStage("products")}>تغيير المنتج</button>
+    {lastEval&&<section className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><div><strong>{lastEval.passed?(level===3?"اكتمل مسار تطوير المنتج":"تم اجتياز المستوى "+level):"طوّر المنتج ثم أعد التقييم"}</strong><span>المتوسط {lastEval.average_score} / 6 • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span></div>{lastEval.passed&&level<3&&<button className="primaryButton noPrint" onClick={openNextLevel}>فتح المستوى {lastEval.next_level} <ArrowLeft size={16}/></button>}</section>}
+    <div className="evaluationActions noPrint">
+      {participantProduct?.status==="completed"?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتمل المستوى الثالث — انتقل إلى تشخيص الفصل <ArrowLeft size={17}/></button>:<button className="primaryButton" disabled={busy||!!lastEval?.passed} onClick={submitLevel}>{lastEval&&!lastEval.passed?"إعادة تقييم المستوى "+level:"تقييم المستوى "+level}</button>}
+      <button className="outlineButton" onClick={printRubric}><Download size={16}/> تصدير البطاقة PDF</button><button className="outlineButton" onClick={()=>setStage("products")}>تغيير المنتج</button>
     </div>
-    {notice&&<div className="loginMessage">{notice}</div>}
+    {notice&&<div className="loginMessage noPrint">{notice}</div>}
   </main>;
 
   if(stage==="diagnosis") return <main className="workshopPage learningLabPage">
