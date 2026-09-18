@@ -1,0 +1,27 @@
+"use client";
+import {useEffect,useState} from "react";
+import Link from "next/link";
+import {useParams} from "next/navigation";
+import {ArrowLeft,BrainCircuit,Check,GitCompareArrows,Grid3X3,Layers3,Printer,School,Sparkles} from "lucide-react";
+import {getSupabaseBrowserClient} from "@/lib/supabase/client";
+export default function IntegratedPlan(){
+ const {id}=useParams<{id:string}>(); const [p,setP]=useState<any>(null),[loading,setLoading]=useState(true);
+ useEffect(()=>{(async()=>{const s=getSupabaseBrowserClient();const {data}=await s.from("teacher_differentiation_projects").select("*").eq("id",id).single();setP(data);setLoading(false)})()},[id]);
+ if(loading)return <main className="integratedPlan"><div className="libraryEmpty">جارٍ بناء خطة الدرس…</div></main>;
+ if(!p)return <main className="integratedPlan"><div className="libraryEmpty">تعذر العثور على المشروع.</div></main>;
+ const d=p.project_data||{}, tools=[
+  ["readiness","التدرج",Layers3,"tiering"],["thinking","بلوم المعدل",BrainCircuit,"bloom"],["concepts","أشكال فن",GitCompareArrows,"venn"],["choice","إكس / أو",Grid3X3,"xo"],["operations","إدارة الصف",School,"classroom"]
+ ] as const;
+ return <main className="integratedPlan">
+  <header className="tierTop noPrint"><Link href="/teacher/library">مكتبتي <ArrowLeft size={14}/></Link><div><Sparkles/><b>خطة الدرس المتمايز</b></div><button onClick={()=>window.print()}><Printer/> طباعة / PDF</button></header>
+  <section className="planCover"><span>DIFFERENTIATED LESSON PLAN</span><h1>{p.title}</h1><p>{[p.subject,p.grade].filter(Boolean).join(" • ")}</p><div><small>ناتج التعلم المشترك</small><b>{p.learning_goal}</b></div><div><small>دليل الجاهزية والقرار</small><b>{p.readiness_evidence||"لم يحدد"}</b></div></section>
+  <section className="planProgress noPrint">{tools.filter(t=>(p.selected_tools||[]).includes(t[0])).map(([key,label,Icon,route])=><div className={d[key]?"complete":""} key={key}><Icon/><span>{label}</span>{d[key]?<Check/>:<Link href={"/teacher/lab/"+route+"?project="+id}>إكمال</Link>}</div>)}</section>
+  {d.tiering&&<PlanSection icon={<Layers3/>} n="01" title="التدرج حسب الجاهزية"><div className="planTierGrid">{(d.tiering.tiers||[]).map((x:any,i:number)=><article key={i}><span>L{i+1}</span><h3>{x.title||x.name||["دعم موجّه","الإتقان","تحدٍ ممتد"][i]}</h3><p>{x.task||x.challenge||"—"}</p><small>{x.support||x.scaffold||""}</small></article>)}</div></PlanSection>}
+  {d.thinking&&<PlanSection icon={<BrainCircuit/>} n="02" title="عمق التفكير ودليل التعلم"><div className="planRows">{(d.thinking.rows||[]).filter((x:any)=>x.process||x.product).map((x:any)=><article key={x.level}><b>{x.level}</b><span>{x.process||"—"}</span><i>{x.product||"—"}</i></article>)}</div></PlanSection>}
+  {d.concepts&&<PlanSection icon={<GitCompareArrows/>} n="03" title="المقارنة وتعقيد المفاهيم"><div className="planSimple"><b>{(d.concepts.concepts||[]).slice(0,d.concepts.count).filter(Boolean).join(" × ")}</b><p>{d.concepts.prompt}</p><small>دليل التعلم: {d.concepts.evidence||"—"}</small></div></PlanSection>}
+  {d.choice&&<PlanSection icon={<Grid3X3/>} n="04" title="لوحة الاختيار المقصود"><div className="planChoices">{(d.choice.choices||[]).slice(0,d.choice.size).filter((x:any)=>x.title||x.product).map((x:any,i:number)=><article key={i}><span>{x.mode||"اختيار"}</span><b>{x.title}</b><p>{x.product}</p><small>{x.challenge}</small></article>)}</div><div className="planRule">قاعدة الاختيار: {d.choice.rule}</div></PlanSection>}
+  {d.operations&&<PlanSection icon={<School/>} n="05" title="خطة التشغيل الصفي"><div className="planTierGrid">{(d.operations.groups||[]).map((g:any,i:number)=><article key={i}><span>{g.minutes} دقيقة</span><h3>{g.name}</h3><p>{g.task||"—"}</p><small>دور المعلم: {g.teacher}</small></article>)}</div><div className="opsSummary"><div><b>الانتقال</b><span>{d.operations.transition}</span></div><div><b>نقطة التحقق</b><span>{d.operations.checkpoint||"—"}</span></div><div><b>الإغلاق</b><span>{d.operations.closure||"—"}</span></div><div><b>المواد</b><span>{d.operations.materials||"—"}</span></div></div></PlanSection>}
+  <section className="planReflection"><span>بعد التطبيق</span><h2>الدليل الجديد هو بداية القرار القادم</h2><p>دوّن ما أظهره الطلاب من تعلم، ثم أعد تشكيل الدعم أو التحدي أو المجموعات في الحصة التالية بدل تثبيت الطلاب في مسارات دائمة.</p></section>
+ </main>
+}
+function PlanSection({icon,n,title,children}:{icon:any,n:string,title:string,children:any}){return <section className="planSection"><header><div>{icon}<span>{n}</span></div><h2>{title}</h2></header>{children}</section>}
