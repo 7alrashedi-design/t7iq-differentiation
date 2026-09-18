@@ -183,6 +183,10 @@ Deno.serve(async (req: Request) => {
       const scoreMap = new Map(scores.filter((s:any)=>allowed.has(s.rubric_template_id)).map((s:any)=>[s.rubric_template_id, Number(s.score)]));
       if (scoreMap.size !== rubricRows.length) return json({ error: "all_criteria_required" }, 400);
 
+      const { data: previousAttempt } = await db.from("product_evaluation_attempts")
+        .select("id,average_score,created_at").eq("participant_product_id",pp.id).eq("level_no",level)
+        .order("created_at",{ascending:false}).limit(1).maybeSingle();
+
       const values = rubricRows.map((r:any)=>scoreMap.get(r.id) ?? 0);
       const avg = values.reduce((a:number,b:number)=>a+b,0) / values.length;
       const essentialPass = rubricRows.filter((r:any)=>r.essential).every((r:any)=>(scoreMap.get(r.id) ?? 0) >= Number(r.min_score ?? 4));
@@ -217,7 +221,7 @@ Deno.serve(async (req: Request) => {
         await db.from("participant_products").update({ current_level: nextLevel, status }).eq("id", pp.id);
       }
 
-      return json({ attempt, passed, average_score: Number(avg.toFixed(2)), essential_pass: essentialPass, required_average: levelThreshold, next_level: nextLevel, status });
+      return json({ attempt, passed, average_score: Number(avg.toFixed(2)), essential_pass: essentialPass, required_average: levelThreshold, next_level: nextLevel, status, previous_average: previousAttempt?.average_score ?? null, improvement: previousAttempt ? Number((avg-Number(previousAttempt.average_score)).toFixed(2)) : null });
     }
 
     if (action === "apply") {
