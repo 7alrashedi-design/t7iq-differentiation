@@ -433,3 +433,90 @@ body{
   .scaleNav .primaryButton{flex:1;justify-content:center}
   .scaleNav .outlineButton{justify-content:center}
 }
+
+
+/* ===== Mobile UX v2: readable, compact, thumb-friendly workshop ===== */
+@media (max-width:600px){
+  html{-webkit-text-size-adjust:100%}
+  body{font-size:16px}
+  .scalePage{padding:8px 10px 22px}
+  .scaleHeader{min-height:54px;align-items:center}
+  .scaleHeader .platformBrand.compact b{font-size:18px}
+  .scaleHeader .platformBrand.compact small{font-size:12px!important;line-height:1.35}
+  .scaleProgressMeta b{font-size:19px}
+  .scaleProgressMeta span{font-size:12px!important}
+  .scaleProgress{height:7px;margin:8px 2px 14px}
+
+  .questionShell{padding:18px 14px 14px;border-radius:24px}
+  .questionNumber{font-size:13px!important;padding:7px 11px}
+  .questionShell h1{font-size:30px!important;line-height:1.42;margin:16px 0 7px;letter-spacing:0}
+  .questionShell>p{font-size:16px!important;line-height:1.7;color:#506570;margin:0}
+
+  .answerScale{margin:18px 0 16px;gap:8px}
+  .answerScale button,.answerScale button:last-child{
+    min-height:64px!important;padding:8px 12px!important;border-radius:18px;
+    grid-template-columns:46px minmax(0,1fr) 22px!important;gap:10px
+  }
+  .answerScale strong{
+    width:42px;height:42px;border-radius:13px;font-size:23px!important;
+    display:grid!important;place-items:center;background:#edf7f5
+  }
+  .answerScale span{
+    font-size:16px!important;line-height:1.45!important;font-weight:600;
+    color:#334d59;margin:0!important
+  }
+  .answerScale button.selected{border-width:2px;background:#eaf7f4}
+  .answerScale button.selected strong{background:#2f8f87;color:#fff}
+
+  .scaleNav{position:sticky;bottom:6px;z-index:8;background:rgba(255,255,255,.96);
+    backdrop-filter:blur(10px);margin:0 -4px;padding:10px 4px 2px;border-top:1px solid #e8eff1}
+  .scaleNav button{min-height:52px;font-size:17px!important;border-radius:15px}
+  .scaleNav>span{display:none!important}
+
+  .reportPage{padding:12px 10px 28px}
+  .reportTop{align-items:center}
+  .reportHero{padding:18px;border-radius:22px}
+  .reportEyebrow,.reportHero p,.fingerprintSummary span,.fingerprintSummary small{font-size:12px!important}
+  .fingerprintCode{font-size:40px}
+  .reportHero h1{font-size:22px}
+  .fingerprintSummary b{font-size:20px}
+  .reportCard{padding:17px;border-radius:19px}
+  .reportCardHead span,.sectionKicker{font-size:12px!important}
+  .reportCardHead h2,.narrativeCard h2{font-size:21px}
+  .rankingList>div{grid-template-columns:24px minmax(105px,1.2fr) 1fr 34px}
+  .rankNo,.rankText b,.rankingList strong{font-size:12px!important}
+  .rankText span{font-size:11px!important}
+  .narrativeCard>p{font-size:15px!important;line-height:1.9}
+  .narrativeTiles span{font-size:12px!important}
+  .narrativeTiles b{font-size:14px!important}
+  .narrativeCard>small{font-size:11px!important;line-height:1.6}
+  .reportNext h2{font-size:22px}.reportNext p{font-size:14px!important;line-height:1.7}
+  .reportNext button{min-height:52px;font-size:16px}
+  .reportFooter{font-size:11px!important}
+
+  .productHero{padding:32px 0 18px}
+  .productHero h1{font-size:30px}.productHero p{font-size:15px!important}
+  .productCard{padding:17px;border-radius:18px}
+  .productCode,.recommendedTag,.productRole span{font-size:11px!important}
+  .productCard h2{font-size:20px}.productCard>p{font-size:14px!important;line-height:1.7}
+  .productRole b{font-size:14px!important}.productCard button{min-height:48px;font-size:14px}
+
+  .evaluationHero{padding:30px 0 14px}.evaluationHero h1{font-size:29px}
+  .evaluationHero p{font-size:15px!important;line-height:1.75}
+  .criterionText span{font-size:12px!important}.criterionText em{font-size:10px!important}
+  .criterionText p{font-size:14px!important;line-height:1.7}
+  .rubricScale button{font-size:14px!important;min-height:42px}
+  .performanceLegend span{font-size:11px!important}
+  .evaluationResult strong{font-size:14px}.evaluationResult span{font-size:12px!important}
+
+  .labHero p,.lessonBuilderHero p{font-size:15px!important;line-height:1.8}
+  .diagnosisGroupTop span{font-size:14px}.diagnosisGroups article>small{font-size:11px!important}
+  .diagnosisGroups h3{font-size:17px}.diagnosisGroups p{font-size:14px!important;line-height:1.7}
+  .labInsight span,.teacherDecision span{font-size:11px!important}
+  .labInsight b,.teacherDecision b{font-size:14px!important}
+  .matrixRow b{font-size:15px}.matrixRow b small{font-size:11px!important}
+  .matrixRow p{font-size:14px!important;line-height:1.75}
+  .lessonDraftGrid span{font-size:12px!important}
+  .lessonDraftGrid h3{font-size:14px!important;line-height:1.75}
+  .teacherReviewBox span{font-size:13px}.teacherReviewBox textarea{font-size:16px}
+}
