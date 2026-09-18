@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
       const ids = (participants ?? []).map((p:any)=>p.id);
       const [{ data: fps }, { data: pps }, { data: apps }] = await Promise.all([
         ids.length ? db.from("fingerprint_results").select("participant_id,fingerprint_code,primary_code").in("participant_id", ids) : Promise.resolve({ data: [] }),
-        ids.length ? db.from("participant_products").select("participant_id,product_id,current_level,status").in("participant_id", ids) : Promise.resolve({ data: [] }),
+        ids.length ? db.from("participant_products").select("id,participant_id,product_id,current_level,status").in("participant_id", ids) : Promise.resolve({ data: [] }),
         ids.length ? db.from("workshop_applications").select("participant_id,status").in("participant_id", ids) : Promise.resolve({ data: [] }),
       ]);
       const dist: Record<string,number> = { W:0,O:0,V:0,T:0,K:0 };
@@ -64,7 +64,7 @@ Deno.serve(async (req: Request) => {
       const ppIds=(pps??[]).map((p:any)=>(p as any).id).filter(Boolean);
       const {data:attempts}=ppIds.length?await db.from("product_evaluation_attempts")
         .select("id,participant_product_id,level_no,average_score,passed,created_at").in("participant_product_id",ppIds):{data:[] as any[]};
-      const attemptIds=(attempts??[]).map((a:any)=>a.id);
+      const latestAttemptMap=new Map<string,any>();for(const a of attempts??[]){const key=(a as any).participant_product_id+"|"+(a as any).level_no;const prev=latestAttemptMap.get(key);if(!prev||new Date((a as any).created_at)>new Date(prev.created_at))latestAttemptMap.set(key,a)}const latestAttempts=[...latestAttemptMap.values()];const attemptIds=latestAttempts.map((a:any)=>a.id);
       const {data:scoreRows}=attemptIds.length?await db.from("product_evaluation_scores")
         .select("attempt_id,score,rubric_template_id").in("attempt_id",attemptIds):{data:[] as any[]};
       const rubricIds=[...new Set((scoreRows??[]).map((s:any)=>s.rubric_template_id))];
@@ -127,7 +127,7 @@ Deno.serve(async (req: Request) => {
           acc[pp.product_id]=(acc[pp.product_id] ?? 0)+1;
           return acc;
         },{})).map(([product_id,count])=>({product_id,count})),
-        evaluation_intelligence:{attempts:(attempts??[]).length,section_analysis,criterion_gaps,intervention}
+        evaluation_intelligence:{attempts:latestAttempts.length,aggregation:"latest_attempt_per_participant_product_level",section_analysis,criterion_gaps,intervention}
       });
     }
 
