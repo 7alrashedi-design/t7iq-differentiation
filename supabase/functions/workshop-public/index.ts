@@ -61,6 +61,43 @@ Deno.serve(async (req: Request) => {
         else if ((pp as any).current_level === 2) levels.L2 += 1;
         else if ((pp as any).current_level === 3) levels.L3 += 1;
       }
+      const ppIds=(pps??[]).map((p:any)=>(p as any).id).filter(Boolean);
+      const {data:attempts}=ppIds.length?await db.from("product_evaluation_attempts")
+        .select("id,participant_product_id,level_no,average_score,passed,created_at").in("participant_product_id",ppIds):{data:[] as any[]};
+      const attemptIds=(attempts??[]).map((a:any)=>a.id);
+      const {data:scoreRows}=attemptIds.length?await db.from("product_evaluation_scores")
+        .select("attempt_id,score,rubric_template_id").in("attempt_id",attemptIds):{data:[] as any[]};
+      const rubricIds=[...new Set((scoreRows??[]).map((s:any)=>s.rubric_template_id))];
+      const {data:templates}=rubricIds.length?await db.from("product_rubric_templates")
+        .select("id,section,criterion_template").in("id",rubricIds):{data:[] as any[]};
+      const templateMap=new Map((templates??[]).map((r:any)=>[r.id,r]));
+      const sectionBuckets:Record<string,number[]>={};
+      const criterionBuckets:Record<string,{criterion:string,section:string,scores:number[]}>={};
+      for(const s of scoreRows??[]){
+        const r:any=templateMap.get((s as any).rubric_template_id); if(!r) continue;
+        const score=Number((s as any).score);
+        (sectionBuckets[r.section]??=[]).push(score);
+        const key=String(r.criterion_template);
+        if(!criterionBuckets[key]) criterionBuckets[key]={criterion:key,section:r.section,scores:[]};
+        criterionBuckets[key].scores.push(score);
+      }
+      const section_analysis=Object.entries(sectionBuckets).map(([section,scores])=>{
+        const average=scores.reduce((a,b)=>a+b,0)/scores.length;
+        return {section,average:Number(average.toFixed(1)),low_rate:Number((scores.filter(x=>x<4).length/scores.length*100).toFixed(0)),ratings:scores.length};
+      }).sort((a,b)=>a.average-b.average);
+      const criterion_gaps=Object.values(criterionBuckets).map(x=>({
+        criterion:x.criterion,section:x.section,
+        average:Number((x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)),
+        low_rate:Number((x.scores.filter(v=>v<4).length/x.scores.length*100).toFixed(0)),
+        ratings:x.scores.length
+      })).filter(x=>x.ratings>=2).sort((a,b)=>a.average-b.average||b.low_rate-a.low_rate).slice(0,5);
+      const weakest=section_analysis[0]??null;
+      const intervention=weakest?{
+        section:weakest.section,
+        title: weakest.section==="المحتوى"?"توقف دقيقتين: عمّق الفكرة قبل تجميل المنتج":weakest.section==="العرض"?"توقف دقيقتين: اجعل شكل المنتج يخدم رسالته":weakest.section==="الإبداع"?"توقف دقيقتين: أظهر صوتك الشخصي في المنتج":"توقف دقيقتين: حوّل التأمل من وصف إلى تحليل",
+        prompt: weakest.section==="المحتوى"?"اطلب من كل مشارك تحديد فكرة واحدة تحتاج دليلًا أو تفسيرًا أعمق، ثم تعديلها قبل المتابعة.":weakest.section==="العرض"?"اطلب من المشاركين فحص عنصر واحد في العرض لا يخدم المتلقي بوضوح، ثم إعادة تصميمه.":weakest.section==="الإبداع"?"اطلب من كل مشارك تحديد الجزء الذي يمكن أن يحمل رؤيته الخاصة بدل الصيغة المعتادة، ثم تطويره.":"اطلب من كل مشارك كتابة: ماذا غيّرت؟ لماذا؟ وما الذي ستفعله بصورة مختلفة في المحاولة القادمة؟"
+      }:null;
+
       return json({
         session: demoSession,
         totals: {
@@ -89,7 +126,8 @@ Deno.serve(async (req: Request) => {
         product_counts: Object.entries((pps ?? []).reduce((acc:Record<string,number>,pp:any)=>{
           acc[pp.product_id]=(acc[pp.product_id] ?? 0)+1;
           return acc;
-        },{})).map(([product_id,count])=>({product_id,count}))
+        },{})).map(([product_id,count])=>({product_id,count})),
+        evaluation_intelligence:{attempts:(attempts??[]).length,section_analysis,criterion_gaps,intervention}
       });
     }
 
