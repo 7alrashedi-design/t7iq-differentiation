@@ -84,6 +84,7 @@ export default function DashboardClient() {
           <a><UsersRound size={18}/> فصولي وطلابي</a>
           <a><Target size={18}/> خريطة الإتقان</a>
           <Link href="/teacher/lab"><BookOpenCheck size={18}/> مختبر التمايز</Link>
+          <Link href="/teacher/library"><GraduationCap size={18}/> مكتبتي</Link>
           <a><LineChart size={18}/> التقدم والأثر</a>
           <a><GraduationCap size={18}/> مساري المهني</a>
         </nav>
