@@ -1,0 +1,11 @@
+"use client";
+import {useEffect,useState} from "react";
+import Link from "next/link";
+import {useParams} from "next/navigation";
+import {ArrowLeft,CheckCircle2,Compass,RefreshCw,Target} from "lucide-react";
+import {getSupabaseBrowserClient} from "@/lib/supabase/client";
+export default function CoachingHistory(){
+ const {id}=useParams<{id:string}>();const [cycle,setCycle]=useState<any>(null),[reviews,setReviews]=useState<any[]>([]),[loading,setLoading]=useState(true);
+ useEffect(()=>{(async()=>{const s=getSupabaseBrowserClient();const [{data:c},{data:r}]=await Promise.all([s.from("teacher_coaching_cycles").select("*").eq("id",id).maybeSingle(),s.from("teacher_coaching_reviews").select("*").eq("cycle_id",id).order("created_at",{ascending:true})]);setCycle(c);setReviews(r||[]);setLoading(false)})()},[id]);
+ if(loading)return <main><div className="libraryEmpty">جارٍ تحميل دورة الكوتشينق…</div></main>;if(!cycle)return <main><div className="libraryEmpty">تعذر العثور على الدورة.</div></main>;
+ return <main className="coachHistory"><header className="tierTop"><Link href="/teacher/growth">مساري المهني <ArrowLeft size={14}/></Link><div><Compass/><b>سجل الكوتشينق</b></div><span>{cycle.status==="completed"?"مكتمل":"نشط"}</span></header><section className="coachHistoryHero"><Target/><div><span>{cycle.focus}</span><h1>{cycle.development_goal}</h1><p>الإجراء: {cycle.action_step}</p><p>دليل النجاح: {cycle.success_evidence}</p>{cycle.review_date&&<small>موعد المراجعة: {new Date(cycle.review_date+"T12:00:00").toLocaleDateString("ar-SA")}</small>}</div></section><section className="coachReviews"><header><h2>المراجعات</h2>{cycle.status==="active"&&<Link href={"/teacher/coaching/"+id+"/review"}>إضافة مراجعة</Link>}</header>{!reviews.length?<div className="libraryEmpty">لم تسجل مراجعة بعد.</div>:reviews.map((r:any,i:number)=><article key={r.id}><b>{i+1}</b><div><span>{r.outcome==="achieved"?"تحقق الهدف":r.outcome==="continue"?"استمرار":"تعديل المسار"}</span><p>{r.observed_evidence||"لا يوجد دليل وصفي"}</p><p>{r.impact_reflection||""}</p><strong>الخطوة التالية: {r.next_step||"—"}</strong><small>{new Date(r.created_at).toLocaleDateString("ar-SA")}</small></div>{r.outcome==="achieved"?<CheckCircle2/>:<RefreshCw/>}</article>)}</section></main>}
