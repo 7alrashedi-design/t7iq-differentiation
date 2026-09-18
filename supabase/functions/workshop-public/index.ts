@@ -162,6 +162,16 @@ Deno.serve(async (req: Request) => {
       .eq("participant_token", token).maybeSingle();
     if (!participant) return json({ error: "invalid_participant" }, 401);
 
+    if (action === "resume") {
+      const [{ data: fp }, { data: pp }] = await Promise.all([
+        db.from("fingerprint_results").select("*").eq("participant_id", participant.id).maybeSingle(),
+        db.from("participant_products").select("id,product_id,current_level,status").eq("participant_id", participant.id).order("created_at",{ascending:false}).limit(1).maybeSingle()
+      ]);
+      let product=null;
+      if(pp?.product_id){const {data:p}=await db.from("product_catalog").select("product_id,product_name,style_category,style_code").eq("product_id",pp.product_id).maybeSingle();product=p}
+      return json({participant,fingerprint:fp,participant_product:pp,product});
+    }
+
     if (action === "save_responses") {
       const answers = Array.isArray(body.answers) ? body.answers : [];
       const rows = answers.map((a: any) => ({
