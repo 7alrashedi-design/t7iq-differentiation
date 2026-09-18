@@ -35,11 +35,9 @@ export function useTeacherProject(){
  const saveTool=useCallback(async(toolKey:string,payload:any)=>{
   if(!projectId)throw new Error("ابدأ من مشروع محفوظ حتى تُضم هذه الأداة إلى خطة الدرس.");
   const s=getSupabaseBrowserClient();
-  const current=project?.project_data||{};
-  const next={...current,[toolKey]:payload};
-  const {error}=await s.from("teacher_differentiation_projects")
-   .update({project_data:next,updated_at:new Date().toISOString()}).eq("id",projectId);
+  const {data,error}=await s.rpc("save_teacher_project_tool",{p_project_id:projectId,p_tool_key:toolKey,p_payload:payload});
   if(error)throw error;
+  const next=(data||{}) as Record<string,any>;
   setProject(p=>p?{...p,project_data:next}:p);
  },[projectId,project]);
 
