@@ -224,6 +224,53 @@ Deno.serve(async (req: Request) => {
       return json({ attempt, passed, average_score: Number(avg.toFixed(2)), essential_pass: essentialPass, required_average: levelThreshold, next_level: nextLevel, status, previous_average: previousAttempt?.average_score ?? null, improvement: previousAttempt ? Number((avg-Number(previousAttempt.average_score)).toFixed(2)) : null });
     }
 
+    if (action === "product_journey") {
+      const participantProductId = String(body.participant_product_id ?? "");
+      const { data: pp } = await db.from("participant_products")
+        .select("id,participant_id,product_id,current_level,status").eq("id",participantProductId)
+        .eq("participant_id",participant.id).maybeSingle();
+      if (!pp) return json({ error: "product_selection_not_found" }, 404);
+
+      const { data: attempts, error: attemptsError } = await db.from("product_evaluation_attempts")
+        .select("id,level_no,average_score,essential_pass,passed,feedback,created_at")
+        .eq("participant_product_id",pp.id).order("created_at",{ascending:true});
+      if (attemptsError) throw attemptsError;
+
+      const attemptIds=(attempts??[]).map((a:any)=>a.id);
+      let scoreRows:any[]=[];
+      if(attemptIds.length){
+        const { data:scores,error:scoresError }=await db.from("product_evaluation_scores")
+          .select("attempt_id,score,rubric_template_id").in("attempt_id",attemptIds);
+        if(scoresError) throw scoresError;
+        scoreRows=scores??[];
+      }
+      const rubricIds=[...new Set(scoreRows.map((s:any)=>s.rubric_template_id))];
+      let rubricMap=new Map<string,any>();
+      if(rubricIds.length){
+        const {data:templates,error:templatesError}=await db.from("product_rubric_templates")
+          .select("id,section,subsection,criterion_template").in("id",rubricIds);
+        if(templatesError) throw templatesError;
+        rubricMap=new Map((templates??[]).map((r:any)=>[r.id,r]));
+      }
+      const enriched=(attempts??[]).map((a:any)=>{
+        const rows=scoreRows.filter((s:any)=>s.attempt_id===a.id).map((s:any)=>({...s,rubric:rubricMap.get(s.rubric_template_id)}));
+        const sectionNames=[...new Set(rows.map((r:any)=>r.rubric?.section).filter(Boolean))];
+        const sections=sectionNames.map((section:any)=>{
+          const sr=rows.filter((r:any)=>r.rubric?.section===section);
+          return {section,average:sr.length?Number((sr.reduce((sum:number,r:any)=>sum+Number(r.score),0)/sr.length).toFixed(1)):0};
+        });
+        return {...a,sections};
+      });
+      const first=enriched[0]??null,last=enriched[enriched.length-1]??null;
+      return json({participant_product:pp,attempts:enriched,summary:{
+        attempts_count:enriched.length,
+        first_average:first?.average_score??null,
+        latest_average:last?.average_score??null,
+        total_improvement:first&&last?Number((Number(last.average_score)-Number(first.average_score)).toFixed(2)):null,
+        completed:pp.status==="completed"
+      }});
+    }
+
     if (action === "apply") {
       const { data, error } = await db.from("workshop_applications").upsert({
         participant_id: participant.id,
