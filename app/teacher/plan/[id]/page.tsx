@@ -2,19 +2,20 @@
 import {useEffect,useState} from "react";
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {ArrowLeft,BrainCircuit,Check,GitCompareArrows,Grid3X3,Layers3,Printer,School,Sparkles} from "lucide-react";
+import {ArrowLeft,BrainCircuit,Check,Copy,GitCompareArrows,Grid3X3,Layers3,Printer,School,Sparkles} from "lucide-react";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 export default function IntegratedPlan(){
- const {id}=useParams<{id:string}>(); const [p,setP]=useState<any>(null),[reflections,setReflections]=useState<any[]>([]),[loading,setLoading]=useState(true);
- useEffect(()=>{(async()=>{const s=getSupabaseBrowserClient();const {data}=await s.from("teacher_differentiation_projects").select("*").eq("id",id).single();setP(data);const {data:rs}=await s.from("teacher_project_reflections").select("*").eq("project_id",id).order("created_at",{ascending:false});setReflections(rs||[]);setLoading(false)})()},[id]);
+ const {id}=useParams<{id:string}>(); const [p,setP]=useState<any>(null),[reflections,setReflections]=useState<any[]>([]),[versions,setVersions]=useState<any[]>([]),[loading,setLoading]=useState(true);
+ useEffect(()=>{(async()=>{const s=getSupabaseBrowserClient();const {data}=await s.from("teacher_differentiation_projects").select("*").eq("id",id).single();setP(data);const {data:rs}=await s.from("teacher_project_reflections").select("*").eq("project_id",id).order("created_at",{ascending:false});setReflections(rs||[]);const root=(data as any)?.parent_project_id||id;const {data:vs}=await s.from("teacher_differentiation_projects").select("id,title,version_no,parent_project_id,status,version_note,updated_at").or("id.eq."+root+",parent_project_id.eq."+root).order("version_no",{ascending:true});setVersions(vs||[]);setLoading(false)})()},[id]);
  if(loading)return <main className="integratedPlan"><div className="libraryEmpty">جارٍ بناء خطة الدرس…</div></main>;
  if(!p)return <main className="integratedPlan"><div className="libraryEmpty">تعذر العثور على المشروع.</div></main>;
  const d=p.project_data||{}, tools=[
   ["readiness","التدرج",Layers3,"tiering"],["thinking","بلوم المعدل",BrainCircuit,"bloom"],["concepts","أشكال فن",GitCompareArrows,"venn"],["choice","إكس / أو",Grid3X3,"xo"],["operations","إدارة الصف",School,"classroom"]
  ] as const;
  return <main className="integratedPlan">
-  <header className="tierTop noPrint"><Link href="/teacher/library">مكتبتي <ArrowLeft size={14}/></Link><div><Sparkles/><b>خطة الدرس المتمايز</b></div><div className="planTopActions"><Link href={"/teacher/reflect/"+id}><Sparkles/> تسجيل ما بعد التطبيق</Link><button onClick={()=>window.print()}><Printer/> طباعة / PDF</button></div></header>
+  <header className="tierTop noPrint"><Link href="/teacher/library">مكتبتي <ArrowLeft size={14}/></Link><div><Sparkles/><b>خطة الدرس المتمايز</b></div><div className="planTopActions"><Link href={"/teacher/library"}><Copy/> إنشاء نسخة محسنة من المكتبة</Link><Link href={"/teacher/reflect/"+id}><Sparkles/> تسجيل ما بعد التطبيق</Link><button onClick={()=>window.print()}><Printer/> طباعة / PDF</button></div></header>
   <section className="planCover"><span>DIFFERENTIATED LESSON PLAN</span><h1>{p.title}</h1><p>{[p.subject,p.grade].filter(Boolean).join(" • ")}</p><div><small>ناتج التعلم المشترك</small><b>{p.learning_goal}</b></div><div><small>دليل الجاهزية والقرار</small><b>{p.readiness_evidence||"لم يحدد"}</b></div></section>
+  {versions.length>1&&<section className="versionJourney"><header><span>EVOLUTION</span><h2>سلسلة تطور الدرس</h2><p>كل إصدار يحتفظ بتصميمه ودليله؛ افتح أي نسخة لمقارنة مسار التحسين عبر الزمن.</p></header><div>{versions.map((v:any)=><Link className={v.id===id?"current":""} href={"/teacher/plan/"+v.id} key={v.id}><b>V{v.version_no||1}</b><span>{v.status==="applied"?"مطبق":v.status==="ready"?"جاهز":"مسودة"}</span><small>{v.version_note||new Date(v.updated_at).toLocaleDateString("ar-SA")}</small></Link>)}</div></section>}
   <section className="planProgress noPrint">{tools.filter(t=>(p.selected_tools||[]).includes(t[0])).map(([key,label,Icon,route])=><div className={d[key]?"complete":""} key={key}><Icon/><span>{label}</span>{d[key]?<Check/>:<Link href={"/teacher/lab/"+route+"?project="+id}>إكمال</Link>}</div>)}</section>
   {d.tiering&&<PlanSection icon={<Layers3/>} n="01" title="التدرج حسب الجاهزية"><div className="planTierGrid">{(d.tiering.tiers||[]).map((x:any,i:number)=><article key={i}><span>L{i+1}</span><h3>{x.title||x.name||["دعم موجّه","الإتقان","تحدٍ ممتد"][i]}</h3><p>{x.task||x.challenge||"—"}</p><small>{x.support||x.scaffold||""}</small></article>)}</div></PlanSection>}
   {d.thinking&&<PlanSection icon={<BrainCircuit/>} n="02" title="عمق التفكير ودليل التعلم"><div className="planRows">{(d.thinking.rows||[]).filter((x:any)=>x.process||x.product).map((x:any)=><article key={x.level}><b>{x.level}</b><span>{x.process||"—"}</span><i>{x.product||"—"}</i></article>)}</div></PlanSection>}
