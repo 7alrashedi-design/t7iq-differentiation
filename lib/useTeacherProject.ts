@@ -43,5 +43,7 @@ export function useTeacherProject(){
   setProject(p=>p?{...p,project_data:next}:p);
  },[projectId,project]);
 
- return {projectId,project,projectLoading,projectError,reload,saveTool};
+ const toolRoutes:Record<string,string>={readiness:"/teacher/lab/tiering",thinking:"/teacher/lab/bloom",concepts:"/teacher/lab/venn",choice:"/teacher/lab/xo",operations:"/teacher/lab/classroom"};
+ const nextHref=(current:string)=>{if(!projectId||!project)return null;const order=["readiness","thinking","concepts","choice","operations"];const selected=order.filter(x=>(project.selected_tools||[]).includes(x));const i=selected.indexOf(current);const next=selected[i+1];return next?toolRoutes[next]+"?project="+projectId:"/teacher/plan/"+projectId};
+ return {projectId,project,projectLoading,projectError,reload,saveTool,nextHref};
 }
