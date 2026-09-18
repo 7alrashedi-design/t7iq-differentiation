@@ -357,3 +357,5 @@ body{
 @media print{
   .reportActions,.reportNext{display:none!important}.reportPage{max-width:none;padding:0}.reportCard{break-inside:avoid;box-shadow:none}.reportHero{break-inside:avoid}.reportFooter{font-size:8pt}
 }
+
+.adminHeaderActions{display:flex;gap:8px;align-items:center}.adminHeaderActions a{text-decoration:none}@media(max-width:900px){.adminHeaderActions{margin-top:12px;flex-wrap:wrap}}
