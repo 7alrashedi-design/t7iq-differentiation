@@ -9,7 +9,7 @@ import {
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { products, scoreLabels, styleItems, styleMeta, type StyleCode } from "@/lib/workshop/styleData";
 
-type Stage="join"|"scale"|"report"|"products"|"evaluate"|"journey"|"diagnosis"|"differentiate"|"lesson"|"apply"|"done";
+type Stage="join"|"scale"|"report"|"products"|"evaluate"|"journey"|"diagnosis"|"differentiate"|"lesson"|"apply"|"finalReport"|"done";
 type Scores=Record<StyleCode,number>;
 type Rubric={id:string;level_no:number;section:string;subsection:string|null;criterion_template:string;essential:boolean;min_score:number;max_score:number;sort_order:number};
 
@@ -255,7 +255,7 @@ export default function WorkshopParticipant(){
     e.preventDefault();setBusy(true);setNotice("");
     try{
       await api("apply",{participant_token:token,email,mobile,school_name:org,note:lessonNote,interested:true});
-      setApplicationSent(true);setStage("done");
+      setApplicationSent(true);if(participantProduct?.id){try{const j=await api("product_journey",{participant_token:token,participant_product_id:participantProduct.id});setJourney(j)}catch{}}setStage("finalReport");
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر إرسال الطلب.")}finally{setBusy(false)}
   }
 
@@ -379,6 +379,25 @@ export default function WorkshopParticipant(){
     <div className="labActions"><button className="outlineButton" onClick={()=>setStage("differentiate")}><ArrowRight size={16}/> السابق</button><button className="primaryButton" onClick={()=>setStage("apply")}>إنهاء التجربة وما بعد الورشة <ArrowLeft size={17}/></button></div>
   </main>;
 
+  if(stage==="finalReport") {
+    const primary=result.top[0],second=result.top[1],third=result.top[2];
+    const j=journey?.summary;
+    return <main className="workshopPage finalExperienceReport">
+      <header className="workshopTop finalReportTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>تقرير تجربة المشارك</small></div></div><div className="noPrint finalReportActions"><button className="outlineButton" onClick={()=>window.print()}><Download size={16}/> PDF</button><button className="outlineButton" onClick={()=>setStage("done")}>إنهاء التجربة <ArrowLeft size={16}/></button></div></header>
+      <section className="finalReportHero"><div><span className="sectionKicker">رحلتي في التمايز</span><h1>{name}</h1><p>{org||"مشارك في الورشة"}</p><div className="finalFingerprintCode">{result.fingerprint}</div><small>بصمتي التعبيرية</small></div><div className="finalHeroStatement"><span>من التشخيص إلى الدليل</span><b>لم تخبرني البصمة ماذا يجب أن أختار؛ بل ساعدتني على فهم <em>كيف أستطيع أن أضيف</em> داخل المنتج.</b></div></section>
+      <section className="finalStoryGrid">
+        <article className="identityStory"><span>01 • من أنا؟</span><h2>{styleMeta[primary.code].title}</h2><p>{styleMeta[primary.code].description}</p><div className="finalTopCodes"><b>{primary.code} <small>{primary.mean.toFixed(1)}</small></b><b>{second.code} <small>{second.mean.toFixed(1)}</small></b><b>{third.code} <small>{third.mean.toFixed(1)}</small></b></div></article>
+        <article className="choiceStory"><span>02 • ماذا اخترت؟</span><h2>{selectedProduct?.product_name||"منتج متمايز"}</h2><p>اخترت المنتج بحرية من المكتبة، دون أن تحصرني البصمة في نوع واحد من المخرجات.</p><div className="finalRole"><small>الدور الذي تقترحه بصمتي</small><b>{selectedProduct?roleFor([selectedProduct.product_id,selectedProduct.product_name,selectedProduct.style_code]):styleMeta[primary.code].role}</b></div></article>
+        <article className="growthStory"><span>03 • كيف تطور المنتج؟</span><h2>{j?.attempts_count??0} محاولات موثقة</h2><div className="growthNumbers"><div><small>البداية</small><b>{j?.first_average??"—"}<em>/6</em></b></div><ArrowLeft size={22}/><div><small>الأحدث</small><b>{j?.latest_average??"—"}<em>/6</em></b></div></div><p>{j?.total_improvement>0?"تحسن المنتج بمقدار "+j.total_improvement+" نقطة منذ أول محاولة.":"يوثق السجل محاولات التطوير والتغذية الراجعة عبر المستويات."}</p></article>
+        <article className="evidenceStory"><span>04 • ما الدليل؟</span><h2>أثر يمكن تتبعه</h2><p>الدرجات وحدها ليست الدليل؛ السجل يجمع المحاولات، محاور الأداء، الملاحظات، الانتقال بين مستويات التحدي، وأثر التحسين.</p><div className="evidenceTags"><b>المحتوى</b><b>العرض</b><b>الإبداع</b><b>التأمل</b></div></article>
+      </section>
+      <section className="finalLearningArc"><div className="finalArcHead"><span className="sectionKicker">ما الذي عشته في الورشة؟</span><h2>التمايز كعملية قرار، لا كقائمة أنشطة.</h2></div><div className="arcSteps"><div><b>1</b><span>شخّصت تفضيلاتي</span></div><i/><div><b>2</b><span>اخترت منتجي بحرية</span></div><i/><div><b>3</b><span>قيّمت المنتج</span></div><i/><div><b>4</b><span>طورت الفجوات</span></div><i/><div><b>5</b><span>ارتفع سقف التحدي</span></div><i/><div><b>6</b><span>وثقت أثر النمو</span></div></div></section>
+      <section className="finalReflection"><Sparkles size={22}/><div><span>الخلاصة التي أحملها معي</span><b>التمايز لا يعني أن يتعلم كل طالب شيئًا مختلفًا؛ بل أن نمنحه نقطة دخول ومسار تعبير وتحديًا مناسبًا، ثم نستخدم الدليل لنقرر خطوته التالية.</b></div></section>
+      <footer className="reportFooter"><span>التمايز • diff.t7iq.com</span><span>{session?.title||"ورشة التمايز"}{session?.trainer_names?.length?" • "+session.trainer_names.join("، "):""}</span></footer>
+      <div className="finalReportBottom noPrint"><button className="outlineButton" onClick={()=>setStage("journey")}><ArrowRight size={16}/> سجل المنتج</button><button className="primaryButton" onClick={()=>setStage("done")}>إنهاء التجربة <ArrowLeft size={16}/></button></div>
+    </main>
+  }
+
   if(stage==="apply") return <main className="participantGate applyGate">
     <section className="participantJoinCard applyCard">
       <div className="differenceMark"><span>ت</span></div>
@@ -390,7 +409,7 @@ export default function WorkshopParticipant(){
         <label>المدرسة / الجهة<input value={org} onChange={e=>setOrg(e.target.value)}/></label>
         <button className="primaryButton" disabled={busy}><GraduationCap size={17}/> إرسال طلب الانضمام</button>
       </form>
-      <button className="outlineButton skipApplication" onClick={()=>setStage("done")}>إنهاء دون تقديم طلب</button>
+      <button className="outlineButton skipApplication" onClick={async()=>{if(participantProduct?.id){try{const d=await api("product_journey",{participant_token:token,participant_product_id:participantProduct.id});setJourney(d)}catch{}}setStage("finalReport")}}>عرض تقريري الختامي</button>
       {notice&&<div className="loginMessage">{notice}</div>}
     </section>
   </main>;
