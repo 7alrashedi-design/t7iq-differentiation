@@ -1,0 +1,247 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowLeft, BookOpenCheck, Building2, CheckCircle2, GraduationCap,
+  LayoutDashboard, Plus, School, Sparkles, UserPlus, UsersRound
+} from "lucide-react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+type Org = { id: string; name: string; organization_type: string; status: string };
+type Program = { id: string; title: string; status: string; delivery_mode: string };
+type Profile = { full_name: string | null; role: string; organization_id: string | null };
+
+export default function AdminPage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const [schoolName, setSchoolName] = useState("");
+  const [schoolType, setSchoolType] = useState("school");
+
+  const [programTitle, setProgramTitle] = useState("");
+  const [programAudience, setProgramAudience] = useState("المعلمون");
+  const [deliveryMode, setDeliveryMode] = useState("blended");
+
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("teacher");
+  const [inviteOrg, setInviteOrg] = useState("");
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  async function refresh() {
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if (!user) return;
+
+      const [{ data: p }, { data: o }, { data: pr }] = await Promise.all([
+        supabase.from("profiles").select("full_name,role,organization_id").eq("id", user.id).maybeSingle(),
+        supabase.from("organizations").select("id,name,organization_type,status").order("created_at", { ascending: false }),
+        supabase.from("training_programs").select("id,title,status,delivery_mode").order("created_at", { ascending: false })
+      ]);
+
+      setProfile(p as Profile | null);
+      setOrgs((o ?? []) as Org[]);
+      setPrograms((pr ?? []) as Program[]);
+      if (!inviteOrg && o?.[0]?.id) setInviteOrg(o[0].id);
+    } catch {
+      setNotice("تعذر تحميل بيانات الإدارة.");
+    }
+  }
+
+  const canManage = useMemo(
+    () => profile?.role === "platform_admin" || profile?.role === "admin",
+    [profile]
+  );
+
+  async function createOrganization(e: FormEvent) {
+    e.preventDefault();
+    if (!schoolName.trim()) return;
+    setBusy(true); setNotice("");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.from("organizations").insert({
+        name: schoolName.trim(),
+        organization_type: schoolType,
+        status: "active"
+      });
+      if (error) throw error;
+      setSchoolName("");
+      setNotice("تم إنشاء الجهة بنجاح.");
+      await refresh();
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "تعذر إنشاء الجهة.");
+    } finally { setBusy(false); }
+  }
+
+  async function createProgram(e: FormEvent) {
+    e.preventDefault();
+    if (!programTitle.trim()) return;
+    setBusy(true); setNotice("");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const { error } = await supabase.from("training_programs").insert({
+        title: programTitle.trim(),
+        audience: programAudience.trim(),
+        delivery_mode: deliveryMode,
+        status: "draft",
+        created_by: sessionData.session?.user.id ?? null
+      });
+      if (error) throw error;
+      setProgramTitle("");
+      setNotice("تم إنشاء البرنامج التدريبي كمسودة.");
+      await refresh();
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "تعذر إنشاء البرنامج.");
+    } finally { setBusy(false); }
+  }
+
+  async function inviteUser(e: FormEvent) {
+    e.preventDefault();
+    if (!inviteEmail || !inviteName || !inviteOrg) return;
+    setBusy(true); setNotice("");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data, error } = await supabase.functions.invoke("invite-platform-user", {
+        body: {
+          email: inviteEmail,
+          full_name: inviteName,
+          role: inviteRole,
+          organization_id: inviteOrg
+        }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setInviteName(""); setInviteEmail("");
+      setNotice("تم إرسال دعوة الحساب وربطه بالجهة.");
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "تعذر إرسال الدعوة.");
+    } finally { setBusy(false); }
+  }
+
+  if (!profile) {
+    return (
+      <main className="adminGate">
+        <div className="adminGateCard">
+          <div className="brandSymbol">T7</div>
+          <h1>إدارة منصة T7IQ</h1>
+          <p>سجّل الدخول بحساب مدير المنصة للوصول إلى إدارة الورش والمدارس والمعلمين.</p>
+          <Link className="primaryButton" href="/login">تسجيل الدخول <ArrowLeft size={17}/></Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!canManage) {
+    return (
+      <main className="adminGate">
+        <div className="adminGateCard">
+          <CheckCircle2 size={32}/>
+          <h1>الحساب متصل</h1>
+          <p>هذا الحساب لا يملك صلاحية مدير المنصة.</p>
+          <Link className="outlineButton" href="/">العودة للمنصة</Link>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="adminPage">
+      <header className="adminHeader">
+        <div>
+          <span className="sectionKicker">T7IQ PLATFORM CONTROL</span>
+          <h1>مركز إدارة المنصة</h1>
+          <p>أنشئ البرنامج التدريبي، ثم الجهة والمعلمين، وبعدها تبدأ رحلة التطبيق داخل الفصول.</p>
+        </div>
+        <Link href="/" className="outlineButton">واجهة المعلم</Link>
+      </header>
+
+      {notice && <div className="adminNotice">{notice}</div>}
+
+      <section className="adminStats">
+        <article><Building2 size={20}/><div><strong>{orgs.length}</strong><span>جهة ومدرسة</span></div></article>
+        <article><GraduationCap size={20}/><div><strong>{programs.length}</strong><span>برنامج تدريبي</span></div></article>
+        <article><UsersRound size={20}/><div><strong>—</strong><span>المعلمون المشاركون</span></div></article>
+        <article><LayoutDashboard size={20}/><div><strong>عام</strong><span>رحلة تطبيق ممتدة</span></div></article>
+      </section>
+
+      <section className="adminJourney">
+        <div className="journeyStep active"><span>1</span><b>البرنامج التدريبي</b><small>صمم الورشة ومسار الاجتياز</small></div>
+        <div className="journeyLine"/>
+        <div className="journeyStep"><span>2</span><b>الجهات والمعلمون</b><small>مدرسة كاملة أو معلم مستقل</small></div>
+        <div className="journeyLine"/>
+        <div className="journeyStep"><span>3</span><b>الفصول والتشخيص</b><small>بيانات التعلم وخريطة الإتقان</small></div>
+        <div className="journeyLine"/>
+        <div className="journeyStep"><span>4</span><b>التطبيق السنوي</b><small>درس، تنفيذ، أثر، توصية جديدة</small></div>
+      </section>
+
+      <section className="adminGrid">
+        <article className="adminCard">
+          <div className="adminCardHead">
+            <div className="iconBadge mint"><GraduationCap size={20}/></div>
+            <div><span>المرحلة الأولى</span><h2>إنشاء برنامج / ورشة</h2></div>
+          </div>
+          <form onSubmit={createProgram} className="adminForm">
+            <label>اسم البرنامج<input value={programTitle} onChange={e=>setProgramTitle(e.target.value)} placeholder="مثال: التمايز في الفصل" required/></label>
+            <label>الفئة المستهدفة<input value={programAudience} onChange={e=>setProgramAudience(e.target.value)} /></label>
+            <label>نمط التنفيذ<select value={deliveryMode} onChange={e=>setDeliveryMode(e.target.value)}><option value="blended">مدمج</option><option value="in_person">حضوري</option><option value="online">عن بعد</option></select></label>
+            <button className="primaryButton" disabled={busy}><Plus size={17}/> إنشاء كمسودة</button>
+          </form>
+          <div className="adminMiniList">
+            {programs.slice(0,4).map(p=><div key={p.id}><BookOpenCheck size={16}/><div><b>{p.title}</b><span>{p.status === "draft" ? "مسودة" : p.status}</span></div></div>)}
+            {programs.length === 0 && <p>لا توجد برامج بعد. ابدأ بإنشاء البرنامج الأول.</p>}
+          </div>
+        </article>
+
+        <article className="adminCard">
+          <div className="adminCardHead">
+            <div className="iconBadge blue"><School size={20}/></div>
+            <div><span>المرحلة الثانية</span><h2>إنشاء جهة / مدرسة</h2></div>
+          </div>
+          <form onSubmit={createOrganization} className="adminForm">
+            <label>اسم الجهة<input value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="اسم المدرسة أو الجهة" required/></label>
+            <label>نوع الجهة<select value={schoolType} onChange={e=>setSchoolType(e.target.value)}><option value="school">مدرسة</option><option value="individual">معلم مستقل</option><option value="training_provider">جهة تدريب</option></select></label>
+            <button className="primaryButton" disabled={busy}><Plus size={17}/> إنشاء الجهة</button>
+          </form>
+          <div className="adminMiniList">
+            {orgs.slice(0,4).map(o=><div key={o.id}><Building2 size={16}/><div><b>{o.name}</b><span>{o.organization_type === "school" ? "مدرسة" : o.organization_type === "individual" ? "مستقل" : "جهة تدريب"}</span></div></div>)}
+            {orgs.length === 0 && <p>لا توجد جهات بعد.</p>}
+          </div>
+        </article>
+
+        <article className="adminCard wideCard">
+          <div className="adminCardHead">
+            <div className="iconBadge peachIcon"><UserPlus size={20}/></div>
+            <div><span>إدارة الوصول</span><h2>دعوة مدير مدرسة أو معلم</h2></div>
+          </div>
+          <form onSubmit={inviteUser} className="adminForm inviteForm">
+            <label>الاسم<input value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="الاسم الكامل" required/></label>
+            <label>البريد<input type="email" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="name@example.com" required/></label>
+            <label>الدور<select value={inviteRole} onChange={e=>setInviteRole(e.target.value)}><option value="teacher">معلم</option><option value="school_admin">مدير مدرسة</option><option value="trainer">مدرب</option><option value="supervisor">مشرف</option></select></label>
+            <label>الجهة<select value={inviteOrg} onChange={e=>setInviteOrg(e.target.value)} required><option value="">اختر الجهة</option>{orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}</select></label>
+            <button className="primaryButton" disabled={busy || orgs.length===0}><UserPlus size={17}/> إرسال الدعوة</button>
+          </form>
+          <div className="adminHint"><Sparkles size={17}/><p>بعد تفعيل الحساب يمكن ربط المعلم بالبرنامج التدريبي. وعند استيفاء شرط الاجتياز تُفتح له رحلة التطبيق السنوية.</p></div>
+        </article>
+      </section>
+
+      <section className="adminNext">
+        <div>
+          <span className="sectionKicker">التالي في البناء</span>
+          <h2>الفصول → التشخيص → خريطة الإتقان</h2>
+          <p>بعد تثبيت البرنامج والجهات والحسابات، تصبح شاشة التشخيص مرتبطة تلقائيًا بالمعلم وفصله ومادته.</p>
+        </div>
+        <span className="nextTag">Learning Intelligence</span>
+      </section>
+    </main>
+  );
+}
