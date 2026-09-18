@@ -1,5 +1,5 @@
 "use client";
-import {useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {ArrowLeft,Check,ChevronLeft,Layers3,Plus,Sparkles} from "lucide-react";
 import {useTeacherProject} from "@/lib/useTeacherProject";
@@ -13,8 +13,7 @@ export default function TieringBuilder(){
  const {projectId,project,saveTool}=useTeacherProject(); const [saving,setSaving]=useState(false),[saved,setSaved]=useState(false);
  const [step,setStep]=useState(1),[subject,setSubject]=useState(""),[grade,setGrade]=useState(""),[lesson,setLesson]=useState(""),[goal,setGoal]=useState(""),[evidence,setEvidence]=useState("");
  const [tiers,setTiers]=useState(defaults);
- useState(()=>{});
- useMemo(()=>{if(project){setSubject(project.subject||"");setGrade(project.grade||"");setLesson(project.lesson||project.title||"");setGoal(project.learning_goal||"");setEvidence(project.readiness_evidence||"");const old=project.project_data?.tiering;if(old?.tiers)setTiers(old.tiers)}return null},[project]);
+ useEffect(()=>{if(project){setSubject(project.subject||"");setGrade(project.grade||"");setLesson(project.lesson||project.title||"");setGoal(project.learning_goal||"");setEvidence(project.readiness_evidence||"");const old=project.project_data?.tiering;if(old?.tiers)setTiers(old.tiers)}},[project]);
  const valid=useMemo(()=>subject.trim()&&lesson.trim()&&goal.trim(),[subject,lesson,goal]);
  function update(i:number,key:keyof Tier,value:string){setTiers(x=>x.map((t,n)=>n===i?{...t,[key]:value}:t))}
  return <main className="tierBuilder">
