@@ -83,7 +83,7 @@ export default function DashboardClient() {
           <a className="active"><House size={18}/> رحلة اليوم</a>
           <a><UsersRound size={18}/> فصولي وطلابي</a>
           <a><Target size={18}/> خريطة الإتقان</a>
-          <a><BookOpenCheck size={18}/> تجارب التعلم</a>
+          <Link href="/teacher/lab"><BookOpenCheck size={18}/> مختبر التمايز</Link>
           <a><LineChart size={18}/> التقدم والأثر</a>
           <a><GraduationCap size={18}/> مساري المهني</a>
         </nav>
