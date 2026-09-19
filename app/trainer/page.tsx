@@ -28,18 +28,19 @@ export default function TrainerHome(){
     const supabase=getSupabaseBrowserClient();
     const {data:{session}}=await supabase.auth.getSession();
     if(!session?.user){setLoading(false);return}
-    const [{data:p},{data:a},{data:s}]=await Promise.all([
+    const [{data:p},{data:a}]=await Promise.all([
       supabase.from("profiles").select("id,role,full_name").eq("id",session.user.id).maybeSingle(),
-      supabase.from("workshop_session_trainers").select("session_id,trainer_id").eq("trainer_id",session.user.id),
-      supabase.from("workshop_sessions")
-        .select("id,title,session_code,status,trainer_names,venue,starts_at,ends_at,created_at")
-        .order("starts_at",{ascending:true})
+      supabase.from("workshop_session_trainers").select("session_id,trainer_id").eq("trainer_id",session.user.id)
     ]);
     setProfile(p as Profile|null);
     const assigned=(a??[]) as Assignment[];
     setAssignments(assigned);
-    const ids=new Set(assigned.map(x=>x.session_id));
-    setSessions(((s??[]) as Session[]).filter(x=>ids.has(x.id)));
+    const ids=assigned.map(x=>x.session_id);
+    if(!ids.length){setSessions([]);setLoading(false);return}
+    const {data:s}=await supabase.from("workshop_sessions")
+      .select("id,title,session_code,status,trainer_names,venue,starts_at,ends_at,created_at")
+      .in("id",ids).order("starts_at",{ascending:true});
+    setSessions((s??[]) as Session[]);
     setLoading(false);
   }
 
