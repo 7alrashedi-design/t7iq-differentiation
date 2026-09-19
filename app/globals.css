@@ -1338,3 +1338,12 @@ body{
 .accountRoster{max-height:340px;overflow:auto}.accountRoster>div{align-items:flex-start}.accountRoster b{font-size:13px}.accountRoster span{font-size:11px;line-height:1.6}
 .trainerAssignmentBox{margin:12px 0 10px;border:1px solid #dce7e7;border-radius:12px;background:#f8fbfa;padding:10px;display:grid;gap:8px}.trainerAssignmentBox label{display:grid;grid-template-columns:auto minmax(180px,1fr);gap:10px;align-items:center;font-size:11px;font-weight:800;color:#527078}.trainerAssignmentBox select{border:1px solid #d4e2e1;border-radius:9px;background:#fff;padding:8px 10px;font:inherit;font-size:12px;color:#355b63}.assignedTrainerChips{display:flex;flex-wrap:wrap;gap:6px}.assignedTrainerChips button{border:1px solid #cfe2df;border-radius:999px;background:#edf7f5;color:#317c72;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer}.assignedTrainerChips button:hover{background:#e4f2ef}
 @media(max-width:640px){.trainerAssignmentBox label{grid-template-columns:1fr}.accountRoster{max-height:none}}
+
+
+/* ===== Product discovery progressive browsing ===== */
+.productDiscovery{display:grid;grid-template-columns:1fr 290px;gap:12px;align-items:center;position:sticky;top:0;z-index:9;background:rgba(244,248,248,.96);backdrop-filter:blur(10px);padding:8px 0 10px}
+.productDiscovery .productFilters{position:static;margin:0;padding:0;background:transparent;backdrop-filter:none}
+.productSearch{display:grid;gap:4px}.productSearch span{font-size:10px;color:#668085;font-weight:850}.productSearch input{border:1px solid #d6e4e3;border-radius:11px;background:#fff;padding:10px 12px;font:inherit;font-size:12px;outline:0}.productSearch input:focus{border-color:#62a79f;box-shadow:0 0 0 3px rgba(79,157,147,.1)}
+.productResultMeta{display:flex;align-items:center;gap:6px;margin:6px 0 10px;color:#70868a;font-size:11px}.productResultMeta b{font-size:14px;color:#347f76}
+.productMore{display:flex;justify-content:center;align-items:center;gap:12px;margin:18px 0 4px}.productMore span{font-size:10px;color:#768a8d}
+@media(max-width:760px){.productDiscovery{grid-template-columns:1fr;top:0}.productDiscovery .productFilters{order:2}.productSearch{order:1}.productMore{flex-direction:column}.productSearch input{font-size:14px}}
