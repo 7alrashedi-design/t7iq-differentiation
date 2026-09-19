@@ -177,7 +177,7 @@ export default function AdminPage() {
             <p>ابدأ من البرنامج التدريبي، أنشئ المدارس والحسابات، ثم تابع رحلة التطبيق طوال العام.</p>
           </div>
         </div>
-        <div className="adminHeaderActions"><Link href="/admin/workshops" className="primaryButton">إدارة الورش واختبارها</Link><Link href="/workshop/test" className="outlineButton">اختبار شامل</Link><Link href="/" className="outlineButton">واجهة المعلم</Link></div>
+        <div className="adminHeaderActions"><Link href="/admin/training" className="primaryButton">الورشة والتأهيل</Link><Link href="/admin/workshops" className="outlineButton">إدارة الورش</Link><Link href="/workshop/test" className="outlineButton">اختبار شامل</Link><Link href="/" className="outlineButton">واجهة المعلم</Link></div>
       </header>
 
       {notice && <div className="adminNotice">{notice}</div>}
