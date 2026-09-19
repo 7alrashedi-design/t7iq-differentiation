@@ -128,7 +128,7 @@ export default function WorkshopsAdminPage(){
         <div className="differenceMark small"><span>ت</span></div>
         <div><span className="sectionKicker">منصة التمايز</span><h1>إدارة الورش والجلسات</h1><p>أنشئ جلسة، اعرض QR، وتابع بصمة المجموعة وتقدم المنتجات لحظة بلحظة.</p></div>
       </div>
-      <div className="adminHeaderActions"><Link href="/workshop/demo" className="outlineButton">التجربة الفردية</Link><Link href="/admin" className="outlineButton">مركز القيادة</Link></div>
+      <div className="adminHeaderActions"><Link href="/workshop/demo" className="outlineButton">التجربة الفردية</Link>{profile?.role!=="trainer"&&<Link href="/admin" className="outlineButton">مركز القيادة</Link>}</div>
     </header>
 
     {notice&&<div className="adminNotice">{notice}</div>}
