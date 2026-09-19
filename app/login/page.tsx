@@ -35,6 +35,8 @@ export default function LoginPage() {
 
       if (profile?.role === "platform_admin" || profile?.role === "admin") {
         router.replace("/admin");
+      } else if (profile?.role === "trainer") {
+        router.replace("/admin/workshops");
       } else {
         router.replace("/");
       }
