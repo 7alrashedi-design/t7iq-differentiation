@@ -1332,3 +1332,9 @@ body{
   .evaluationHero{padding:10px!important}.evaluationHero h1{font-size:20pt!important}
   .reportFooter{break-before:auto!important;page-break-before:auto!important}
 }
+
+
+/* ===== Admin / trainer management refinement 2026-09-19 ===== */
+.accountRoster{max-height:340px;overflow:auto}.accountRoster>div{align-items:flex-start}.accountRoster b{font-size:13px}.accountRoster span{font-size:11px;line-height:1.6}
+.trainerAssignmentBox{margin:12px 0 10px;border:1px solid #dce7e7;border-radius:12px;background:#f8fbfa;padding:10px;display:grid;gap:8px}.trainerAssignmentBox label{display:grid;grid-template-columns:auto minmax(180px,1fr);gap:10px;align-items:center;font-size:11px;font-weight:800;color:#527078}.trainerAssignmentBox select{border:1px solid #d4e2e1;border-radius:9px;background:#fff;padding:8px 10px;font:inherit;font-size:12px;color:#355b63}.assignedTrainerChips{display:flex;flex-wrap:wrap;gap:6px}.assignedTrainerChips button{border:1px solid #cfe2df;border-radius:999px;background:#edf7f5;color:#317c72;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer}.assignedTrainerChips button:hover{background:#e4f2ef}
+@media(max-width:640px){.trainerAssignmentBox label{grid-template-columns:1fr}.accountRoster{max-height:none}}
