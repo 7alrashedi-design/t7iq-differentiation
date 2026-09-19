@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import QRCode from "qrcode";
 import {
   ArrowRight, BarChart3, CheckCircle2, Copy, Download, ExternalLink,
@@ -120,7 +120,7 @@ export default function WorkshopDashboard(){
   return <main className="liveDashboardPage">
     <header className="liveDashboardHeader">
       <div>
-        <Link href="/admin/workshops" className="backLink"><ArrowRight size={16}/> الورش</Link>
+        <Link href={trainerView?"/trainer":"/admin/workshops"} className="backLink"><ArrowRight size={16}/> {trainerView?"مساحة المدرب":"الورش"}</Link>
         <span className="sectionKicker">لوحة المدرب الحية</span>
         <h1>{session.title}</h1>
         <p>{session.trainer_names?.join("، ")} {session.venue?"• "+session.venue:""}</p>
