@@ -47,7 +47,7 @@ export default function WorkshopsAdminPage(){
     if(!trainers && p?.full_name) setTrainers(p.full_name);
   }
 
-  const allowed=useMemo(()=>["platform_admin","admin","trainer"].includes(profile?.role??""),[profile]);
+  const allowed=useMemo(()=>["platform_admin","admin"].includes(profile?.role??""),[profile]);
 
   function generateCode(){
     const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -120,7 +120,7 @@ export default function WorkshopsAdminPage(){
   }
 
   if(!profile) return <main className="adminGate"><div className="adminGateCard refinedGate"><div className="differenceMark"><span>ت</span></div><h1>إدارة الورش</h1><p>يلزم تسجيل الدخول بحساب مدير المنصة أو المدرب.</p><Link href="/login" className="primaryButton">تسجيل الدخول</Link></div></main>;
-  if(!allowed) return <main className="adminGate"><div className="adminGateCard refinedGate"><h1>لا توجد صلاحية</h1><p>إدارة الورش متاحة لمدير المنصة والمدرب.</p><Link href="/" className="outlineButton">العودة</Link></div></main>;
+  if(!allowed) return <main className="adminGate"><div className="adminGateCard refinedGate"><h1>لا توجد صلاحية</h1><p>إدارة إنشاء الورش وإسنادها متاحة لمدير المنصة. ينتقل المدرب إلى مساحة المدرب لتشغيل الجلسات المسندة إليه.</p><Link href="/" className="outlineButton">العودة</Link></div></main>;
 
   return <main className="workshopAdminPage">
     <header className="workshopAdminHeader">
@@ -128,7 +128,7 @@ export default function WorkshopsAdminPage(){
         <div className="differenceMark small"><span>ت</span></div>
         <div><span className="sectionKicker">منصة التمايز</span><h1>إدارة الورش والجلسات</h1><p>أنشئ جلسة، اعرض QR، وتابع بصمة المجموعة وتقدم المنتجات لحظة بلحظة.</p></div>
       </div>
-      <div className="adminHeaderActions"><Link href="/workshop/demo" className="outlineButton">التجربة الفردية</Link>{profile?.role!=="trainer"&&<Link href="/admin" className="outlineButton">مركز القيادة</Link>}</div>
+      <div className="adminHeaderActions"><Link href="/workshop/demo" className="outlineButton">التجربة الفردية</Link><Link href="/admin" className="outlineButton">مركز القيادة</Link></div>
     </header>
 
     {notice&&<div className="adminNotice">{notice}</div>}
@@ -170,7 +170,7 @@ export default function WorkshopsAdminPage(){
               {s.starts_at&&<span><CalendarDays size={14}/>{new Date(s.starts_at).toLocaleString("ar-SA")}</span>}
               {s.venue&&<span><Radio size={14}/>{s.venue}</span>}
             </div>
-            {profile?.role!=="trainer"&&<div className="trainerAssignmentBox"><label>إسناد مدرب<select defaultValue="" onChange={e=>{if(e.target.value)assignTrainer(s.id,e.target.value);e.currentTarget.value=""}}><option value="">اختر المدرب</option>{trainersList.filter(t=>!assignments.some(a=>a.session_id===s.id&&a.trainer_id===t.id)).map(t=><option key={t.id} value={t.id}>{t.full_name||t.email||"مدرب"}</option>)}</select></label><div className="assignedTrainerChips">{assignments.filter(a=>a.session_id===s.id).map(a=>{const t=trainersList.find(x=>x.id===a.trainer_id);return <button type="button" key={a.trainer_id} onClick={()=>unassignTrainer(s.id,a.trainer_id)} title="إلغاء الإسناد">{t?.full_name||t?.email||"مدرب"} ×</button>})}</div></div>}
+            <div className="trainerAssignmentBox"><label>إسناد مدرب<select defaultValue="" onChange={e=>{if(e.target.value)assignTrainer(s.id,e.target.value);e.currentTarget.value=""}}><option value="">اختر المدرب</option>{trainersList.filter(t=>!assignments.some(a=>a.session_id===s.id&&a.trainer_id===t.id)).map(t=><option key={t.id} value={t.id}>{t.full_name||t.email||"مدرب"}</option>)}</select></label><div className="assignedTrainerChips">{assignments.filter(a=>a.session_id===s.id).map(a=>{const t=trainersList.find(x=>x.id===a.trainer_id);return <button type="button" key={a.trainer_id} onClick={()=>unassignTrainer(s.id,a.trainer_id)} title="إلغاء الإسناد">{t?.full_name||t?.email||"مدرب"} ×</button>})}</div></div>}
             <div className="sessionButtons">
               <Link href={`/admin/workshops/${s.id}`} className="primaryButton">لوحة الجلسة <ArrowLeft size={15}/></Link>
               <button className="outlineButton" onClick={()=>copy(joinUrl)}><Copy size={15}/> نسخ رابط المشارك</button>
