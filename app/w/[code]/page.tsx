@@ -153,8 +153,15 @@ export default function WorkshopParticipant(){
     {code:"W",label:"كتابي"},{code:"O",label:"شفهي"},{code:"V",label:"مرئي/صوتي"},{code:"T",label:"تقني"},{code:"K",label:"حركي"}
   ],[]);
   const [productFilter,setProductFilter]=useState<ProductFilter>("ALL");
-  const visibleProducts=useMemo(()=>products.filter(p=>productFilter==="ALL" ? true : productFilter==="K" ? String(p[0]).startsWith("K-") : p[2]===productFilter),[productFilter]);
+  const [productQuery,setProductQuery]=useState("");
+  const [productLimit,setProductLimit]=useState(12);
   const topCodes=result.top.map(t=>t.code);
+  const filteredProducts=useMemo(()=>products
+    .filter(p=>productFilter==="ALL" ? true : productFilter==="K" ? String(p[0]).startsWith("K-") : p[2]===productFilter)
+    .filter(p=>!productQuery.trim() || String(p[1]).includes(productQuery.trim()) || String(p[0]).toLowerCase().includes(productQuery.trim().toLowerCase()))
+    .sort((a:any,b:any)=>Number(topCodes.includes(b[2] as StyleCode))-Number(topCodes.includes(a[2] as StyleCode)))
+  ,[productFilter,productQuery,result.fingerprint]);
+  const visibleProducts=filteredProducts.slice(0,productLimit);
   function fitLabel(p:any){return topCodes.includes(p[2] as StyleCode)?"يلائم بصمتك مباشرة":"يمكنك توظيف بصمتك داخله"}
   function roleFor(p:any){return productRoles[result.top[0].code]}
   const generatedGroups=useMemo(()=>{
@@ -358,9 +365,15 @@ export default function WorkshopParticipant(){
   if(stage==="products") return <main className="workshopPage productPage">
     <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>من البصمة إلى المنتج</small></div></div><button className="outlineButton" onClick={()=>setStage("report")}><ArrowRight size={16}/> تقريري</button></header>
     <section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي يشعل فضولك.</h1><p>كل المنتجات متاحة لك. بصمتك لا تقيد اختيارك؛ بل تساعدك في تحديد <b>الدور الذي تضيف به قوتك</b> داخل المنتج أو فريق العمل.</p></section>
-    <nav className="productFilters"><button className={productFilter==="ALL"?"active":""} onClick={()=>setProductFilter("ALL")}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={productFilter===g.code?"active":""} onClick={()=>setProductFilter(g.code)}>{g.label}</button>)}</nav>
+    <div className="productDiscovery">
+      <nav className="productFilters"><button className={productFilter==="ALL"?"active":""} onClick={()=>{setProductFilter("ALL");setProductLimit(12)}}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={productFilter===g.code?"active":""} onClick={()=>{setProductFilter(g.code);setProductLimit(12)}}>{g.label}</button>)}</nav>
+      <label className="productSearch"><span>ابحث عن منتج</span><input value={productQuery} onChange={e=>{setProductQuery(e.target.value);setProductLimit(12)}} placeholder="مثال: تقرير، فيديو، مجلة…"/></label>
+    </div>
     <div className="productChoiceHint"><UsersRound size={18}/><div><b>فكر بالمنتج أولًا، ثم بالدور.</b><span>مثال: صاحب البصمة الكتابية يمكنه اختيار «فيلم» ويكون دوره كتابة السيناريو أو توثيق المحتوى، بينما يكمل زملاؤه الأدوار البصرية والتقنية والأدائية.</span></div></div>
+    <div className="productResultMeta"><b>{filteredProducts.length}</b><span>منتجًا مطابقًا • نعرض الأقرب لبصمتك أولًا</span></div>
     <section className="productGrid allProductGrid">{visibleProducts.map((p:any)=><article key={p[0]} className={"productCard "+(topCodes.includes(p[2] as StyleCode)?"directFit":"")}><div className="productCardTop"><span className="productCode">{p[0]}</span>{topCodes.includes(p[2] as StyleCode)&&<span className="recommendedTag">قريب من بصمتك</span>}</div><h2>{p[1]}</h2><p>{fitLabel(p)}</p><div className="productRole"><span>دورك المقترح وفق بصمتك</span><b>{roleFor(p)}</b></div><button className="outlineButton" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button></article>)}</section>
+    {visibleProducts.length<filteredProducts.length&&<div className="productMore"><button className="outlineButton" onClick={()=>setProductLimit(x=>x+12)}>عرض 12 منتجًا إضافيًا</button><span>ظهر {visibleProducts.length} من {filteredProducts.length}</span></div>}
+    {filteredProducts.length===0&&<div className="emptyJourney">لا توجد منتجات مطابقة. غيّر البحث أو التصنيف.</div>}
     {notice&&<div className="loginMessage">{notice}</div>}
   </main>;
 
