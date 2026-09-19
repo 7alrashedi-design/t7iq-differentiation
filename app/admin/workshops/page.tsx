@@ -7,12 +7,16 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Session = {
   id:string; title:string; session_code:string; status:string; trainer_names:string[];
-  venue:string|null; starts_at:string|null; created_at:string;
+  venue:string|null; starts_at:string|null; created_at:string; created_by:string|null;
 };
+type Trainer={id:string;full_name:string|null;email:string|null};
+type Assignment={session_id:string;trainer_id:string};
 
 export default function WorkshopsAdminPage(){
   const [sessions,setSessions]=useState<Session[]>([]);
-  const [profile,setProfile]=useState<{role:string;full_name:string|null}|null>(null);
+  const [profile,setProfile]=useState<{id?:string;role:string;full_name:string|null}|null>(null);
+  const [trainersList,setTrainersList]=useState<Trainer[]>([]);
+  const [assignments,setAssignments]=useState<Assignment[]>([]);
   const [title,setTitle]=useState("ورشة التمايز");
   const [trainers,setTrainers]=useState("");
   const [venue,setVenue]=useState("");
@@ -26,14 +30,20 @@ export default function WorkshopsAdminPage(){
     const supabase=getSupabaseBrowserClient();
     const {data:{session}}=await supabase.auth.getSession();
     if(!session?.user) return;
-    const [{data:p},{data:s}]=await Promise.all([
-      supabase.from("profiles").select("role,full_name").eq("id",session.user.id).maybeSingle(),
+    const [{data:p},{data:s},{data:t},{data:a}]=await Promise.all([
+      supabase.from("profiles").select("id,role,full_name").eq("id",session.user.id).maybeSingle(),
       supabase.from("workshop_sessions")
-        .select("id,title,session_code,status,trainer_names,venue,starts_at,created_at")
-        .order("created_at",{ascending:false})
+        .select("id,title,session_code,status,trainer_names,venue,starts_at,created_at,created_by")
+        .order("created_at",{ascending:false}),
+      supabase.from("profiles").select("id,full_name,email").eq("role","trainer").order("full_name"),
+      supabase.from("workshop_session_trainers").select("session_id,trainer_id")
     ]);
     setProfile(p);
-    setSessions((s??[]) as Session[]);
+    const raw=(s??[]) as Session[];
+    const mine=new Set((a??[]).filter((x:any)=>x.trainer_id===session.user.id).map((x:any)=>x.session_id));
+    setSessions(p?.role==="trainer"?raw.filter(x=>x.created_by===session.user.id||mine.has(x.id)):raw);
+    setTrainersList((t??[]) as Trainer[]);
+    setAssignments((a??[]) as Assignment[]);
     if(!trainers && p?.full_name) setTrainers(p.full_name);
   }
 
@@ -54,7 +64,7 @@ export default function WorkshopsAdminPage(){
       const {data:{session}}=await supabase.auth.getSession();
       if(!session?.user) throw new Error("سجّل الدخول أولًا.");
       const code=generateCode();
-      const {error}=await supabase.from("workshop_sessions").insert({
+      const {data:created,error}=await supabase.from("workshop_sessions").insert({
         title:title.trim(),
         session_code:code,
         status:"open",
@@ -70,7 +80,7 @@ export default function WorkshopsAdminPage(){
           pass_average:4,
           essential_min:4
         }
-      });
+      }).select("id").single();
       if(error) throw error;
       setNotice(`تم إنشاء الجلسة وفتحها للمشاركين. الرمز: ${code}`);
       setVenue("");setStartsAt("");
@@ -78,6 +88,30 @@ export default function WorkshopsAdminPage(){
     }catch(e){
       setNotice(e instanceof Error?e.message:"تعذر إنشاء الجلسة.");
     }finally{setBusy(false)}
+  }
+
+  async function assignTrainer(sessionId:string,trainerId:string){
+    if(!trainerId) return;
+    setBusy(true);setNotice("");
+    try{
+      const supabase=getSupabaseBrowserClient();
+      const {data:{session}}=await supabase.auth.getSession();
+      const {error}=await supabase.from("workshop_session_trainers").upsert({session_id:sessionId,trainer_id:trainerId,assigned_by:session?.user.id??null});
+      if(error) throw error;
+      setNotice("تم إسناد المدرب للورشة.");
+      await load();
+    }catch(e){setNotice(e instanceof Error?e.message:"تعذر إسناد المدرب.")}finally{setBusy(false)}
+  }
+
+  async function unassignTrainer(sessionId:string,trainerId:string){
+    setBusy(true);setNotice("");
+    try{
+      const supabase=getSupabaseBrowserClient();
+      const {error}=await supabase.from("workshop_session_trainers").delete().eq("session_id",sessionId).eq("trainer_id",trainerId);
+      if(error) throw error;
+      setNotice("تم إلغاء إسناد المدرب.");
+      await load();
+    }catch(e){setNotice(e instanceof Error?e.message:"تعذر إلغاء الإسناد.")}finally{setBusy(false)}
   }
 
   async function copy(text:string){
@@ -136,6 +170,7 @@ export default function WorkshopsAdminPage(){
               {s.starts_at&&<span><CalendarDays size={14}/>{new Date(s.starts_at).toLocaleString("ar-SA")}</span>}
               {s.venue&&<span><Radio size={14}/>{s.venue}</span>}
             </div>
+            {profile?.role!=="trainer"&&<div className="trainerAssignmentBox"><label>إسناد مدرب<select defaultValue="" onChange={e=>{if(e.target.value)assignTrainer(s.id,e.target.value);e.currentTarget.value=""}}><option value="">اختر المدرب</option>{trainersList.filter(t=>!assignments.some(a=>a.session_id===s.id&&a.trainer_id===t.id)).map(t=><option key={t.id} value={t.id}>{t.full_name||t.email||"مدرب"}</option>)}</select></label><div className="assignedTrainerChips">{assignments.filter(a=>a.session_id===s.id).map(a=>{const t=trainersList.find(x=>x.id===a.trainer_id);return <button type="button" key={a.trainer_id} onClick={()=>unassignTrainer(s.id,a.trainer_id)} title="إلغاء الإسناد">{t?.full_name||t?.email||"مدرب"} ×</button>})}</div></div>}
             <div className="sessionButtons">
               <Link href={`/admin/workshops/${s.id}`} className="primaryButton">لوحة الجلسة <ArrowLeft size={15}/></Link>
               <button className="outlineButton" onClick={()=>copy(joinUrl)}><Copy size={15}/> نسخ رابط المشارك</button>
