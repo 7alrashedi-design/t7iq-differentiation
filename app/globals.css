@@ -1276,3 +1276,59 @@ body{
 .saveError{margin-top:8px;border:1px solid #e6c6c2;background:#fff3f1;color:#8a4139;border-radius:9px;padding:8px 10px;font-size:7px;font-weight:800}
 
 .setupPage{min-height:100vh;background:#f1f6f5;display:grid;place-items:center;padding:24px}.setupCard{width:min(520px,100%);background:#fff;border:1px solid #dce7e7;border-radius:24px;padding:32px;box-shadow:0 24px 60px rgba(23,63,79,.08);text-align:right}.setupIcon{width:52px;height:52px;border-radius:16px;background:#173f4f;color:#fff;display:grid;place-items:center;margin-bottom:14px}.setupIcon svg,.setupDone{width:28px;height:28px}.setupDone{color:#3b8c80}.setupCard>span{font-size:11px;color:#3e8d83;font-weight:900}.setupCard h1{font-size:25px;margin:5px 0}.setupCard>p{font-size:13px;line-height:1.8;color:#6c8286}.setupCard form{display:grid;gap:13px;margin:20px 0}.setupCard label{font-size:12px;font-weight:800;display:grid;gap:6px}.setupCard .inputWrap{border:1px solid #d7e4e3;border-radius:12px;padding:0 12px;display:flex;align-items:center;gap:8px}.setupCard .inputWrap>svg{width:17px;color:#789093}.setupCard input{border:0;outline:0;padding:13px 0;width:100%;font:inherit}.setupCard .inputWrap button{border:0;background:transparent;display:grid;place-items:center}.setupCard .inputWrap button svg{width:17px}.setupCard .primaryButton{justify-content:center}.setupCard>small{font-size:10px;color:#84979a}
+
+
+/* ===== Workshop UX refinement 2026-09-19 ===== */
+.productPage{max-width:1180px;margin:0 auto;padding:18px 22px 44px}.productHero{padding:28px 8px 18px}.productHero h1{font-size:clamp(28px,3vw,42px);line-height:1.25;margin:8px 0}.productHero p{font-size:14px;line-height:1.8;max-width:900px}.productFilters{position:sticky;top:0;z-index:8;background:rgba(244,248,248,.94);backdrop-filter:blur(10px);padding:10px 0;margin:0 0 12px}.productFilters button{font-size:13px;padding:9px 15px}.productChoiceHint{padding:14px 16px;margin:10px 0 16px}.productChoiceHint b{font-size:14px}.productChoiceHint span{font-size:12px;line-height:1.7}.allProductGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.allProductGrid .productCard{min-height:0;padding:18px;border-radius:18px}.productCard h2{font-size:20px;margin:8px 0}.productCard p,.productRole span{font-size:12px;line-height:1.6}.productRole b{font-size:14px}.productCard .outlineButton{font-size:13px;padding:10px 12px;margin-top:10px}.productCode,.recommendedTag{font-size:11px}
+
+.evaluationPage{max-width:1240px;margin:0 auto;padding:18px 24px 60px}.evaluationTop{margin-bottom:16px}.evaluationHero{padding:26px}.evaluationHero h1{font-size:clamp(28px,3vw,44px);line-height:1.25}.evaluationHero p,.passRule{font-size:14px;line-height:1.8}.rubricPrintMeta{gap:10px}.rubricPrintMeta span{font-size:11px}.rubricPrintMeta b{font-size:15px}.evaluatorPanel{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:end;background:#fff;border:1px solid #d8e7e5;border-radius:18px;padding:18px;margin:14px 0}.evaluatorPanel h2{font-size:22px;margin:4px 0}.evaluatorPanel p{font-size:13px;line-height:1.7;color:#6d8185;margin:0}.evaluatorControls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.evaluatorControls label{display:grid;gap:6px;font-size:12px;font-weight:800}.evaluatorControls input,.evaluatorControls select{border:1px solid #d5e3e2;border-radius:10px;padding:11px 12px;font:inherit;font-size:13px;background:#fff}.rubricLoading{min-height:220px;display:grid;place-items:center;align-content:center;gap:7px;border:1px dashed #bfd8d4;border-radius:18px;background:#f8fbfa;margin:14px 0;color:#2e8077}.rubricLoading b{font-size:17px}.rubricLoading span{font-size:13px;color:#6f8588}.mixedRubric{display:grid;gap:12px}.mixedRubric .rubricCriterion{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(330px,.9fr);gap:14px;align-items:start;padding:18px;border-radius:18px}.criterionIndex{font-size:18px}.criterionText>div span{font-size:13px}.criterionText>div em{font-size:10px}.criterionText>p{font-size:15px;line-height:1.8;margin:7px 0 10px}.criterionNote{display:grid;gap:6px;color:#477079;font-size:11px;font-weight:800}.criterionNote textarea{min-height:82px;resize:vertical;border:1px solid #d7e4e3;border-radius:10px;padding:10px;font:inherit;font-size:13px;line-height:1.7;background:#fbfdfd}.rubricScale{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.rubricScale button{min-width:0;min-height:62px;border-radius:10px;padding:7px 3px;display:grid;place-items:center;align-content:center;gap:2px}.rubricScale button b{font-size:16px}.rubricScale button small{font-size:8px;white-space:nowrap}.qualitativeSummary{display:grid;grid-template-columns:1.2fr .9fr .9fr;gap:10px;margin:14px 0}.qualitativeSummary label{display:grid;gap:6px;font-size:12px;font-weight:850}.qualitativeSummary textarea{min-height:120px;border:1px solid #d6e4e3;border-radius:12px;padding:12px;font:inherit;font-size:13px;line-height:1.75;resize:vertical}.performanceLegend{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0}.performanceLegend span{font-size:11px;padding:8px;border-radius:9px}.performanceLegend b{font-size:13px}.developmentReport{font-size:13px}.developmentReport h2{font-size:26px}.developmentInsights p,.developmentInsights small,.retryPlan span{font-size:13px;line-height:1.75}
+
+.lessonPicker{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:end;background:#fff;border:1px solid #d8e7e5;border-radius:18px;padding:18px;margin:0 0 16px}.lessonPicker h2{font-size:22px;margin:4px 0}.lessonPicker p{font-size:13px;line-height:1.7;color:#6d8185}.lessonPickerFields{display:grid;grid-template-columns:1fr 1fr .55fr;gap:10px}.lessonPickerFields label{display:grid;gap:6px;font-size:12px;font-weight:800}.lessonPickerFields input{border:1px solid #d5e3e2;border-radius:10px;padding:11px 12px;font:inherit;font-size:13px}.learningLabPage{max-width:1280px;margin:0 auto;padding:18px 24px 60px}.learningLabPage .labHero h1,.learningLabPage .lessonBuilderHero h1{font-size:clamp(30px,3.4vw,50px);line-height:1.2}.learningLabPage .labHero p,.learningLabPage .lessonBuilderHero p{font-size:15px;line-height:1.8}.diagnosisGroups article h3{font-size:20px}.diagnosisGroups article p{font-size:13px;line-height:1.7}.differentiationMatrix{font-size:13px}.matrixHeader span{font-size:12px}.matrixRow b{font-size:16px}.matrixRow p{font-size:13px;line-height:1.75}.lessonDraftGrid article{padding:18px}.lessonDraftGrid article span{font-size:12px}.lessonDraftGrid article h3{font-size:17px;line-height:1.7}.teacherReviewBox span{font-size:13px}.teacherReviewBox textarea{font-size:14px;line-height:1.7;min-height:130px}.teacherDecision b{font-size:14px;line-height:1.7}
+
+.finalExperienceReport{max-width:1120px;margin:0 auto;padding:18px 24px 50px}.finalQualitativeSummary{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;margin:14px 0}.finalQualitativeSummary>div{background:#fff;border:1px solid #dbe8e6;border-radius:14px;padding:15px}.finalQualitativeSummary span{display:block;font-size:11px;color:#3e8d83;font-weight:900;margin-bottom:5px}.finalQualitativeSummary h2,.finalQualitativeSummary b{font-size:14px;line-height:1.7;margin:0;color:#294d59}
+
+@media(max-width:900px){
+  .allProductGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mixedRubric .rubricCriterion{grid-template-columns:34px 1fr}
+  .mixedRubric .rubricScale{grid-column:2}
+  .evaluatorPanel,.lessonPicker{grid-template-columns:1fr}
+  .qualitativeSummary,.finalQualitativeSummary{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .productPage,.evaluationPage,.learningLabPage,.finalExperienceReport{padding:12px 12px 44px}
+  .allProductGrid{grid-template-columns:1fr}
+  .productHero h1{font-size:30px}.productHero p{font-size:14px}
+  .productFilters{overflow-x:auto;display:flex;gap:7px}.productFilters button{flex:0 0 auto}
+  .evaluatorControls,.lessonPickerFields{grid-template-columns:1fr}
+  .mixedRubric .rubricCriterion{grid-template-columns:1fr;padding:14px}
+  .criterionIndex{width:34px;height:34px}
+  .mixedRubric .rubricScale{grid-column:auto;grid-template-columns:repeat(4,1fr)}
+  .rubricScale button{min-height:58px}.rubricScale button small{font-size:9px}
+  .criterionText>p{font-size:16px}.criterionNote textarea{font-size:14px}
+  .performanceLegend{grid-template-columns:repeat(2,1fr)}
+  .evaluationHero h1{font-size:30px}
+  .learningLabPage .labHero h1,.learningLabPage .lessonBuilderHero h1{font-size:32px}
+  .matrixHeader{display:none}.matrixRow{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;padding:16px!important}.matrixRow p{font-size:14px}
+  .lessonDraftGrid{grid-template-columns:1fr!important}
+}
+
+/* Focused print mode: prevents blank pages and excludes controls */
+@page{size:A4 portrait;margin:10mm}
+@media print{
+  html,body{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important}
+  body{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .noPrint,.reportActions,.evaluationHeaderActions,.evaluationActions,.journeyTopActions,.finalReportActions,.finalReportBottom,.labActions,.productFilters,.workshopTop button,.lessonPicker{display:none!important}
+  .reportPage,.evaluationPage,.productJourneyPage,.finalExperienceReport{position:static!important;display:block!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}
+  .reportPage section,.evaluationPage section,.productJourneyPage section,.finalExperienceReport section,.reportPage article,.evaluationPage article,.productJourneyPage article,.finalExperienceReport article{break-inside:avoid!important;page-break-inside:avoid!important}
+  .reportTop,.workshopTop{position:static!important}
+  .reportHero,.reportGrid,.reportNext,.rubricPrintMeta,.mixedRubric,.qualitativeSummary,.developmentReport,.journeyHero,.journeyLevels,.journeyTimeline,.beforeAfter,.finalReportHero,.finalStoryGrid,.finalLearningArc,.finalQualitativeSummary,.finalReflection,.reportFooter{visibility:visible!important}
+  .reportPage *,.evaluationPage *,.productJourneyPage *,.finalExperienceReport *{visibility:visible!important}
+  .reportPage,.finalExperienceReport{font-size:10pt}
+  .mixedRubric .rubricCriterion{grid-template-columns:28px 1fr 230px!important;padding:8px!important;margin-bottom:5px!important}
+  .criterionText>p{font-size:9pt!important;line-height:1.45!important}
+  .criterionNote textarea,.qualitativeSummary textarea{border:1px solid #cfdad9!important;min-height:45px!important;font-size:8.5pt!important}
+  .rubricScale button{min-height:34px!important;padding:3px!important}
+  .rubricScale button small{display:none!important}
+  .evaluationHero{padding:10px!important}.evaluationHero h1{font-size:20pt!important}
+  .reportFooter{break-before:auto!important;page-break-before:auto!important}
+}
