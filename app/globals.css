@@ -1347,3 +1347,97 @@ body{
 .productResultMeta{display:flex;align-items:center;gap:6px;margin:6px 0 10px;color:#70868a;font-size:11px}.productResultMeta b{font-size:14px;color:#347f76}
 .productMore{display:flex;justify-content:center;align-items:center;gap:12px;margin:18px 0 4px}.productMore span{font-size:10px;color:#768a8d}
 @media(max-width:760px){.productDiscovery{grid-template-columns:1fr;top:0}.productDiscovery .productFilters{order:2}.productSearch{order:1}.productMore{flex-direction:column}.productSearch input{font-size:14px}}
+
+
+/* ===== Role journeys v2 — Admin / Trainer / Participant ===== */
+html,body{
+  font-family:var(--font-sans-ar),system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.platformBrand b,.brandBlock strong,.sectionKicker,.primaryButton,.outlineButton{
+  font-family:var(--font-kufi),var(--font-sans-ar),system-ui,sans-serif;
+}
+button,input,select,textarea{font-family:inherit}
+:root{
+  --role-surface:rgba(255,255,255,.88);
+  --role-border:rgba(73,111,126,.12);
+  --role-shadow:0 24px 70px rgba(41,72,88,.09);
+  --role-radius:28px;
+}
+.roleGate{min-height:100vh;display:grid;place-items:center;padding:22px;background:
+  radial-gradient(circle at 80% 0%,rgba(75,180,163,.17),transparent 30%),
+  radial-gradient(circle at 10% 80%,rgba(97,159,218,.12),transparent 32%),#f7fafb}
+.roleGateCard{width:min(520px,100%);background:rgba(255,255,255,.92);border:1px solid var(--role-border);
+  border-radius:30px;padding:34px;text-align:center;box-shadow:var(--role-shadow);backdrop-filter:blur(16px)}
+.roleGateCard .differenceMark{margin:auto}.roleGateCard h1{margin:18px 0 8px;font-size:26px}.roleGateCard p{color:var(--muted);line-height:1.9;font-size:13px}
+.roleWorkspace{min-height:100vh;max-width:1540px;margin:auto;padding:28px 34px 48px}
+.roleHero{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:24px;
+  padding:26px 28px;border:1px solid var(--role-border);border-radius:32px;background:
+  radial-gradient(circle at 88% 20%,rgba(68,177,160,.16),transparent 26%),
+  radial-gradient(circle at 8% 100%,rgba(93,158,219,.12),transparent 34%),rgba(255,255,255,.92);
+  box-shadow:var(--role-shadow)}
+.roleHero:after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;left:-100px;top:-120px;background:rgba(86,157,213,.07)}
+.roleBrand{display:flex;align-items:center;gap:15px;position:relative;z-index:1}.roleBrand h1{font-size:31px;margin:3px 0 6px}.roleBrand p{margin:0;color:var(--muted);font-size:12px}
+.roleHeroActions{display:flex;gap:9px;position:relative;z-index:1}.roleHeroActions a{text-decoration:none}
+.rolePulseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.rolePulseGrid article{display:flex;align-items:center;gap:12px;padding:16px 17px;border:1px solid var(--role-border);border-radius:20px;background:var(--role-surface);box-shadow:0 10px 30px rgba(48,76,94,.04)}
+.pulseIcon{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;flex:none}.pulseIcon svg{width:20px}.pulseIcon.mint{background:#eaf8f3;color:#2f8f87}.pulseIcon.blue{background:#eef5ff;color:#4d82c2}.pulseIcon.violet{background:#f3efff;color:#7d62bc}.pulseIcon.amber{background:#fff5e7;color:#b67d35}
+.rolePulseGrid strong,.rolePulseGrid span{display:block}.rolePulseGrid strong{font-size:23px}.rolePulseGrid span{font-size:10px;color:var(--muted);margin-top:2px}
+.journeyRibbon{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 20px;margin:0 0 18px;border:1px solid #e4edee;border-radius:21px;background:linear-gradient(135deg,#f8fcfb,#f7f9fd)}
+.journeyTitle{display:flex;align-items:center;gap:10px;min-width:200px}.journeyTitle>svg{color:var(--brand)}.journeyTitle b,.journeyTitle span{display:block}.journeyTitle b{font-size:12px}.journeyTitle span{font-size:9px;color:var(--muted);margin-top:3px}
+.journeyCompact{display:flex;align-items:center;justify-content:flex-end;flex:1;min-width:0;overflow:auto;padding-bottom:2px}
+.journeyCompact div{display:flex;align-items:center;gap:7px;white-space:nowrap}.journeyCompact i{width:28px;height:28px;border-radius:10px;background:#eef3f5;color:#7b8f9a;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800}
+.journeyCompact div.isActive i{background:linear-gradient(135deg,var(--brand),#6da9d9);color:white;box-shadow:0 8px 18px rgba(47,143,135,.18)}.journeyCompact span{font-size:10px;font-weight:700}.journeyCompact em{width:42px;height:1px;background:#dce6e9;margin:0 9px;flex:none}
+.roleSection{margin-top:6px}.roleSectionHead{display:flex;justify-content:space-between;align-items:end;margin:0 2px 12px}.roleSectionHead h2{font-size:21px;margin:3px 0 0}.roleSectionHead>span{font-size:10px;color:var(--muted);padding:7px 10px;border-radius:999px;background:#eef3f5}
+.trainerSessionGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.trainerSessionCard{position:relative;overflow:hidden;background:rgba(255,255,255,.94);border:1px solid var(--role-border);border-radius:24px;padding:19px;box-shadow:0 14px 40px rgba(44,75,91,.05)}
+.trainerSessionCard:before{content:"";position:absolute;right:0;top:0;width:100%;height:4px;background:linear-gradient(90deg,var(--brand),#6aa6dc)}
+.trainerSessionTop{display:flex;justify-content:space-between;align-items:center}.trainerSessionTop>b{letter-spacing:1.5px;font-size:13px;color:#436171}
+.trainerSessionCard h3{font-size:18px;margin:18px 0 12px}.trainerMeta{display:grid;gap:7px;color:var(--muted);font-size:10px;min-height:45px}.trainerMeta span{display:flex;align-items:center;gap:6px}.trainerMeta svg{width:14px}
+.trainerSessionActions{display:flex;gap:8px;margin-top:17px}.trainerSessionActions a{flex:1;text-decoration:none;padding:10px 11px;font-size:10px}.trainerSessionActions svg{width:15px}
+.roleEmpty{grid-column:1/-1;display:grid;place-items:center;text-align:center;min-height:250px;border:1px dashed #d5e2e6;border-radius:24px;background:rgba(255,255,255,.55);padding:30px}.roleEmpty>svg{color:#8ca2ad;width:34px;height:34px}.roleEmpty h3{margin:12px 0 3px}.roleEmpty p{font-size:11px;color:var(--muted)}
+
+/* Participant journey is intentionally distraction-free */
+.participantGate{background:
+  radial-gradient(circle at 85% 5%,rgba(75,179,162,.14),transparent 25%),
+  radial-gradient(circle at 7% 86%,rgba(92,158,218,.10),transparent 28%),#f8fbfc}
+.participantJoinCard,.participantGateCard,.fingerprintReport,.productExplorer,.evaluationCard,.lessonSimulationCard{
+  border-radius:26px!important;box-shadow:0 20px 60px rgba(41,74,90,.08)!important}
+.participantJoinCard h1,.fingerprintReport h1,.productExplorer h1{letter-spacing:-.4px}
+.scaleProgressBar i,.fingerprintBars i{border-radius:999px;overflow:hidden}
+.optionScale button,.scoreButtons button{min-height:46px}
+@media(min-width:1400px){
+  .liveDashboardPage{max-width:1760px;margin:auto}
+  .liveHeroGrid{grid-template-columns:.72fr 1.1fr 1.1fr 1.08fr}
+  .sessionAccessCard{position:sticky;top:18px}
+  .liveMetricsCard{grid-template-columns:1fr 1fr}
+}
+@media(min-width:1900px){
+  html{font-size:18px}
+  .roleWorkspace{max-width:1820px}.trainerSessionGrid{grid-template-columns:repeat(4,1fr)}
+  .liveDashboardHeader h1{font-size:34px}
+}
+@media(max-width:1050px){
+  .roleWorkspace{padding:20px}.rolePulseGrid{grid-template-columns:repeat(2,1fr)}.trainerSessionGrid{grid-template-columns:1fr 1fr}
+  .journeyRibbon{align-items:flex-start;display:block}.journeyCompact{justify-content:flex-start;margin-top:14px}
+}
+@media(max-width:720px){
+  .roleWorkspace{padding:12px 12px 32px}.roleHero{display:block;padding:20px;border-radius:24px}.roleBrand{align-items:flex-start}.roleBrand .differenceMark{width:46px;height:46px;border-radius:15px}.roleBrand h1{font-size:24px}
+  .roleHeroActions{margin-top:16px}.roleHeroActions a{flex:1;text-align:center;justify-content:center}.rolePulseGrid{grid-template-columns:1fr 1fr;gap:8px}.rolePulseGrid article{padding:12px;gap:8px}.pulseIcon{width:37px;height:37px}
+  .trainerSessionGrid{grid-template-columns:1fr}.trainerSessionCard{border-radius:20px}.trainerSessionActions{display:grid;grid-template-columns:1fr 1fr}
+  .journeyCompact{gap:0}.journeyCompact span{display:none}.journeyCompact em{width:26px}.journeyCompact i{width:31px;height:31px}
+  .liveDashboardHeader{display:block}.liveHeaderActions{margin-top:13px;display:grid!important;grid-template-columns:1fr 1fr}.liveHeaderActions button,.liveHeaderActions a{justify-content:center}
+  .liveHeroGrid{grid-template-columns:1fr!important}.liveTable{min-width:760px}.sessionAccessCard img{max-width:220px}
+}
+@media(max-width:420px){
+  .rolePulseGrid{grid-template-columns:1fr}.trainerSessionActions{grid-template-columns:1fr}.roleHeroActions{display:grid}
+  .roleBrand h1{font-size:21px}.roleBrand p{font-size:10px;line-height:1.7}
+}
+
+/* Presenter mode: readable from a classroom display */
+@media (min-width:1600px){
+  .liveMetric strong{font-size:34px!important}.liveMetric span{font-size:13px!important}
+  .sessionCodeBig{font-size:46px!important;letter-spacing:6px}.fingerprintBarLabel{font-size:13px}
+  .levelLiveGrid strong{font-size:34px!important}.levelLiveGrid small{font-size:11px!important}
+}
