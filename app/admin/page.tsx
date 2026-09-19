@@ -10,12 +10,13 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Org = { id: string; name: string; organization_type: string; status: string };
 type Program = { id: string; title: string; status: string; delivery_mode: string };
-type Profile = { full_name: string | null; role: string; organization_id: string | null };
+type Profile = { id?: string; email?: string | null; full_name: string | null; role: string; organization_id: string | null };
 
 export default function AdminPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [accounts, setAccounts] = useState<Profile[]>([]);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -41,15 +42,17 @@ export default function AdminPage() {
       const user = sessionData.session?.user;
       if (!user) return;
 
-      const [{ data: p }, { data: o }, { data: pr }] = await Promise.all([
-        supabase.from("profiles").select("full_name,role,organization_id").eq("id", user.id).maybeSingle(),
+      const [{ data: p }, { data: o }, { data: pr }, { data: ac }] = await Promise.all([
+        supabase.from("profiles").select("id,email,full_name,role,organization_id").eq("id", user.id).maybeSingle(),
         supabase.from("organizations").select("id,name,organization_type,status").order("created_at", { ascending: false }),
-        supabase.from("training_programs").select("id,title,status,delivery_mode").order("created_at", { ascending: false })
+        supabase.from("training_programs").select("id,title,status,delivery_mode").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id,email,full_name,role,organization_id").order("full_name")
       ]);
 
       setProfile(p as Profile | null);
       setOrgs((o ?? []) as Org[]);
       setPrograms((pr ?? []) as Program[]);
+      setAccounts((ac ?? []) as Profile[]);
       if (!accountOrg && o?.[0]?.id) setAccountOrg(o[0].id);
     } catch {
       setNotice("تعذر تحميل بيانات الإدارة.");
@@ -107,7 +110,8 @@ export default function AdminPage() {
   async function createAccount(e: FormEvent) {
     e.preventDefault();
     if (!accountEmail || !accountName || !accountPassword) return;
-    if (accountRole !== "platform_admin" && !accountOrg) {
+    const requiresOrg = accountRole === "teacher" || accountRole === "school_admin";
+    if (requiresOrg && !accountOrg) {
       setNotice("اختر جهة للحساب.");
       return;
     }
@@ -121,7 +125,7 @@ export default function AdminPage() {
           password: accountPassword,
           full_name: accountName,
           role: accountRole,
-          organization_id: accountRole === "platform_admin" ? null : accountOrg
+          organization_id: (accountRole === "platform_admin" || accountRole === "trainer" || accountRole === "supervisor") ? null : accountOrg
         }
       });
       if (error) throw error;
@@ -255,19 +259,31 @@ export default function AdminPage() {
               <option value="platform_admin">مدير منصة</option>
             </select></label>
 
-            {accountRole !== "platform_admin" && (
+            {(accountRole === "teacher" || accountRole === "school_admin") && (
               <label>الجهة<select value={accountOrg} onChange={e=>setAccountOrg(e.target.value)} required>
                 <option value="">اختر الجهة</option>
                 {orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}
               </select></label>
             )}
 
-            <button className="primaryButton createAccountButton" disabled={busy || (accountRole !== "platform_admin" && orgs.length===0)}>
+            <button className="primaryButton createAccountButton" disabled={busy || ((accountRole === "teacher" || accountRole === "school_admin") && orgs.length===0)}>
               <UserPlus size={17}/> إنشاء الحساب
             </button>
           </form>
 
           <div className="adminHint"><Sparkles size={17}/><p>بعد إنشاء الحساب يمكن ربط المعلم بالبرنامج التدريبي، ثم تفعيل رحلة التطبيق بعد استيفاء شروط البرنامج.</p></div>
+        </article>
+
+        <article className="adminCard premiumCard wideCard">
+          <div className="adminCardHead">
+            <div className="iconBadge mint"><UsersRound size={20}/></div>
+            <div><span>الحسابات الحالية</span><h2>مديرو المنصة والمدربون والمعلمون</h2></div>
+          </div>
+          <div className="adminMiniList accountRoster">
+            {accounts.map(a=><div key={a.id || a.email || a.full_name || Math.random().toString()}><UsersRound size={16}/><div><b>{a.full_name || "بدون اسم"}</b><span>{a.email || "—"} • {a.role==="platform_admin"?"مدير منصة":a.role==="trainer"?"مدرب":a.role==="teacher"?"معلم":a.role==="school_admin"?"مدير مدرسة":a.role}</span></div></div>)}
+            {accounts.length===0&&<p>لا توجد حسابات ظاهرة.</p>}
+          </div>
+          <div className="adminHint"><ShieldCheck size={17}/><p>حساب مدير المنصة الحالي مؤكد ومربوط بدور <b>platform_admin</b>. حساب المدرب لا يحتاج جهة ويمكن إسناده لأي ورشة من صفحة إدارة الورش.</p></div>
         </article>
       </section>
 
