@@ -9,6 +9,7 @@ async function screenshot(page:any, name:string){
 
 async function scoreVisibleRubric(page:any){
   const cards=page.locator(".rubricCriterion");
+  await expect(cards.first()).toBeVisible({timeout:30000});
   const count=await cards.count();
   expect(count).toBeGreaterThan(0);
   for(let i=0;i<count;i++){
@@ -44,7 +45,8 @@ test("رحلة الورشة كاملة بصريًا ووظيفيًا", async ({ 
     if(i<49) await page.waitForTimeout(320);
   }
   await page.getByRole("button",{name:/إظهار بصمتي/}).click();
-  await expect(page.getByText("بصمتك التعبيرية")).toBeVisible({timeout:20000});
+  await expect(page.locator(".reportPage")).toBeVisible({timeout:30000});
+  await expect(page.getByText("بصمتك التعبيرية").first()).toBeVisible({timeout:30000});
   await screenshot(page,"02-fingerprint-report");
 
   await page.emulateMedia({media:"print"});
@@ -62,6 +64,7 @@ test("رحلة الورشة كاملة بصريًا ووظيفيًا", async ({ 
 
   await page.locator(".productCard").first().getByRole("button",{name:/اختيار هذا المنتج/}).click();
   await expect(page.getByText(/تقييم مختلط/)).toBeVisible({timeout:20000});
+  await expect(page.locator(".rubricCriterion").first()).toBeVisible({timeout:30000});
   await screenshot(page,"05-evaluation-desktop");
   await page.setViewportSize({width:390,height:844});
   await screenshot(page,"06-evaluation-mobile");
