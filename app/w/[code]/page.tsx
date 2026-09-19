@@ -69,11 +69,20 @@ export default function WorkshopParticipant(){
   const [level,setLevel]=useState(1);
   const [rubric,setRubric]=useState<Rubric[]>([]);
   const [rubricScores,setRubricScores]=useState<Record<string,number>>({});
+  const [criterionNotes,setCriterionNotes]=useState<Record<string,string>>({});
   const [rubricFeedback,setRubricFeedback]=useState("");
+  const [evaluatorType,setEvaluatorType]=useState<"self"|"trainer"|"peer">("self");
+  const [evaluatorName,setEvaluatorName]=useState("");
+  const [developmentPriority,setDevelopmentPriority]=useState("");
+  const [nextRecommendation,setNextRecommendation]=useState("");
+  const [rubricLoading,setRubricLoading]=useState(false);
   const [lastEval,setLastEval]=useState<any>(null);
   const [levelTransition,setLevelTransition]=useState<number|null>(null);
   const [journey,setJourney]=useState<any>(null);
   const [lessonNote,setLessonNote]=useState("");
+  const [lessonSubject,setLessonSubject]=useState("أحياء 1");
+  const [lessonTitle,setLessonTitle]=useState("الفيروسات");
+  const [lessonClassSize,setLessonClassSize]=useState(28);
   const [applicationSent,setApplicationSent]=useState(false);
 
   const result=useMemo(()=>calculate(answers),[answers]);
@@ -82,6 +91,14 @@ export default function WorkshopParticipant(){
   const item=styleItems[current];
 
   async function shareReport(){const text="تقريري في "+(session?.title||"ورشة التمايز")+" • بصمتي: "+result.fingerprint+(selectedProduct?.product_name?" • المنتج: "+selectedProduct.product_name:"");if(typeof navigator!=="undefined"&&navigator.share){try{await navigator.share({title:"تقرير تجربة التمايز",text,url:window.location.href})}catch{}}else if(typeof navigator!=="undefined"){await navigator.clipboard.writeText(text+" "+window.location.href);setNotice("تم نسخ ملخص التقرير والرابط.")}}
+  function printNamed(kind:string){
+    if(typeof document==="undefined") return;
+    const old=document.title;
+    const date=new Date().toISOString().slice(0,10);
+    document.title=((name||"مشارك")+" - "+kind+" - "+date).replace(/[\\/:*?"<>|]/g,"-");
+    window.print();
+    window.setTimeout(()=>{document.title=old},1200);
+  }
 
   async function api(action:string,payload:any={}){
     const {data,error}=await supabase.functions.invoke("workshop-public",{body:{action,...payload}});
@@ -140,6 +157,20 @@ export default function WorkshopParticipant(){
   const topCodes=result.top.map(t=>t.code);
   function fitLabel(p:any){return topCodes.includes(p[2] as StyleCode)?"يلائم بصمتك مباشرة":"يمكنك توظيف بصمتك داخله"}
   function roleFor(p:any){return productRoles[result.top[0].code]}
+  const generatedGroups=useMemo(()=>{
+    const support=Math.max(1,Math.round(lessonClassSize*.25));
+    const core=Math.max(1,Math.round(lessonClassSize*.54));
+    const stretch=Math.max(1,lessonClassSize-support-core);
+    const counts=[support,core,stretch];
+    return diagnosisGroups.map((g,i)=>({
+      ...g,
+      count:counts[i],
+      goal:lessonTitle==="الفيروسات"?g.goal:
+        i===0?"يفهم المفاهيم الأساسية في «"+lessonTitle+"» ويطبقها بدعم موجّه.":
+        i===1?"يطبق ويحلل مفاهيم «"+lessonTitle+"» في مهمة منظمة ويبرر اختياراته.":
+        "يحلل ويقوّم «"+lessonTitle+"» ثم ينتج تفسيرًا أو حلًا أكثر عمقًا وإبداعًا."
+    }));
+  },[lessonClassSize,lessonTitle]);
 
   async function selectProduct(p:any){
     setBusy(true);setNotice("");
@@ -148,29 +179,42 @@ export default function WorkshopParticipant(){
       setSelectedProduct(d.product);
       setParticipantProduct(d.participant_product);
       setLevel(d.participant_product.current_level);
-      await loadRubric(d.participant_product.current_level,d.product.product_name,d.product.product_id);
       setStage("evaluate");
+      await loadRubric(d.participant_product.current_level,d.product.product_name,d.product.product_id);
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر اختيار المنتج.")}finally{setBusy(false)}
   }
 
   async function loadRubric(lvl:number,productName?:string,productId?:string){
-    const d=await api("rubric",{participant_token:token,level_no:lvl,product_id:productId??selectedProduct?.product_id});
-    const rows=(d.rubric??[]).map((r:Rubric)=>({...r,criterion_template:r.criterion_template.replaceAll("{product}",productName??selectedProduct?.product_name??"المنتج")}));
-    setRubric(rows);
-    setRubricScores({});
-    setRubricFeedback("");
+    setRubricLoading(true);
+    try{
+      const d=await api("rubric",{participant_token:token,level_no:lvl,product_id:productId??selectedProduct?.product_id});
+      const rows=(d.rubric??[]).map((r:Rubric)=>({...r,criterion_template:r.criterion_template.replaceAll("{product}",productName??selectedProduct?.product_name??"المنتج")}));
+      setRubric(rows);
+      setRubricScores({});
+      setCriterionNotes({});
+      setRubricFeedback("");
+      setDevelopmentPriority("");
+      setNextRecommendation("");
+    }finally{setRubricLoading(false)}
   }
 
+  const visibleRubric=useMemo(()=>evaluatorType==="self"?rubric:rubric.filter(r=>r.section!=="التأمل"),[rubric,evaluatorType]);
+
   async function submitLevel(){
-    if(rubric.some(r=>rubricScores[r.id]===undefined)){setNotice("قيّم جميع المعايير قبل الإرسال.");return}
+    if(visibleRubric.some(r=>rubricScores[r.id]===undefined)){setNotice("قيّم جميع المعايير الظاهرة قبل الإرسال.");return}
     setBusy(true);setNotice("");
     try{
       const d=await api("submit_evaluation",{
         participant_token:token,
         participant_product_id:participantProduct.id,
         level_no:level,
-        scores:rubric.map(r=>({rubric_template_id:r.id,score:rubricScores[r.id]})),
-        feedback:rubricFeedback||null
+        evaluator_type:evaluatorType,
+        evaluator_name:evaluatorName||name||null,
+        scores:visibleRubric.map(r=>({rubric_template_id:r.id,score:rubricScores[r.id]})),
+        notes:visibleRubric.map(r=>({rubric_template_id:r.id,note:criterionNotes[r.id]||null})),
+        feedback:rubricFeedback||null,
+        development_priority:developmentPriority||null,
+        next_recommendation:nextRecommendation||null
       });
       setLastEval(d);
       if(d.passed){
@@ -223,11 +267,11 @@ export default function WorkshopParticipant(){
   }:null;
 
   const rubricAnalysis=useMemo(()=>{
-    if(!rubric.length) return {sections:[] as {name:string;average:number}[],strongest:null as Rubric|null,weakest:[] as Rubric[],answered:0,average:0};
-    const scored=rubric.filter(r=>rubricScores[r.id]!==undefined);
-    const sectionNames=[...new Set(rubric.map(r=>r.section))];
+    if(!visibleRubric.length) return {sections:[] as {name:string;average:number}[],strongest:null as Rubric|null,weakest:[] as Rubric[],answered:0,average:0};
+    const scored=visibleRubric.filter(r=>rubricScores[r.id]!==undefined);
+    const sectionNames=[...new Set(visibleRubric.map(r=>r.section))];
     const sections=sectionNames.map(section=>{
-      const rows=rubric.filter(r=>r.section===section&&rubricScores[r.id]!==undefined);
+      const rows=visibleRubric.filter(r=>r.section===section&&rubricScores[r.id]!==undefined);
       const average=rows.length?rows.reduce((sum,r)=>sum+(rubricScores[r.id]??0),0)/rows.length:0;
       return {name:section,average:Number(average.toFixed(1))};
     });
@@ -235,7 +279,7 @@ export default function WorkshopParticipant(){
     const weakest=[...scored].sort((a,b)=>(rubricScores[a.id]??0)-(rubricScores[b.id]??0)).slice(0,3);
     const average=scored.length?scored.reduce((sum,r)=>sum+(rubricScores[r.id]??0),0)/scored.length:0;
     return {sections,strongest:ranked[0]??null,weakest,answered:scored.length,average:Number(average.toFixed(1))};
-  },[rubric,rubricScores]);
+  },[visibleRubric,rubricScores]);
 
   function developmentAdvice(r:Rubric){
     const score=rubricScores[r.id]??0;
@@ -255,7 +299,7 @@ export default function WorkshopParticipant(){
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر تحميل سجل رحلة المنتج.")}finally{setBusy(false)}
   }
 
-  function printRubric(){ window.print(); }
+  function printRubric(){ printNamed("بطاقة تطوير المنتج"); }
 
   async function apply(e:FormEvent){
     e.preventDefault();setBusy(true);setNotice("");
@@ -299,7 +343,7 @@ export default function WorkshopParticipant(){
   if(stage==="report"){
     const primary=result.top[0],second=result.top[1],third=result.top[2];
     return <main className="reportPage">
-      <header className="reportTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>تقرير بصمة التعبير</small></div></div><div className="reportIdentity"><b>{session?.title || "ورشة التمايز"}</b><span>{session?.trainer_names?.length ? "المدرب/المدربون: "+session.trainer_names.join("، ") : "ورشة التمايز"}</span><small>{new Date().toLocaleDateString("ar-SA",{year:"numeric",month:"long",day:"numeric"})}</small></div><div className="reportActions"><button className="outlineButton" onClick={()=>window.print()}><Download size={16}/> حفظ PDF</button><button className="outlineButton" onClick={shareReport}><Share2 size={16}/> مشاركة</button><button className="outlineButton" onClick={()=>navigator.share?.({title:"بصمتي التعبيرية",text:"بصمتي التعبيرية في منصة التمايز: "+result.fingerprint})}><Share2 size={16}/> مشاركة</button></div></header>
+      <header className="reportTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>تقرير بصمة التعبير</small></div></div><div className="reportIdentity"><b>{session?.title || "ورشة التمايز"}</b><span>{session?.trainer_names?.length ? "المدرب/المدربون: "+session.trainer_names.join("، ") : "ورشة التمايز"}</span><small>{new Date().toLocaleDateString("ar-SA",{year:"numeric",month:"long",day:"numeric"})}</small></div><div className="reportActions noPrint"><button className="outlineButton" onClick={()=>printNamed("تقرير بصمة التعبير")}><Download size={16}/> حفظ PDF</button><button className="outlineButton" onClick={shareReport}><Share2 size={16}/> مشاركة</button></div></header>
       <section className="reportHero"><div className="reportHeroMain"><span className="reportEyebrow">بصمتك التعبيرية</span><div className="fingerprintCode">{result.fingerprint}</div><div className="reportPerson"><h1>{name}</h1><p>{org || "مشارك في الورشة"}</p></div><small className="fingerprintTagline">لكل متعلم طريقة فريدة للتعبير</small></div><div className="fingerprintVisual"><div className="fingerprintGlyph">◎</div><span>{primary.code}</span></div><div className="fingerprintSummary"><span>البعد الأكثر حضورًا</span><b>{styleMeta[primary.code].title}</b><strong>{primary.mean.toFixed(1)}<em>/5</em></strong><small>{styleMeta[primary.code].shortTitle}</small></div></section>
       <section className="reportGrid">
         <article className="reportCard radarCard"><div className="reportCardHead"><div><span>الملف الكمي</span><h2>خريطة بصمتك</h2></div><BarChart3 size={21}/></div><Radar rows={result.rows}/></article>
@@ -332,8 +376,17 @@ export default function WorkshopParticipant(){
     <header className="workshopTop evaluationTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>{selectedProduct?.product_name}</b><small>بطاقة تطوير المنتج • المستوى {level}</small></div></div><div className="evaluationHeaderActions"><span className="levelBadge">L{level}</span><button className="outlineButton" onClick={printRubric}><Download size={16}/> PDF / طباعة</button></div></header>
     <section className="evaluationHero"><div><span className="sectionKicker">مسار تطوير المنتج</span><h1>{level===1?"المستوى الأول — ابنِ الأساس":level===2?"المستوى الثاني — ارفع مستوى الإتقان":"المستوى الثالث — اصنع النسخة الاحترافية"}</h1><p>طبّق البطاقة إلكترونيًا على منتجك الحالي. يمكنك كذلك تصدير البطاقة PDF وطباعتها قبل أو بعد التعبئة.</p><div className="passRule"><b>شرط العبور:</b> متوسط لا يقل عن {level===1?"4.0":level===2?"4.5":"5.0"} من 6، مع اجتياز جميع المعايير الجوهرية.</div></div><div className="levelJourney"><span className={level>=1?"done":""}>1</span><i/><span className={level>=2?"done":""}>2</span><i/><span className={level>=3?"done":""}>3</span></div></section>
     <section className="rubricPrintMeta"><div><span>المنتج</span><b>{selectedProduct?.product_name}</b></div><div><span>المشارك</span><b>{name}</b></div><div><span>المستوى</span><b>{level} من 3</b></div><div><span>التاريخ</span><b>{new Date().toLocaleDateString("ar-SA")}</b></div></section>
-    <section className="rubricList">{rubric.map((r,index)=><article key={r.id} className={"rubricCriterion "+(r.essential?"essential":"")}><div className="criterionIndex">{index+1}</div><div className="criterionText"><div><span>{r.section}{r.subsection?" • "+r.subsection:""}</span>{r.essential&&<em>جوهري</em>}</div><p>{r.criterion_template}</p></div><div className="rubricScale">{[0,1,2,3,4,5,6].map(v=><button key={v} className={rubricScores[r.id]===v?"selected":""} onClick={()=>setRubricScores(s=>({...s,[r.id]:v}))}>{v}</button>)}</div></article>)}</section>
-    <label className="rubricComments"><span>تعليقات وملاحظات التطوير</span><textarea value={rubricFeedback} onChange={e=>setRubricFeedback(e.target.value)} placeholder="دوّن ما الذي نجح في المنتج، وما الذي يحتاج إلى تطوير قبل المحاولة التالية."/></label><div className="performanceLegend"><span><b>0</b> ضعيف</span><span><b>1</b> متأخر</span><span><b>2</b> مبتدئ</span><span><b>3</b> متطور</span><span><b>4</b> إتقان</span><span><b>5</b> متقدم</span><span><b>6</b> احتراف</span></div>
+    <section className="evaluatorPanel noPrint">
+      <div><span className="sectionKicker">نوع التقييم</span><h2>تقييم مختلط: كمي + نوعي</h2><p>اختر المقيم. الخبير والأقران يقيمون المحتوى والعرض والإبداع، بينما يشمل التقييم الذاتي التأمل أيضًا.</p></div>
+      <div className="evaluatorControls"><label>المقيم<select value={evaluatorType} onChange={e=>setEvaluatorType(e.target.value as "self"|"trainer"|"peer")}><option value="self">المتعلم ذاته</option><option value="trainer">الخبير / المدرب</option><option value="peer">قرين / زميل</option></select></label><label>اسم المقيم<input value={evaluatorName} onChange={e=>setEvaluatorName(e.target.value)} placeholder={name||"اسم المقيم"}/></label></div>
+    </section>
+    {rubricLoading?<section className="rubricLoading"><Sparkles size={22}/><b>جارٍ تجهيز بطاقة التقييم الخاصة بالمنتج…</b><span>نحمّل المعايير المناسبة لهذا المنتج والمستوى.</span></section>:<section className="rubricList mixedRubric">{visibleRubric.map((r,index)=><article key={r.id} className={"rubricCriterion "+(r.essential?"essential":"")}><div className="criterionIndex">{index+1}</div><div className="criterionText"><div><span>{r.section}{r.subsection?" • "+r.subsection:""}</span>{r.essential&&<em>جوهري</em>}</div><p>{r.criterion_template}</p><label className="criterionNote">الملاحظة النوعية<textarea value={criterionNotes[r.id]||""} onChange={e=>setCriterionNotes(n=>({...n,[r.id]:e.target.value}))} placeholder="ما الذي يثبت هذه الدرجة؟ وما الملاحظة التطويرية الواقعية؟"/></label></div><div className="rubricScale" aria-label="التقييم الكمي من صفر إلى ستة">{[0,1,2,3,4,5,6].map(v=><button type="button" key={v} title={["الضعيف","المتأخر","المبتدئ","المتطور","المتقن","المتقدم","الاحترافي"][v]} className={rubricScores[r.id]===v?"selected":""} onClick={()=>setRubricScores(s=>({...s,[r.id]:v}))}><b>{v}</b><small>{["ضعيف","متأخر","مبتدئ","متطور","متقن","متقدم","احترافي"][v]}</small></button>)}</div></article>)}</section>}
+    <section className="qualitativeSummary">
+      <label><span>ملاحظات عامة على المنتج</span><textarea value={rubricFeedback} onChange={e=>setRubricFeedback(e.target.value)} placeholder="اكتب الصورة الشاملة للأداء: ما الذي تحقق؟ وما الذي يحتاج إلى مراجعة؟"/></label>
+      <label><span>أولوية التطوير</span><textarea value={developmentPriority} onChange={e=>setDevelopmentPriority(e.target.value)} placeholder="حدد أهم عنصر يجب تطويره قبل المحاولة التالية."/></label>
+      <label><span>التوصية للمحاولة القادمة</span><textarea value={nextRecommendation} onChange={e=>setNextRecommendation(e.target.value)} placeholder="ما الإجراء العملي المحدد الذي ينبغي تنفيذه في النسخة التالية؟"/></label>
+    </section>
+    <div className="performanceLegend"><span><b>0</b> الضعيف</span><span><b>1</b> المتأخر</span><span><b>2</b> المبتدئ</span><span><b>3</b> المتطور</span><span><b>4</b> المتقن</span><span><b>5</b> المتقدم</span><span><b>6</b> الاحترافي</span></div>
     {lastEval&&<><section className={lastEval.passed?"evaluationResult pass":"evaluationResult retry"}><div><strong>{lastEval.passed?(level===3?"اكتمل مسار تطوير المنتج":"تم اجتياز المستوى "+level):"طوّر المنتج ثم أعد التقييم"}</strong><span>المتوسط {lastEval.average_score} / 6 • المطلوب {lastEval.required_average ?? (level===1?4:level===2?4.5:5)} • المعايير الجوهرية {lastEval.essential_pass?"متحققة":"تحتاج تحسينًا"}</span>{lastEval.previous_average!==null&&<small>المحاولة السابقة {Number(lastEval.previous_average).toFixed(1)} • التغير {lastEval.improvement>0?"+":""}{lastEval.improvement}</small>}</div>{lastEval.passed&&level<3&&<button className="primaryButton noPrint" onClick={openNextLevel}>فتح المستوى {lastEval.next_level} <ArrowLeft size={16}/></button>}</section><section className="developmentReport"><div className="developmentHead"><div><span className="sectionKicker">تقرير التطوير</span><h2>ماذا تقول البطاقة عن منتجك؟</h2></div><strong>{rubricAnalysis.average}<small>/6</small></strong></div><div className="axisAnalysis">{rubricAnalysis.sections.map(s=><div key={s.name}><span>{s.name}</span><div><i style={{width:(s.average/6)*100+"%"}}/></div><b>{s.average}</b></div>)}</div><div className="developmentInsights">{rubricAnalysis.strongest&&<article className="strengthInsight"><span>نقطة قوة</span><b>{rubricAnalysis.strongest.section}{rubricAnalysis.strongest.subsection?" • "+rubricAnalysis.strongest.subsection:""}</b><p>{rubricAnalysis.strongest.criterion_template}</p></article>}<article className="growthInsight"><span>أولوية التطوير قبل المحاولة التالية</span>{rubricAnalysis.weakest.map(r=><div key={r.id}><b>{rubricScores[r.id]}/6</b><p>{r.criterion_template}</p><small>{developmentAdvice(r)}</small></div>)}</article></div>{!lastEval.passed&&<div className="retryPlan"><Sparkles size={18}/><div><b>خطة المحاولة القادمة</b><span>ابدأ بالمعايير الثلاثة الأقل درجة، عدّل المنتج فعليًا، ثم أعد التقييم. الهدف ليس رفع الرقم فقط؛ بل رؤية أثر التحسين في المنتج نفسه.</span></div></div>}</section></>}
     <div className="evaluationActions noPrint">
       {participantProduct?.status==="completed"?<button className="primaryButton" onClick={()=>setStage("diagnosis")}>اكتمل المستوى الثالث — انتقل إلى تشخيص الفصل <ArrowLeft size={17}/></button>:<button className="primaryButton" disabled={busy||!!lastEval?.passed} onClick={submitLevel}>{lastEval&&!lastEval.passed?"إعادة تقييم المستوى "+level:"تقييم المستوى "+level}</button>}
@@ -343,7 +396,7 @@ export default function WorkshopParticipant(){
   </main>;
 
   if(stage==="journey"&&journey) return <main className="workshopPage productJourneyPage">
-    <header className="workshopTop journeyTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>رحلة {selectedProduct?.product_name}</b><small>سجل التطوير والمحاولات</small></div></div><div className="journeyTopActions noPrint"><button className="outlineButton" onClick={()=>setStage("evaluate")}><ArrowRight size={16}/> البطاقة</button><button className="outlineButton" onClick={()=>window.print()}><Download size={16}/> PDF</button></div></header>
+    <header className="workshopTop journeyTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>رحلة {selectedProduct?.product_name}</b><small>سجل التطوير والمحاولات</small></div></div><div className="journeyTopActions noPrint"><button className="outlineButton" onClick={()=>setStage("evaluate")}><ArrowRight size={16}/> البطاقة</button><button className="outlineButton" onClick={()=>printNamed("التقرير الختامي للورشة")}><Download size={16}/> PDF</button></div></header>
     <section className="journeyHero"><div><span className="sectionKicker">أثر التطوير عبر الزمن</span><h1>من أول محاولة… إلى النسخة الأقوى.</h1><p>هذا السجل لا يعرض درجة نهائية فقط؛ بل يوثق كيف تطور المنتج مع التغذية الراجعة وارتفاع مستوى التحدي.</p></div><div className="journeySummary"><div><span>المحاولات</span><b>{journey.summary.attempts_count}</b></div><div><span>البداية</span><b>{journey.summary.first_average??"—"}<small>/6</small></b></div><div><span>الأحدث</span><b>{journey.summary.latest_average??"—"}<small>/6</small></b></div><div className={(journey.summary.total_improvement??0)>=0?"positive":"negative"}><span>التغير</span><b>{journey.summary.total_improvement!==null?(journey.summary.total_improvement>0?"+":"")+journey.summary.total_improvement:"—"}</b></div></div></section>
     <section className="journeyLevels">{[1,2,3].map(l=>{const ats=journey.attempts.filter((a:any)=>a.level_no===l);const latest=ats[ats.length-1];return <article key={l} className={latest?.passed?"levelComplete":ats.length?"levelTried":""}><div className="journeyLevelNo">L{l}</div><div><span>{l===1?"الأساس":l===2?"الإتقان":"الاحتراف"}</span><b>{ats.length?ats.length+" محاولة":"لم يبدأ"}</b></div>{latest&&<strong>{latest.average_score}<small>/6</small></strong>}</article>})}</section>
     <section className="journeyTimeline"><div className="journeySectionHead"><span className="sectionKicker">الخط الزمني</span><h2>محاولات التطوير</h2></div>{journey.attempts.length===0?<div className="emptyJourney">لم تُسجل محاولات بعد.</div>:journey.attempts.map((a:any,i:number)=><article key={a.id} className="journeyAttempt"><div className="attemptRail"><span>{i+1}</span><i/></div><div className="attemptCard"><div className="attemptHead"><div><span>المحاولة {i+1} • المستوى {a.level_no}</span><b>{new Date(a.created_at).toLocaleDateString("ar-SA")}</b></div><strong className={a.passed?"passed":"retry"}>{a.average_score}<small>/6</small></strong></div><div className="attemptAxes">{(a.sections??[]).map((s:any)=><div key={s.section}><span>{s.section}</span><div><i style={{width:(s.average/6)*100+"%"}}/></div><b>{s.average}</b></div>)}</div>{a.feedback&&<p className="attemptFeedback"><b>ملاحظات التطوير:</b> {a.feedback}</p>}<div className="attemptStatus">{a.passed?<><CheckCircle2 size={15}/> اجتاز هذا المستوى</>:<>يحتاج تطويرًا ثم إعادة المحاولة</>}</div></div></article>)}</section>
@@ -352,30 +405,31 @@ export default function WorkshopParticipant(){
   </main>;
 
   if(stage==="diagnosis") return <main className="workshopPage learningLabPage">
-    <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>مختبر التمايز</b><small>من التشخيص إلى الأهداف</small></div></div><span className="workshopPill">أحياء 1 • الفيروسات</span></header>
-    <section className="labHero"><div><span className="smartBadge"><Target size={15}/> المحطة السادسة</span><h1>بيانات فصل واحد… ثلاث نقاط انطلاق.</h1><p>الموضوع واحد، لكن الاستعداد مختلف. المحرك لا يخفض سقف التعلم؛ بل يغيّر نقطة الدخول وعمق العمليات العقلية.</p></div><div className="classSnapshot"><strong>28</strong><span>طالبًا</span><small>تشخيص افتراضي للورشة</small></div></section>
-    <section className="diagnosisGroups">{diagnosisGroups.map(g=><article key={g.key}><div className="diagnosisGroupTop"><span>{g.title}</span><strong>{g.count}</strong></div><div className="readinessMeter"><i style={{width:g.readiness+"%"}}/></div><small>جاهزية {g.readiness}%</small><h3>{g.range}</h3><p>{g.goal}</p></article>)}</section>
+    <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>مختبر التمايز</b><small>من التشخيص إلى الأهداف</small></div></div><span className="workshopPill">{lessonSubject} • {lessonTitle}</span></header>
+    <section className="lessonPicker noPrint"><div><span className="sectionKicker">اختيار الدرس</span><h2>ولّد الحصة من بيانات الفصل الافتراضي</h2><p>غيّر المادة أو الدرس أو عدد الطلاب، وسيُعاد توزيع المسارات كنموذج فوري يمكن للمدرب عرضه أو للمعلم تطويره.</p></div><div className="lessonPickerFields"><label>المادة<input value={lessonSubject} onChange={e=>setLessonSubject(e.target.value)} /></label><label>الدرس<input value={lessonTitle} onChange={e=>setLessonTitle(e.target.value)} /></label><label>عدد الطلاب<input type="number" min="3" max="60" value={lessonClassSize} onChange={e=>setLessonClassSize(Math.max(3,Number(e.target.value)||3))}/></label></div></section>
+    <section className="labHero"><div><span className="smartBadge"><Target size={15}/> المحطة السادسة</span><h1>بيانات فصل واحد… ثلاث نقاط انطلاق.</h1><p>الموضوع واحد، لكن الاستعداد مختلف. المحرك لا يخفض سقف التعلم؛ بل يغيّر نقطة الدخول وعمق العمليات العقلية.</p></div><div className="classSnapshot"><strong>{lessonClassSize}</strong><span>طالبًا</span><small>تشخيص افتراضي قابل للتعديل</small></div></section>
+    <section className="diagnosisGroups">{generatedGroups.map(g=><article key={g.key}><div className="diagnosisGroupTop"><span>{g.title}</span><strong>{g.count}</strong></div><div className="readinessMeter"><i style={{width:g.readiness+"%"}}/></div><small>جاهزية {g.readiness}%</small><h3>{g.range}</h3><p>{g.goal}</p></article>)}</section>
     <section className="labInsight"><Sparkles size={19}/><div><span>قرار المحرك</span><b>المتطلب الجوهري مشترك، بينما تتدرج الأهداف والعمليات من الدعم إلى التحليل والتقويم والإبداع.</b></div></section>
     <div className="labActions"><button className="primaryButton" onClick={()=>setStage("differentiate")}>شاهد تمايز المحتوى والعملية والمنتج <ArrowLeft size={17}/></button></div>
   </main>;
 
   if(stage==="differentiate") return <main className="workshopPage learningLabPage">
     <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>موضوع واحد • مسارات مختلفة</small></div></div><span className="workshopPill">المحطة السابعة</span></header>
-    <section className="labHero compactLab"><div><h1>الفيروسات: الهدف المشترك ثابت، التجربة تتكيف.</h1><p>نغيّر عمق المحتوى، طبيعة العملية، وشكل المنتج القصير وفق الاستعداد وبصمة التعبير.</p></div></section>
+    <section className="labHero compactLab"><div><h1>{lessonTitle}: الهدف المشترك ثابت، التجربة تتكيف.</h1><p>نغيّر عمق المحتوى، طبيعة العملية، وشكل المنتج القصير وفق الاستعداد وبصمة التعبير.</p></div></section>
     <section className="differentiationMatrix">
       <div className="matrixHeader"><span>المسار</span><span>المحتوى</span><span>العملية</span><span>المنتج</span></div>
-      {diagnosisGroups.map(g=><div className="matrixRow" key={g.key}><b>{g.title}<small>{g.count} طلاب</small></b><p>{g.key==="support"?"مفاهيم أساسية + تمثيل مبسط للتركيب.":g.key==="core"?"تركيب الفيروس ودورة التكاثر مع مقارنة منظمة.":"حالات علمية وقيود التفسير ونقد الأدلة."}</p><p>{g.process}</p><p>{g.product}</p></div>)}
+      {generatedGroups.map(g=><div className="matrixRow" key={g.key}><b>{g.title}<small>{g.count} طلاب</small></b><p>{g.key==="support"?"مفاهيم أساسية + تمثيل مبسط للتركيب.":g.key==="core"?"تركيب الفيروس ودورة التكاثر مع مقارنة منظمة.":"حالات علمية وقيود التفسير ونقد الأدلة."}</p><p>{g.process}</p><p>{g.product}</p></div>)}
     </section>
     <div className="labActions"><button className="outlineButton" onClick={()=>setStage("diagnosis")}><ArrowRight size={16}/> السابق</button><button className="primaryButton" onClick={()=>setStage("lesson")}>ابنِ الدرس الكامل <ArrowLeft size={17}/></button></div>
   </main>;
 
   if(stage==="lesson") return <main className="workshopPage learningLabPage">
     <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>مسودة الدرس</b><small>القرار النهائي للمعلم</small></div></div><span className="workshopPill">المحطة الثامنة</span></header>
-    <section className="lessonBuilderHero"><div><span className="smartBadge"><Sparkles size={15}/> مولد الدرس</span><h1>أحياء 1 — الفيروسات</h1><p>مسودة مبنية على التشخيص وبصمات التعبير. راجعها وعدلها؛ المنصة لا تتخذ القرار بدل المعلم.</p></div><div className="draftBadge">مسودة<br/><b>للمراجعة</b></div></section>
+    <section className="lessonBuilderHero"><div><span className="smartBadge"><Sparkles size={15}/> مولد الدرس</span><h1>{lessonSubject} — {lessonTitle}</h1><p>مسودة مبنية على التشخيص وبصمات التعبير. راجعها وعدلها؛ المنصة لا تتخذ القرار بدل المعلم.</p></div><div className="draftBadge">مسودة<br/><b>للمراجعة</b></div></section>
     <section className="lessonDraftGrid">
-      <article><span>الهدف المركزي</span><h3>أن يفسر الطالب بنية الفيروس وآلية تكاثره ويستخدم الأدلة لتبرير تفسيره.</h3></article>
-      <article><span>التهيئة</span><h3>صورة/مقطع قصير ثم سؤال: لماذا لا يصنف الفيروس كخلية كاملة؟</h3></article>
-      <article><span>المحتوى</span><h3>نواة مشتركة + دعم مفاهيمي + امتداد تحليلي حسب الجاهزية.</h3></article>
+      <article><span>الهدف المركزي</span><h3>أن يفسر الطالب المفاهيم الجوهرية في «{lessonTitle}» ويستخدم الأدلة لتبرير فهمه وتطبيقه.</h3></article>
+      <article><span>التهيئة</span><h3>مثير بصري أو سؤال قصير يكشف التصورات السابقة حول «{lessonTitle}».</h3></article>
+      <article><span>المحتوى</span><h3>نواة مشتركة في «{lessonTitle}» + دعم مفاهيمي + امتداد تحليلي حسب الجاهزية.</h3></article>
       <article><span>العملية</span><h3>تحليل تمثيل، مقارنة، حالة علمية، ونقاش موجه وفق المسار.</h3></article>
       <article><span>المنتج</span><h3>خريطة مفاهيم / إنفوجرافيك / فيديو أو محاكاة مع حرية الاختيار.</h3></article>
       <article><span>التقويم</span><h3>تذكرة خروج من سؤالين: تفسير + دليل؛ تحدّث خريطة الإتقان للحصة التالية.</h3></article>
@@ -398,6 +452,7 @@ export default function WorkshopParticipant(){
         <article className="evidenceStory"><span>04 • ما الدليل؟</span><h2>أثر يمكن تتبعه</h2><p>الدرجات وحدها ليست الدليل؛ السجل يجمع المحاولات، محاور الأداء، الملاحظات، الانتقال بين مستويات التحدي، وأثر التحسين.</p><div className="evidenceTags"><b>المحتوى</b><b>العرض</b><b>الإبداع</b><b>التأمل</b></div></article>
       </section>
       <section className="finalLearningArc"><div className="finalArcHead"><span className="sectionKicker">ما الذي عشته في الورشة؟</span><h2>التمايز كعملية قرار، لا كقائمة أنشطة.</h2></div><div className="arcSteps"><div><b>1</b><span>شخّصت تفضيلاتي</span></div><i/><div><b>2</b><span>اخترت منتجي بحرية</span></div><i/><div><b>3</b><span>قيّمت المنتج</span></div><i/><div><b>4</b><span>طورت الفجوات</span></div><i/><div><b>5</b><span>ارتفع سقف التحدي</span></div><i/><div><b>6</b><span>وثقت أثر النمو</span></div></div></section>
+      <section className="finalQualitativeSummary"><div><span>التقييم النوعي الأخير</span><h2>{lastEval?.feedback||rubricFeedback||"لا توجد ملاحظة نوعية مسجلة بعد."}</h2></div><div><span>أولوية التطوير</span><b>{developmentPriority||"تُحدد من أقل المعايير أداءً في بطاقة المنتج."}</b></div><div><span>المحاولة القادمة</span><b>{nextRecommendation||"طوّر العنصر الأقل أداءً، ثم أعد التقييم وقارن أثر التعديل."}</b></div></section>
       <section className="finalReflection"><Sparkles size={22}/><div><span>الخلاصة التي أحملها معي</span><b>التمايز لا يعني أن يتعلم كل طالب شيئًا مختلفًا؛ بل أن نمنحه نقطة دخول ومسار تعبير وتحديًا مناسبًا، ثم نستخدم الدليل لنقرر خطوته التالية.</b></div></section>
       <footer className="reportFooter"><span>التمايز • diff.t7iq.com</span><span>{session?.title||"ورشة التمايز"}{session?.trainer_names?.length?" • "+session.trainer_names.join("، "):""}</span></footer>
       <div className="finalReportBottom noPrint"><button className="outlineButton" onClick={()=>setStage("journey")}><ArrowRight size={16}/> سجل المنتج</button><button className="primaryButton" onClick={()=>setStage("done")}>إنهاء التجربة <ArrowLeft size={16}/></button></div>
@@ -428,7 +483,7 @@ export default function WorkshopParticipant(){
       <p>لقد مررت بالمسار كاملًا: التشخيص → البصمة → المنتج → التطوير → التشخيص الصفي → أهداف بلوم → التمايز → الدرس → القرار التعليمي الجديد.</p>
       <div className="finalFingerprint"><span>بصمتك</span><b>{result.fingerprint}</b><small>{selectedProduct?.product_name?"منتجك: "+selectedProduct.product_name:""}</small></div>
       {applicationSent&&<div className="applicationSuccess">تم إرسال طلبك للدراسة التطبيقية السنوية.</div>}
-      <div className="doneActions"><button className="outlineButton" onClick={()=>window.print()}><Download size={16}/> حفظ التقرير</button><button className="primaryButton" onClick={()=>setStage("report")}>العودة لتقرير البصمة</button></div>
+      <div className="doneActions"><button className="outlineButton" onClick={()=>printNamed("تقرير تجربة التمايز")}><Download size={16}/> حفظ التقرير</button><button className="primaryButton" onClick={()=>setStage("report")}>العودة لتقرير البصمة</button></div>
     </section>
   </main>;
 }
