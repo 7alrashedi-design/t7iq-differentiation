@@ -6,19 +6,24 @@ import { useParams, usePathname } from "next/navigation";
 import QRCode from "qrcode";
 import {
   ArrowRight, BarChart3, CheckCircle2, Copy, Download, ExternalLink,
-  PauseCircle, PlayCircle, QrCode, RefreshCw, UsersRound
+  PauseCircle, PlayCircle, QrCode, RefreshCw, UsersRound, UserCheck, UserX
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Session={id:string;title:string;session_code:string;status:string;trainer_names:string[];venue:string|null;starts_at:string|null;settings:any};
-type Participant={id:string;full_name:string;organization_name:string|null;joined_at:string;completed_at:string|null};
+type Participant={
+  id:string;full_name:string;organization_name:string|null;joined_at:string;completed_at:string|null;
+  qualification_status:"in_progress"|"completed"|"qualified"|"not_qualified";qualified_at:string|null;qualification_note:string|null
+};
 type Fingerprint={participant_id:string;fingerprint_code:string;primary_code:string;dimension_scores:any};
 type ParticipantProduct={id:string;participant_id:string;product_id:string;current_level:number;status:string};
 type Application={participant_id:string;status:string};
 
 export default function WorkshopDashboard(){
   const params=useParams<{id:string}>();
+  const pathname=usePathname();
   const id=params.id;
+  const trainerView=pathname.startsWith("/trainer/");
   const [session,setSession]=useState<Session|null>(null);
   const [participants,setParticipants]=useState<Participant[]>([]);
   const [fingerprints,setFingerprints]=useState<Fingerprint[]>([]);
@@ -27,6 +32,7 @@ export default function WorkshopDashboard(){
   const [qr,setQr]=useState("");
   const [notice,setNotice]=useState("");
   const [auto,setAuto]=useState(true);
+  const [busyParticipant,setBusyParticipant]=useState<string|null>(null);
 
   async function idsFor(sessionId:string){
     const supabase=getSupabaseBrowserClient();
@@ -40,7 +46,7 @@ export default function WorkshopDashboard(){
     const ids=await idsFor(id);
     const [{data:s},{data:p},{data:f},{data:pp},{data:a}]=await Promise.all([
       supabase.from("workshop_sessions").select("id,title,session_code,status,trainer_names,venue,starts_at,settings").eq("id",id).maybeSingle(),
-      supabase.from("workshop_participants").select("id,full_name,organization_name,joined_at,completed_at").eq("session_id",id).order("joined_at"),
+      supabase.from("workshop_participants").select("id,full_name,organization_name,joined_at,completed_at,qualification_status,qualified_at,qualification_note").eq("session_id",id).order("joined_at"),
       ids.length?supabase.from("fingerprint_results").select("participant_id,fingerprint_code,primary_code,dimension_scores").in("participant_id",ids):Promise.resolve({data:[]}),
       ids.length?supabase.from("participant_products").select("id,participant_id,product_id,current_level,status").in("participant_id",ids):Promise.resolve({data:[]}),
       ids.length?supabase.from("workshop_applications").select("participant_id,status").in("participant_id",ids):Promise.resolve({data:[]})
@@ -52,10 +58,10 @@ export default function WorkshopDashboard(){
     setApplications((a??[]) as Application[]);
   }
 
-  useEffect(()=>{load()},[id]);
+  useEffect(()=>{void load()},[id]);
   useEffect(()=>{
     if(!auto) return;
-    const t=setInterval(load,5000);
+    const t=setInterval(()=>{void load()},5000);
     return()=>clearInterval(t);
   },[auto,id]);
 
@@ -83,12 +89,35 @@ export default function WorkshopDashboard(){
     done:products.filter(p=>p.status==="completed").length
   }),[products]);
 
+  const qualificationStats=useMemo(()=>({
+    qualified:participants.filter(p=>p.qualification_status==="qualified").length,
+    notQualified:participants.filter(p=>p.qualification_status==="not_qualified").length,
+    pending:participants.filter(p=>!["qualified","not_qualified"].includes(p.qualification_status)).length
+  }),[participants]);
+
   async function updateStatus(status:string){
     const supabase=getSupabaseBrowserClient();
     const {error}=await supabase.from("workshop_sessions").update({status}).eq("id",id);
     if(error){setNotice(error.message);return}
     setNotice(status==="live"?"الجلسة الآن مباشرة.":status==="closed"?"تم إغلاق دخول المشاركين.":"تم فتح الجلسة.");
     await load();
+  }
+
+  async function setQualification(participantId:string,status:"qualified"|"not_qualified"){
+    setBusyParticipant(participantId);setNotice("");
+    try{
+      const supabase=getSupabaseBrowserClient();
+      const pr=products.find(x=>x.participant_id===participantId);
+      if(status==="qualified"&&pr?.status!=="completed") throw new Error("لا يمكن اعتماد التأهيل قبل إكمال مستويات المنتج.");
+      const {error}=await supabase.from("workshop_participants").update({
+        qualification_status:status,
+        qualified_at:status==="qualified"?new Date().toISOString():null,
+        completed_at:status==="qualified"?new Date().toISOString():undefined
+      }).eq("id",participantId).eq("session_id",id);
+      if(error) throw error;
+      setNotice(status==="qualified"?"تم اعتماد تأهيل المتدرب.":"تم تسجيل المتدرب كغير مؤهل في هذه الورشة.");
+      await load();
+    }catch(e){setNotice(e instanceof Error?e.message:"تعذر تحديث حالة التأهيل.")}finally{setBusyParticipant(null)}
   }
 
   async function copyLink(){
@@ -98,12 +127,13 @@ export default function WorkshopDashboard(){
   }
 
   function exportCSV(){
-    const header=["الاسم","الجهة","البصمة","المنتج","المستوى","الحالة","طلب الدراسة"];
+    const header=["الاسم","الجهة","البصمة","المنتج","المستوى","حالة المنتج","التأهيل","طلب الدراسة"];
     const rows=participants.map(p=>{
       const fp=fingerprints.find(f=>f.participant_id===p.id);
       const pr=products.find(x=>x.participant_id===p.id);
       const ap=applications.find(x=>x.participant_id===p.id);
-      return [p.full_name,p.organization_name??"",fp?.fingerprint_code??"",pr?.product_id??"",pr?.current_level??"",pr?.status??"",ap?.status??""];
+      const q=p.qualification_status==="qualified"?"مؤهل":p.qualification_status==="not_qualified"?"غير مؤهل":"قيد المتابعة";
+      return [p.full_name,p.organization_name??"",fp?.fingerprint_code??"",pr?.product_id??"",pr?.current_level??"",pr?.status??"",q,ap?.status??""];
     });
     const csv=[header,...rows].map(r=>r.map(v=>"\""+String(v).replaceAll("\"","\"\"")+"\"").join(",")).join("\n");
     const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
@@ -127,7 +157,7 @@ export default function WorkshopDashboard(){
       </div>
       <div className="liveHeaderActions">
         <button className="outlineButton" onClick={()=>setAuto(v=>!v)}>{auto?<PauseCircle size={16}/>:<PlayCircle size={16}/>} {auto?"إيقاف التحديث":"تشغيل التحديث"}</button>
-        <button className="outlineButton" onClick={load}><RefreshCw size={16}/> تحديث</button>
+        <button className="outlineButton" onClick={()=>void load()}><RefreshCw size={16}/> تحديث</button>
         <button className="outlineButton" onClick={exportCSV}><Download size={16}/> CSV</button>
         <button className="outlineButton" onClick={()=>window.print()}><Download size={16}/> تقرير PDF</button>
       </div>
@@ -138,25 +168,25 @@ export default function WorkshopDashboard(){
     <section className="liveHeroGrid">
       <article className="sessionAccessCard">
         <div className="sessionCodeBig">{session.session_code}</div>
-        <h2>ادخل إلى الورشة</h2>
+        <h2>الدخول إلى الورشة</h2>
         <p>امسح الرمز أو افتح الرابط، ثم اكتب الاسم والجهة فقط.</p>
         {qr?<img src={qr} alt="QR للدخول إلى الورشة"/>:<div className="qrPlaceholder"><QrCode size={34}/></div>}
         <div className="accessButtons">
-          <button className="outlineButton" onClick={copyLink}><Copy size={15}/> نسخ الرابط</button>
+          <button className="outlineButton" onClick={()=>void copyLink()}><Copy size={15}/> نسخ الرابط</button>
           <Link href={joinUrl} target="_blank" className="outlineButton">فتح <ExternalLink size={15}/></Link>
         </div>
         <div className="sessionStateButtons">
-          <button onClick={()=>updateStatus("open")} className={session.status==="open"?"active":""}>فتح</button>
-          <button onClick={()=>updateStatus("live")} className={session.status==="live"?"active":""}>مباشر</button>
-          <button onClick={()=>updateStatus("closed")} className={session.status==="closed"?"active":""}>إغلاق</button>
+          <button onClick={()=>void updateStatus("open")} className={session.status==="open"?"active":""}>فتح</button>
+          <button onClick={()=>void updateStatus("live")} className={session.status==="live"?"active":""}>مباشر</button>
+          <button onClick={()=>void updateStatus("closed")} className={session.status==="closed"?"active":""}>إغلاق</button>
         </div>
       </article>
 
       <article className="liveMetricsCard">
-        <div className="liveMetric"><UsersRound size={20}/><div><strong>{participants.length}</strong><span>مشاركًا دخلوا</span></div></div>
+        <div className="liveMetric"><UsersRound size={20}/><div><strong>{participants.length}</strong><span>دخلوا الجلسة</span></div></div>
         <div className="liveMetric"><BarChart3 size={20}/><div><strong>{fingerprints.length}</strong><span>أكملوا «أسلوبي»</span></div></div>
-        <div className="liveMetric"><CheckCircle2 size={20}/><div><strong>{levelStats.done}</strong><span>أكملوا مستويات المنتج</span></div></div>
-        <div className="liveMetric"><PlayCircle size={20}/><div><strong>{applications.length}</strong><span>طلبات الدراسة السنوية</span></div></div>
+        <div className="liveMetric"><CheckCircle2 size={20}/><div><strong>{levelStats.done}</strong><span>أكملوا المنتج</span></div></div>
+        <div className="liveMetric"><UserCheck size={20}/><div><strong>{qualificationStats.qualified}</strong><span>تم تأهيلهم</span></div></div>
       </article>
 
       <article className="fingerprintLiveCard">
@@ -172,23 +202,39 @@ export default function WorkshopDashboard(){
       <article className="levelLiveCard">
         <div className="liveCardHead"><div><span>رحلة المنتج</span><h2>الانتقال بين المستويات</h2></div></div>
         <div className="levelLiveGrid">
-          <div><span>L1</span><strong>{levelStats.l1}</strong><small>أساس المنتج</small></div>
+          <div><span>L1</span><strong>{levelStats.l1}</strong><small>الأساس</small></div>
           <div><span>L2</span><strong>{levelStats.l2}</strong><small>الإتقان</small></div>
           <div><span>L3</span><strong>{levelStats.l3}</strong><small>الاحتراف</small></div>
-          <div className="done"><span>✓</span><strong>{levelStats.done}</strong><small>أكملوا</small></div>
+          <div className="done"><span>✓</span><strong>{levelStats.done}</strong><small>مكتمل</small></div>
+        </div>
+        <div className="qualificationMini">
+          <span>قيد الاعتماد <b>{qualificationStats.pending}</b></span>
+          <span>غير مؤهل <b>{qualificationStats.notQualified}</b></span>
         </div>
       </article>
     </section>
 
     <section className="liveParticipantsSection">
-      <div className="sectionTitleRow"><div><span className="sectionKicker">متابعة لحظية</span><h2>المشاركون</h2></div><span>{participants.length}</span></div>
+      <div className="sectionTitleRow"><div><span className="sectionKicker">متابعة واعتماد</span><h2>المشاركون</h2></div><span>{participants.length}</span></div>
       <div className="liveTableWrap">
-        <table className="liveTable"><thead><tr><th>المشارك</th><th>الجهة</th><th>البصمة</th><th>المنتج</th><th>المستوى</th><th>الحالة</th><th>الدراسة السنوية</th></tr></thead>
+        <table className="liveTable"><thead><tr><th>المشارك</th><th>الجهة</th><th>البصمة</th><th>المنتج</th><th>المستوى</th><th>الحالة</th><th>التأهيل</th></tr></thead>
           <tbody>{participants.map(p=>{
             const fp=fingerprints.find(x=>x.participant_id===p.id);
             const pr=products.find(x=>x.participant_id===p.id);
-            const ap=applications.find(x=>x.participant_id===p.id);
-            return <tr key={p.id}><td><b>{p.full_name}</b></td><td>{p.organization_name||"—"}</td><td>{fp?.fingerprint_code||"يطبق المقياس"}</td><td>{pr?.product_id||"—"}</td><td>{pr?"L"+pr.current_level:"—"}</td><td>{pr?.status==="completed"?"مكتمل":pr?"قيد التطوير":"—"}</td><td>{ap?"أرسل الطلب":"—"}</td></tr>
+            const eligible=pr?.status==="completed";
+            return <tr key={p.id}>
+              <td><b>{p.full_name}</b></td><td>{p.organization_name||"—"}</td><td>{fp?.fingerprint_code||"يطبق المقياس"}</td>
+              <td>{pr?.product_id||"—"}</td><td>{pr?"L"+pr.current_level:"—"}</td>
+              <td>{pr?.status==="completed"?"مكتمل":pr?"قيد التطوير":"—"}</td>
+              <td>
+                {p.qualification_status==="qualified"?<span className="qualificationBadge qualified">مؤهل ✓</span>:
+                 p.qualification_status==="not_qualified"?<span className="qualificationBadge rejected">غير مؤهل</span>:
+                 <div className="qualificationActions">
+                   <button disabled={!eligible||busyParticipant===p.id} onClick={()=>void setQualification(p.id,"qualified")} title={!eligible?"يلزم إكمال L3 أولًا":"اعتماد التأهيل"}><UserCheck/> تأهيل</button>
+                   <button disabled={busyParticipant===p.id} onClick={()=>void setQualification(p.id,"not_qualified")}><UserX/> غير مؤهل</button>
+                 </div>}
+              </td>
+            </tr>
           })}</tbody>
         </table>
       </div>
