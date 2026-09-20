@@ -1487,3 +1487,6 @@ button,input,select,textarea{font-family:inherit}
 .programReportList{display:grid;gap:8px}.programReportList>div{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #edf2f4}.programReportList b{font-size:11px}.programReportList span,.programReportList small{font-size:9px;color:var(--muted)}.tableSub{display:block;color:var(--muted);font-size:8px;margin-top:3px}
 @media(max-width:800px){.trainingReportGrid{grid-template-columns:1fr}.qualificationActions{min-width:145px;display:grid;grid-template-columns:1fr}.miniRowActions{margin-right:0}.programMiniRow{flex-wrap:wrap}}
 @media print{.roleHeroActions,.liveHeaderActions,.sessionStateButtons,.qualificationActions,.noPrint{display:none!important}.roleWorkspace,.liveDashboardPage{max-width:none!important;padding:0!important}.reportPanel,.liveParticipantsSection,.roleHero{box-shadow:none!important}}
+
+.participantQualified,.participantNotQualified{display:inline-flex;margin-top:12px;padding:7px 11px;border-radius:999px;font-size:10px;font-weight:800}
+.participantQualified{background:#e8f7f1;color:#26766d}.participantNotQualified{background:#fff0ef;color:#a44d47}
