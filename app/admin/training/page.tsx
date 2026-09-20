@@ -16,7 +16,7 @@ export default function TrainingCenter(){
   const [sessions,setSessions]=useState<Session[]>([]);
   const [trainerCount,setTrainerCount]=useState(0);
   const [participantCount,setParticipantCount]=useState(0);
-  const [completedCount,setCompletedCount]=useState(0);
+  const [completedCount,setCompletedCount]=useState(0);\n  const [qualifiedCount,setQualifiedCount]=useState(0);
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{void load()},[]);
@@ -24,7 +24,7 @@ export default function TrainingCenter(){
     const s=getSupabaseBrowserClient();
     const {data:{session}}=await s.auth.getSession();
     if(!session?.user){setLoading(false);return}
-    const [{data:p},{data:ws},{count:tc},{count:pc},{count:cc}]=await Promise.all([
+    const [{data:p},{data:ws},{count:tc},{count:pc},{count:cc},{count:qc}]=await Promise.all([
       s.from("profiles").select("role,full_name").eq("id",session.user.id).maybeSingle(),
       s.from("workshop_sessions").select("id,title,session_code,status,starts_at,venue").order("created_at",{ascending:false}).limit(6),
       s.from("profiles").select("id",{count:"exact",head:true}).eq("role","trainer"),
@@ -32,7 +32,7 @@ export default function TrainingCenter(){
       s.from("workshop_participants").select("id",{count:"exact",head:true}).not("completed_at","is",null)
     ]);
     setProfile(p as Profile|null);setSessions((ws??[]) as Session[]);
-    setTrainerCount(tc??0);setParticipantCount(pc??0);setCompletedCount(cc??0);setLoading(false);
+    setTrainerCount(tc??0);setParticipantCount(pc??0);setCompletedCount(cc??0);setQualifiedCount(qc??0);setLoading(false);
   }
 
   const openCount=useMemo(()=>sessions.filter(x=>x.status==="open"||x.status==="live").length,[sessions]);
@@ -51,14 +51,14 @@ export default function TrainingCenter(){
       <article><div className="pulseIcon mint"><Presentation/></div><div><strong>{sessions.length}</strong><span>ورش وجلسات</span></div></article>
       <article><div className="pulseIcon blue"><UserCog/></div><div><strong>{trainerCount}</strong><span>مدربون</span></div></article>
       <article><div className="pulseIcon violet"><UsersRound/></div><div><strong>{participantCount}</strong><span>مشاركون</span></div></article>
-      <article><div className="pulseIcon amber"><CheckCircle2/></div><div><strong>{completedCount}</strong><span>أكملوا الرحلة</span></div></article>
+      <article><div className="pulseIcon amber"><CheckCircle2/></div><div><strong>{qualifiedCount}</strong><span>تم تأهيلهم</span></div></article>
     </section>
 
     <section className="trainingPath">
       <article><span>01</span><div className="pathIcon"><GraduationCap/></div><h2>صمّم الورشة</h2><p>اسم الجلسة، الموعد، المكان، المقياس، المنتجات ومعايير الاجتياز.</p><Link href="/admin/workshops">إنشاء وإدارة الورش <ArrowLeft/></Link></article>
       <article><span>02</span><div className="pathIcon"><UserCog/></div><h2>أسند المدرب</h2><p>اختر المدرب المناسب لكل جلسة. سيظهر له فقط ما تم إسناده إليه.</p><Link href="/admin">إدارة الحسابات <ArrowLeft/></Link></article>
       <article><span>03</span><div className="pathIcon"><QrCode/></div><h2>شغّل التجربة</h2><p>كود وQR للدخول، متابعة مباشرة، وتحكم في فتح وإغلاق الجلسة.</p><Link href="/admin/workshops">لوحات الجلسات <ArrowLeft/></Link></article>
-      <article><span>04</span><div className="pathIcon"><BarChart3/></div><h2>اقرأ الأثر</h2><p>توزيع البصمات، مستويات المنتج، الإكمال، وتقارير المشاركين.</p><Link href="/workshop/test">اختبار التجربة <ArrowLeft/></Link></article>
+      <article><span>04</span><div className="pathIcon"><BarChart3/></div><h2>اقرأ الأثر</h2><p>توزيع البصمات، مستويات المنتج، الإكمال، اعتماد التأهيل، وتقارير المشاركين.</p><Link href="/workshop/test">اختبار التجربة <ArrowLeft/></Link></article>
     </section>
 
     <section className="roleSection">
