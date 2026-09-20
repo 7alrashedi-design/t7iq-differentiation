@@ -44,7 +44,7 @@ export default function TrainingCenter(){
   return <main className="roleWorkspace trainingCenter">
     <header className="roleHero">
       <div className="roleBrand"><div className="differenceMark"><span>ت</span></div><div><span className="sectionKicker">الجزء الأول • الورشة والتأهيل</span><h1>مركز رحلة الورشة</h1><p>أنشئ التجربة، أسند المدرب، ثم تابع المتدربين من الدخول حتى التقرير.</p></div></div>
-      <div className="roleHeroActions"><Link className="outlineButton" href="/admin">مركز القيادة</Link><Link className="primaryButton" href="/admin/workshops">إدارة الورش <ArrowLeft/></Link></div>
+      <div className="roleHeroActions"><Link className="outlineButton" href="/admin">مركز القيادة</Link><Link className="outlineButton" href="/admin/training/report">التقرير الشامل</Link><Link className="primaryButton" href="/admin/workshops">إدارة الورش <ArrowLeft/></Link></div>
     </header>
 
     <section className="rolePulseGrid">
