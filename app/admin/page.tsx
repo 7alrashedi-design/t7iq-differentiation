@@ -107,6 +107,18 @@ export default function AdminPage() {
     } finally { setBusy(false); }
   }
 
+  async function updateProgramStatus(programId:string,status:"draft"|"published"|"archived") {
+    setBusy(true); setNotice("");
+    try {
+      const supabase=getSupabaseBrowserClient();
+      const {error}=await supabase.from("training_programs").update({status,updated_at:new Date().toISOString()}).eq("id",programId);
+      if(error) throw error;
+      setNotice(status==="published"?"تم نشر البرنامج وأصبح جاهزًا لربط الورش.":status==="archived"?"تمت أرشفة البرنامج.":"تمت إعادة البرنامج إلى المسودة.");
+      await refresh();
+    } catch(e) { setNotice(e instanceof Error?e.message:"تعذر تحديث حالة البرنامج."); }
+    finally { setBusy(false); }
+  }
+
   async function createAccount(e: FormEvent) {
     e.preventDefault();
     if (!accountEmail || !accountName || !accountPassword) return;
@@ -212,7 +224,7 @@ export default function AdminPage() {
             <button className="primaryButton" disabled={busy}><Plus size={17}/> إنشاء البرنامج</button>
           </form>
           <div className="adminMiniList">
-            {programs.slice(0,4).map(p=><div key={p.id}><BookOpenCheck size={16}/><div><b>{p.title}</b><span>{p.status === "draft" ? "مسودة" : p.status}</span></div></div>)}
+            {programs.slice(0,4).map(p=><div key={p.id} className="programMiniRow"><BookOpenCheck size={16}/><div><b>{p.title}</b><span>{p.status === "draft" ? "مسودة" : p.status === "published" ? "منشور" : "مؤرشف"}</span></div><div className="miniRowActions">{p.status!=="published"&&<button type="button" onClick={()=>void updateProgramStatus(p.id,"published")}>نشر</button>}{p.status==="published"&&<button type="button" onClick={()=>void updateProgramStatus(p.id,"archived")}>أرشفة</button>}{p.status==="archived"&&<button type="button" onClick={()=>void updateProgramStatus(p.id,"draft")}>إعادة</button>}</div></div>)}
             {programs.length === 0 && <p>ابدأ بإنشاء البرنامج الأول.</p>}
           </div>
         </article>
