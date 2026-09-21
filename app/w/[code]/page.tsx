@@ -88,7 +88,8 @@ export default function WorkshopParticipant(){
   const [lessonSubject,setLessonSubject]=useState("أحياء 1");
   const [lessonTitle,setLessonTitle]=useState("الفيروسات");
   const [lessonClassSize,setLessonClassSize]=useState(28);
-  const [applicationSent,setApplicationSent]=useState(false);\n  const [qualificationStatus,setQualificationStatus]=useState<string>("in_progress");
+  const [applicationSent,setApplicationSent]=useState(false);
+  const [qualificationStatus,setQualificationStatus]=useState<string>("in_progress");
 
   const result=useMemo(()=>calculate(answers),[answers]);
   const answered=Object.keys(answers).length;
