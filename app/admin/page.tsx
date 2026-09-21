@@ -153,7 +153,13 @@ export default function AdminPage() {
   }
 
   if (!profile) {
-    return (
+    async function signOut(){
+    const supabase=getSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    window.location.href="/login";
+  }
+
+  return (
       <main className="adminGate">
         <div className="adminGateCard refinedGate">
           <div className="differenceMark"><span>ت</span></div>
@@ -189,7 +195,7 @@ export default function AdminPage() {
             <p>ابدأ من البرنامج التدريبي، أنشئ المدارس والحسابات، ثم تابع رحلة التطبيق طوال العام.</p>
           </div>
         </div>
-        <div className="adminHeaderActions"><Link href="/admin/training" className="primaryButton">الورشة والتأهيل</Link><Link href="/admin/workshops" className="outlineButton">إدارة الورش</Link><Link href="/workshop/test" className="outlineButton">اختبار شامل</Link><Link href="/" className="outlineButton">واجهة المعلم</Link></div>
+        <div className="adminHeaderActions"><Link href="/admin/training" className="primaryButton">الورشة والتأهيل</Link><Link href="/admin/workshops" className="outlineButton">إدارة الورش</Link><Link href="/workshop/test" className="outlineButton">اختبار شامل</Link><button type="button" className="outlineButton" onClick={()=>void signOut()}>تسجيل الخروج</button></div>
       </header>
 
       {notice && <div className="adminNotice">{notice}</div>}
