@@ -49,6 +49,12 @@ export default function TrainerHome(){
   const upcoming=useMemo(()=>sessions.filter(s=>s.status!=="closed"&&s.starts_at&&new Date(s.starts_at).getTime()>now),[sessions]);
   const completed=useMemo(()=>sessions.filter(s=>s.status==="closed"),[sessions]);
 
+  async function signOut(){
+    const supabase=getSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    window.location.href="/login";
+  }
+
   if(loading) return <main className="roleGate"><div className="roleGateCard"><div className="differenceMark"><span>ت</span></div><h1>جارٍ تجهيز مساحة المدرب</h1><p>نرتب ورشك والجلسات المسندة إليك.</p></div></main>;
   if(!profile) return <main className="roleGate"><div className="roleGateCard"><div className="differenceMark"><span>ت</span></div><h1>مساحة المدرب</h1><p>سجّل الدخول بحساب المدرب للوصول إلى ورشك.</p><Link className="primaryButton" href="/login">تسجيل الدخول</Link></div></main>;
   if(profile.role!=="trainer"&&profile.role!=="platform_admin"&&profile.role!=="admin") return <main className="roleGate"><div className="roleGateCard"><h1>لا توجد صلاحية</h1><p>هذه المساحة مخصصة للمدربين.</p><Link className="outlineButton" href="/">العودة</Link></div></main>;
@@ -61,7 +67,7 @@ export default function TrainerHome(){
       </div>
       <div className="roleHeroActions">
         <Link className="outlineButton" href="/workshop/test">مختبر التجربة</Link>
-        {profile.role!=="trainer"&&<Link className="outlineButton" href="/admin">مركز القيادة</Link>}
+        {profile.role!=="trainer"&&<Link className="outlineButton" href="/admin">مركز القيادة</Link>}<button type="button" className="outlineButton" onClick={()=>void signOut()}>تسجيل الخروج</button>
       </div>
     </header>
 
