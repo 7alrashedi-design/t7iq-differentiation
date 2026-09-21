@@ -16,7 +16,8 @@ export default function TrainingCenter(){
   const [sessions,setSessions]=useState<Session[]>([]);
   const [trainerCount,setTrainerCount]=useState(0);
   const [participantCount,setParticipantCount]=useState(0);
-  const [completedCount,setCompletedCount]=useState(0);\n  const [qualifiedCount,setQualifiedCount]=useState(0);
+  const [completedCount,setCompletedCount]=useState(0);
+  const [qualifiedCount,setQualifiedCount]=useState(0);
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{void load()},[]);
