@@ -90,6 +90,8 @@ export default function WorkshopParticipant(){
   const [lessonClassSize,setLessonClassSize]=useState(28);
   const [applicationSent,setApplicationSent]=useState(false);
   const [qualificationStatus,setQualificationStatus]=useState<string>("in_progress");
+  const [resumeCode,setResumeCode]=useState("");
+  const [resumeMode,setResumeMode]=useState(false);
 
   const result=useMemo(()=>calculate(answers),[answers]);
   const answered=Object.keys(answers).length;
@@ -117,7 +119,7 @@ export default function WorkshopParticipant(){
     api("session",{code}).then(d=>setSession(d.session)).catch(()=>setNotice("الجلسة غير موجودة أو مغلقة حاليًا."));
   },[code]);
 
-  useEffect(()=>{const saved=typeof window!=="undefined"?localStorage.getItem("tamayoz-workshop-"+code):null;if(!saved)return;(async()=>{try{const d=await api("resume",{participant_token:saved});setToken(saved);const savedAnswers=localStorage.getItem("tamayoz-answers-"+code);if(savedAnswers){try{setAnswers(JSON.parse(savedAnswers))}catch{}}else if(d.answers&&Object.keys(d.answers).length){setAnswers(d.answers);localStorage.setItem("tamayoz-answers-"+code,JSON.stringify(d.answers))}setName(d.participant?.full_name||"");setOrg(d.participant?.organization_name||"");setQualificationStatus(d.participant?.qualification_status||"in_progress");if(d.product){setSelectedProduct(d.product);setParticipantProduct(d.participant_product);setLevel(d.participant_product?.current_level||1);setStage("products")}else if(d.fingerprint){setStage("products")}else if(d.answers&&Object.keys(d.answers).length){setCurrent(Math.min(49,Object.keys(d.answers).length));setStage("scale")}else{setStage("scale")}}catch{localStorage.removeItem("tamayoz-workshop-"+code)}})()},[code]);
+  useEffect(()=>{const saved=typeof window!=="undefined"?localStorage.getItem("tamayoz-workshop-"+code):null;if(!saved)return;(async()=>{try{const d=await api("resume",{participant_token:saved});setToken(saved);const savedAnswers=localStorage.getItem("tamayoz-answers-"+code);if(savedAnswers){try{setAnswers(JSON.parse(savedAnswers))}catch{}}else if(d.answers&&Object.keys(d.answers).length){setAnswers(d.answers);localStorage.setItem("tamayoz-answers-"+code,JSON.stringify(d.answers))}setName(d.participant?.full_name||"");setOrg(d.participant?.organization_name||"");setResumeCode(d.participant?.resume_code||"");setQualificationStatus(d.participant?.qualification_status||"in_progress");if(d.product){setSelectedProduct(d.product);setParticipantProduct(d.participant_product);setLevel(d.participant_product?.current_level||1);setStage("products")}else if(d.fingerprint){setStage("products")}else if(d.answers&&Object.keys(d.answers).length){setCurrent(Math.min(49,Object.keys(d.answers).length));setStage("scale")}else{setStage("scale")}}catch{localStorage.removeItem("tamayoz-workshop-"+code)}})()},[code]);
 
   async function join(e:FormEvent){
     e.preventDefault();setBusy(true);setNotice("");
@@ -125,9 +127,35 @@ export default function WorkshopParticipant(){
       const d=await api("join",{code,full_name:name,organization_name:org,email:email||null,mobile:mobile||null});
       const t=d.participant.participant_token;
       setToken(t);
+      setResumeCode(d.participant.resume_code||"");
       localStorage.setItem("tamayoz-workshop-"+code,t);
+      if(d.participant.resume_code) localStorage.setItem("tamayoz-resume-"+code,d.participant.resume_code);
       setStage("scale");
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر الدخول.")}finally{setBusy(false)}
+  }
+
+  async function resumeWithCode(e:FormEvent){
+    e.preventDefault();setBusy(true);setNotice("");
+    try{
+      const d=await api("resume_by_code",{code,resume_code:resumeCode});
+      const t=d.participant.participant_token;
+      setToken(t);
+      setName(d.participant.full_name||"");
+      setOrg(d.participant.organization_name||"");
+      setQualificationStatus(d.participant.qualification_status||"in_progress");
+      localStorage.setItem("tamayoz-workshop-"+code,t);
+      localStorage.setItem("tamayoz-resume-"+code,d.participant.resume_code||resumeCode.toUpperCase());
+      const resumed=await api("resume",{participant_token:t});
+      if(resumed.answers&&Object.keys(resumed.answers).length){
+        setAnswers(resumed.answers);
+        localStorage.setItem("tamayoz-answers-"+code,JSON.stringify(resumed.answers));
+      }
+      if(resumed.product){
+        setSelectedProduct(resumed.product);setParticipantProduct(resumed.participant_product);setLevel(resumed.participant_product?.current_level||1);setStage("products");
+      }else if(resumed.fingerprint){setStage("products")}
+      else if(resumed.answers&&Object.keys(resumed.answers).length){setCurrent(Math.min(49,Object.keys(resumed.answers).length));setStage("scale")}
+      else{setStage("scale")}
+    }catch(e){setNotice(e instanceof Error?e.message:"تعذر استكمال الرحلة بهذا الرمز.")}finally{setBusy(false)}
   }
 
   function choose(v:number){
@@ -331,18 +359,22 @@ export default function WorkshopParticipant(){
       <h1>{session.title}</h1>
       <p>ستعيش تجربة التمايز بنفسك أولًا، ثم ترى كيف تتحول البيانات إلى قرار تعليمي.</p>
       {session.trainer_names?.length>0&&<div className="trainerLine">المدرب: {session.trainer_names.join("، ")}</div>}
-      <form onSubmit={join} className="participantJoinForm">
+      {!resumeMode?<form onSubmit={join} className="participantJoinForm">
         <label>الاسم<input required value={name} onChange={e=>setName(e.target.value)} placeholder="الاسم"/></label>
         <label>الجهة<input value={org} onChange={e=>setOrg(e.target.value)} placeholder="المدرسة / الجهة"/></label>
         <div className="joinOptional"><label>البريد <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="اختياري"/></label><label>الجوال<input value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="اختياري"/></label></div>
         <button className="primaryButton" disabled={busy}>دخول الجلسة <ArrowLeft size={17}/></button>
-      </form>
+      </form>:<form onSubmit={resumeWithCode} className="participantJoinForm resumeForm">
+        <label>رمز الاستكمال<input required value={resumeCode} onChange={e=>setResumeCode(e.target.value.toUpperCase())} placeholder="مثال: A1B2C3D4E5" maxLength={10}/></label>
+        <button className="primaryButton" disabled={busy}>استكمال رحلتي <ArrowLeft size={17}/></button>
+      </form>}
+      <button type="button" className="resumeSwitch" onClick={()=>{setResumeMode(v=>!v);setNotice("")}}>{resumeMode?"دخول جديد":"لدي رمز استكمال"}</button>
       {notice&&<div className="loginMessage">{notice}</div>}
     </section>
   </main>;
 
   if(stage==="scale") return <main className="workshopPage scalePage">
-    <header className="scaleHeader"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>أسلوبي</b><small>مقياس أسلوب التعبير</small></div></div><div className="scaleProgressMeta"><b>{progress}%</b><span>{answered} من 50</span></div></header>
+    <header className="scaleHeader"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>أسلوبي</b><small>مقياس أسلوب التعبير</small></div></div>{resumeCode&&<div className="resumeCodeBadge"><span>رمز الاستكمال</span><b>{resumeCode}</b></div>}<div className="scaleProgressMeta"><b>{progress}%</b><span>{answered} من 50</span></div></header>
     <ParticipantJourney active={1}/><div className="scaleProgress"><i style={{width:progress+"%"}}/></div>
     <section className="questionShell">
       <div className="questionMetaRow"><div className="questionNumber">العبارة {item.id} من 50</div><span className="questionAnswered">{answers[item.id] ? "تمت الإجابة ✓" : "اختر إجابتك"}</span></div>
