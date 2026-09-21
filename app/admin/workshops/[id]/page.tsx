@@ -223,7 +223,7 @@ export default function WorkshopDashboard(){
             const pr=products.find(x=>x.participant_id===p.id);
             const eligible=pr?.status==="completed";
             return <tr key={p.id}>
-              <td><b>{p.full_name}</b></td><td>{p.organization_name||"—"}</td><td>{fp?.fingerprint_code||"يطبق المقياس"}</td>
+              <td><Link className="participantReportLink" href={"/trainer/session/"+id+"/participant/"+p.id}><b>{p.full_name}</b></Link></td><td>{p.organization_name||"—"}</td><td>{fp?.fingerprint_code||"يطبق المقياس"}</td>
               <td>{pr?.product_id||"—"}</td><td>{pr?"L"+pr.current_level:"—"}</td>
               <td>{pr?.status==="completed"?"مكتمل":pr?"قيد التطوير":"—"}</td>
               <td>
