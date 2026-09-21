@@ -30,7 +30,8 @@ export default function TrainingCenter(){
       s.from("workshop_sessions").select("id,title,session_code,status,starts_at,venue").order("created_at",{ascending:false}).limit(6),
       s.from("profiles").select("id",{count:"exact",head:true}).eq("role","trainer"),
       s.from("workshop_participants").select("id",{count:"exact",head:true}),
-      s.from("workshop_participants").select("id",{count:"exact",head:true}).not("completed_at","is",null)
+      s.from("workshop_participants").select("id",{count:"exact",head:true}).not("completed_at","is",null),
+      s.from("workshop_participants").select("id",{count:"exact",head:true}).eq("qualification_status","qualified")
     ]);
     setProfile(p as Profile|null);setSessions((ws??[]) as Session[]);
     setTrainerCount(tc??0);setParticipantCount(pc??0);setCompletedCount(cc??0);setQualifiedCount(qc??0);setLoading(false);
