@@ -1,0 +1,29 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: hostinger-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.HOSTINGER_API_KEY != '' && vars.HOSTINGER_VM_ID != '' && secrets.SUPABASE_PUBLISHABLE_KEY != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Deploy to Hostinger VPS
+        uses: hostinger/deploy-action@v1
+        with:
+          api-key: ${{ secrets.HOSTINGER_API_KEY }}
+          virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
+          project-name: t7iq-differentiation
+          docker-compose-path: docker-compose.hostinger.yml
+          environment-variables: |
+            NEXT_PUBLIC_SUPABASE_URL=https://mihalnbzprdqaaprjkha.supabase.co
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
