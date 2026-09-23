@@ -152,14 +152,14 @@ export default function AdminPage() {
     } finally { setBusy(false); }
   }
 
-  if (!profile) {
-    async function signOut(){
+  async function signOut(){
     const supabase=getSupabaseBrowserClient();
     await supabase.auth.signOut();
     window.location.href="/login";
   }
 
-  return (
+  if (!profile) {
+    return (
       <main className="adminGate">
         <div className="adminGateCard refinedGate">
           <div className="differenceMark"><span>ت</span></div>
