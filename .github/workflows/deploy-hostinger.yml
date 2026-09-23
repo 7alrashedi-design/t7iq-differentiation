@@ -12,7 +12,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ secrets.HOSTINGER_API_KEY != '' && vars.HOSTINGER_VM_ID != '' && secrets.SUPABASE_PUBLISHABLE_KEY != '' }}
+    if: ${{ secrets.HOSTINGER_API_KEY != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -21,9 +21,9 @@ jobs:
         uses: hostinger/deploy-action@v1
         with:
           api-key: ${{ secrets.HOSTINGER_API_KEY }}
-          virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
+          virtual-machine: 1989843
           project-name: t7iq-differentiation
           docker-compose-path: docker-compose.hostinger.yml
           environment-variables: |
             NEXT_PUBLIC_SUPABASE_URL=https://mihalnbzprdqaaprjkha.supabase.co
-            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_8MvCl5qU4te0v_rWzZWN5g_G3um0uGg
