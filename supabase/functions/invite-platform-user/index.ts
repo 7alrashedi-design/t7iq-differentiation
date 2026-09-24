@@ -24,9 +24,11 @@ Deno.serve(async (req: Request) => {
 
     const { data: callerProfile } = await callerClient
       .from("profiles")
-      .select("role,organization_id")
+      .select("role,organization_id,account_status")
       .eq("id", caller.id)
       .maybeSingle();
+
+    if (callerProfile?.account_status !== "active") return Response.json({ error: "account_suspended" }, { status: 403, headers: corsHeaders });
 
     const callerRole = callerProfile?.role;
     const isPlatformAdmin = callerRole === "platform_admin" || callerRole === "admin";
@@ -34,6 +36,28 @@ Deno.serve(async (req: Request) => {
     if (!isPlatformAdmin && !isSchoolAdmin) return Response.json({ error: "forbidden" }, { status: 403, headers: corsHeaders });
 
     const body = await req.json();
+    const action = String(body.action ?? "create");
+    const targetUserId = body.user_id ? String(body.user_id) : "";
+    const admin = createClient(supabaseUrl, serviceRole);
+
+    if (["suspend","activate","delete"].includes(action)) {
+      if (!isPlatformAdmin) return Response.json({ error: "platform_admin_only" }, { status: 403, headers: corsHeaders });
+      if (!targetUserId || targetUserId === caller.id) return Response.json({ error: "invalid_target" }, { status: 400, headers: corsHeaders });
+      const { data: target } = await admin.from("profiles").select("role").eq("id", targetUserId).maybeSingle();
+      if (!target) return Response.json({ error: "user_not_found" }, { status: 404, headers: corsHeaders });
+      if (action === "delete") {
+        const { error } = await admin.auth.admin.deleteUser(targetUserId);
+        if (error) return Response.json({ error: error.message }, { status: 400, headers: corsHeaders });
+        return Response.json({ ok: true, action }, { headers: corsHeaders });
+      }
+      const suspended = action === "suspend";
+      const { error: authError } = await admin.auth.admin.updateUserById(targetUserId, { ban_duration: suspended ? "876000h" : "none" });
+      if (authError) return Response.json({ error: authError.message }, { status: 400, headers: corsHeaders });
+      const { error: profileStatusError } = await admin.from("profiles").update({ account_status: suspended ? "suspended" : "active" }).eq("id", targetUserId);
+      if (profileStatusError) return Response.json({ error: profileStatusError.message }, { status: 400, headers: corsHeaders });
+      return Response.json({ ok: true, action, account_status: suspended ? "suspended" : "active" }, { headers: corsHeaders });
+    }
+
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
     const fullName = String(body.full_name ?? "").trim();
@@ -54,7 +78,6 @@ Deno.serve(async (req: Request) => {
     const organizationId = (role === "platform_admin" || role === "trainer" || role === "supervisor") ? null : isSchoolAdmin ? callerProfile?.organization_id : requestedOrg;
     if ((role === "teacher" || role === "school_admin") && !organizationId) return Response.json({ error: "organization_required" }, { status: 400, headers: corsHeaders });
 
-    const admin = createClient(supabaseUrl, serviceRole);
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
       password,
@@ -71,6 +94,8 @@ Deno.serve(async (req: Request) => {
       organization_id: organizationId,
       role,
       full_name: fullName,
+      email,
+      account_status: "active",
     });
 
     if (profileError) {
