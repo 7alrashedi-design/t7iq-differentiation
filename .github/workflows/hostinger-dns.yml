@@ -1,0 +1,17 @@
+name: Hostinger DNS Inspect
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dns:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read DNS zone
+        env:
+          HOSTINGER_API_KEY: ${{ secrets.HOSTINGER_API_KEY }}
+        run: |
+          set -e
+          curl --fail --show-error --silent             -H "Authorization: Bearer $HOSTINGER_API_KEY"             -H "Accept: application/json"             https://developers.hostinger.com/api/dns/v1/zones/t7iq.com
+          echo
