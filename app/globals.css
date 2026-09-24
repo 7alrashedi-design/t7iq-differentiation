@@ -1546,3 +1546,30 @@ button,input,select,textarea{font-family:inherit}
 @media(max-width:700px){.accountOpsToolbar{grid-template-columns:1fr}.accountRoster>div{align-items:flex-start}.accountRoster .miniRowActions{flex-wrap:wrap}}
 
 .adminCenterShell{min-height:100dvh;display:grid;grid-template-columns:260px minmax(0,1fr);background:#f6f8f8}.adminCenterSidebar{position:sticky;top:0;height:100dvh;padding:22px 16px;display:flex;flex-direction:column;gap:22px;background:#fff;border-inline-end:1px solid rgba(40,70,75,.1);z-index:20}.adminCenterBrand{display:grid;gap:2px;padding:0 8px}.adminCenterBrand strong{font-size:21px}.adminCenterBrand span{font-size:12px;color:#65777a}.adminCenterSidebar nav{display:grid;gap:5px}.adminCenterSidebar nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;text-decoration:none;color:inherit;font-weight:650}.adminCenterSidebar nav a:hover,.adminCenterSidebar nav a:focus-visible{background:#eef6f4}.adminCenterSidebarFoot{margin-top:auto;display:flex;align-items:center;gap:8px;color:#6c7b7e;font-size:12px;padding:10px}.adminCenterMain{min-width:0}.adminCenterMain>.adminShell{max-width:none}@media(max-width:900px){.adminCenterShell{grid-template-columns:1fr}.adminCenterSidebar{position:sticky;height:auto;padding:10px 12px;gap:10px;border-inline-end:0;border-bottom:1px solid rgba(40,70,75,.1)}.adminCenterBrand{display:none}.adminCenterSidebar nav{display:flex;overflow-x:auto;scrollbar-width:none}.adminCenterSidebar nav a{white-space:nowrap}.adminCenterSidebarFoot{display:none}}@media print{.adminCenterSidebar{display:none!important}.adminCenterShell{display:block;background:#fff}}
+
+
+/* Mobile admin/training containment — prevent RTL content clipping */
+.adminCenterMain,.roleWorkspace,.roleHero,.roleBrand,.roleHeroActions,.rolePulseGrid,.trainingPath,.trainingSessionList{min-width:0}
+@media(max-width:900px){
+  .adminCenterMain{width:100%;max-width:100vw;overflow-x:hidden}
+  .adminCenterSidebar{max-width:100vw;overflow:hidden}
+  .adminCenterSidebar nav{width:100%;max-width:100%;overscroll-behavior-inline:contain}
+  .roleWorkspace{width:100%;max-width:100%;padding:16px 14px 32px;overflow-x:hidden}
+  .roleHero{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;padding:20px 16px;border-radius:24px}
+  .roleBrand{align-items:flex-start}.roleBrand>div:last-child{min-width:0}
+  .roleBrand h1{font-size:clamp(24px,7vw,31px);line-height:1.35}
+  .roleBrand p{font-size:11px;line-height:1.8}
+  .roleHeroActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:8px}
+  .roleHeroActions a,.roleHeroActions button{width:100%;min-width:0;justify-content:center;text-align:center;white-space:normal}
+  .rolePulseGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rolePulseGrid article{min-width:0;padding:14px 12px}
+  .trainingPath{grid-template-columns:minmax(0,1fr)}
+  .trainingSessionList>article{min-width:0}
+}
+@media(max-width:520px){
+  .roleWorkspace{padding:12px 10px 28px}
+  .roleHero{padding:18px 14px;border-radius:20px}
+  .roleHeroActions{grid-template-columns:minmax(0,1fr)}
+  .rolePulseGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .rolePulseGrid article{gap:9px}.rolePulseGrid strong{font-size:21px}
+}
