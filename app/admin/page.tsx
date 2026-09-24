@@ -10,7 +10,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Org = { id: string; name: string; organization_type: string; status: string };
 type Program = { id: string; title: string; status: string; delivery_mode: string };
-type Profile = { id?: string; email?: string | null; full_name: string | null; role: string; organization_id: string | null };
+type Profile = { id?: string; email?: string | null; full_name: string | null; role: string; organization_id: string | null; account_status?: "active"|"suspended" };
 
 export default function AdminPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -19,6 +19,8 @@ export default function AdminPage() {
   const [accounts, setAccounts] = useState<Profile[]>([]);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [accountQuery,setAccountQuery]=useState("");
+  const [accountStatusFilter,setAccountStatusFilter]=useState("all");
 
   const [schoolName, setSchoolName] = useState("");
   const [schoolType, setSchoolType] = useState("school");
@@ -43,10 +45,10 @@ export default function AdminPage() {
       if (!user) return;
 
       const [{ data: p }, { data: o }, { data: pr }, { data: ac }] = await Promise.all([
-        supabase.from("profiles").select("id,email,full_name,role,organization_id").eq("id", user.id).maybeSingle(),
+        supabase.from("profiles").select("id,email,full_name,role,organization_id,account_status").eq("id", user.id).maybeSingle(),
         supabase.from("organizations").select("id,name,organization_type,status").order("created_at", { ascending: false }),
         supabase.from("training_programs").select("id,title,status,delivery_mode").order("created_at", { ascending: false }),
-        supabase.from("profiles").select("id,email,full_name,role,organization_id").order("full_name")
+        supabase.from("profiles").select("id,email,full_name,role,organization_id,account_status").order("full_name")
       ]);
 
       setProfile(p as Profile | null);
@@ -150,6 +152,13 @@ export default function AdminPage() {
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "تعذر إنشاء الحساب.");
     } finally { setBusy(false); }
+  }
+
+  const filteredAccounts=useMemo(()=>accounts.filter(a=>{const q=accountQuery.trim().toLowerCase();const matchesQ=!q||`${a.full_name??""} ${a.email??""} ${a.role}`.toLowerCase().includes(q);const matchesStatus=accountStatusFilter==="all"||(a.account_status??"active")===accountStatusFilter;return matchesQ&&matchesStatus}),[accounts,accountQuery,accountStatusFilter]);
+
+  async function setAccountStatus(id:string,status:"active"|"suspended"){
+    if(id===profile?.id&&status==="suspended"){setNotice("لا يمكن إيقاف حساب مدير المنصة المستخدم حاليًا.");return}
+    setBusy(true);setNotice("");try{const supabase=getSupabaseBrowserClient();const {error}=await supabase.from("profiles").update({account_status:status}).eq("id",id);if(error)throw error;setNotice(status==="active"?"تمت إعادة تفعيل الحساب.":"تم إيقاف الحساب.");await refresh()}catch(e){setNotice(e instanceof Error?e.message:"تعذر تحديث الحساب.")}finally{setBusy(false)}
   }
 
   async function signOut(){
@@ -297,8 +306,9 @@ export default function AdminPage() {
             <div className="iconBadge mint"><UsersRound size={20}/></div>
             <div><span>الحسابات الحالية</span><h2>مديرو المنصة والمدربون والمعلمون</h2></div>
           </div>
+          <div className="accountOpsToolbar"><input aria-label="بحث الحسابات" placeholder="ابحث بالاسم أو البريد أو الدور…" value={accountQuery} onChange={e=>setAccountQuery(e.target.value)}/><select aria-label="تصفية حالة الحساب" value={accountStatusFilter} onChange={e=>setAccountStatusFilter(e.target.value)}><option value="all">كل الحالات</option><option value="active">نشط</option><option value="suspended">موقوف</option></select></div>
           <div className="adminMiniList accountRoster">
-            {accounts.map(a=><div key={a.id || a.email || a.full_name || Math.random().toString()}><UsersRound size={16}/><div><b>{a.full_name || "بدون اسم"}</b><span>{a.email || "—"} • {a.role==="platform_admin"?"مدير منصة":a.role==="trainer"?"مدرب":a.role==="teacher"?"معلم":a.role==="school_admin"?"مدير مدرسة":a.role}</span></div></div>)}
+            {filteredAccounts.map(a=><div key={a.id || a.email || a.full_name || Math.random().toString()}><UsersRound size={16}/><div><b>{a.full_name || "بدون اسم"}</b><span>{a.email || "—"} • {a.role==="platform_admin"?"مدير منصة":a.role==="trainer"?"مدرب":a.role==="teacher"?"معلم":a.role==="school_admin"?"مدير مدرسة":a.role}</span></div></div>)}
             {accounts.length===0&&<p>لا توجد حسابات ظاهرة.</p>}
           </div>
           <div className="adminHint"><ShieldCheck size={17}/><p>حساب مدير المنصة الحالي مؤكد ومربوط بدور <b>platform_admin</b>. حساب المدرب لا يحتاج جهة ويمكن إسناده لأي ورشة من صفحة إدارة الورش.</p></div>
