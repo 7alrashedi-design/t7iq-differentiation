@@ -26,7 +26,7 @@ jobs:
       - name: Wait for production deployment
         run: |
           for i in {1..30}; do
-            code=$(curl -L -s -o /dev/null -w "%{http_code}" https://diff.t7iq.com/w/DEMO26 || true)
+            code=$(curl -L -sS --connect-timeout 5 --max-time 12 -o /dev/null -w "%{http_code}" https://diff.t7iq.com/w/DEMO26 || true)
             if [ "$code" = "200" ]; then exit 0; fi
             sleep 10
           done
