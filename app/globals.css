@@ -1537,3 +1537,10 @@ button,input,select,textarea{font-family:inherit}
 .projectorQr img{image-rendering:auto;max-width:min(34vw,430px);height:auto}
 @media(min-width:1800px){.facSlide h1{font-size:clamp(48px,3.4vw,76px)!important}.facSlide p{font-size:clamp(18px,1.2vw,26px)!important}.projectorQr img{max-width:480px}.facilitatorChrome{font-size:18px}.presenterFreshness>span{font-size:13px}}
 @media(max-width:760px){.presenterFreshness>span{display:none}.facSlide{min-height:calc(100dvh - 96px)}}
+
+/* Admin account operations */
+.accountOpsToolbar{display:grid;grid-template-columns:minmax(240px,1fr) 180px;gap:10px;margin:12px 0 14px}
+.accountOpsToolbar input,.accountOpsToolbar select{width:100%;border:1px solid rgba(100,130,140,.2);background:#fff;border-radius:12px;padding:11px 13px;font:inherit}
+.accountState{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.accountState.active{background:#eaf8f1;color:#187653}.accountState.suspended{background:#fff0ef;color:#a43e38}
+@media(max-width:700px){.accountOpsToolbar{grid-template-columns:1fr}.accountRoster>div{align-items:flex-start}.accountRoster .miniRowActions{flex-wrap:wrap}}
