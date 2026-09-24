@@ -2,14 +2,14 @@
 import {useEffect,useMemo,useState} from "react";
 import QRCode from "qrcode";
 import {createClient} from "@supabase/supabase-js";
-import {Activity,ChevronLeft,ChevronRight,Maximize2,RefreshCw,Users} from "lucide-react";
+import {Activity,ChevronLeft,ChevronRight,Maximize2,RefreshCw,Users,Wifi} from "lucide-react";
 
 const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 const names:Record<string,string>={W:"كتابي",O:"شفهي",V:"بصري",T:"تقني",K:"أدائي/عملي"};
 export default function Present({params}:{params:Promise<{code:string}>}){
- const [code,setCode]=useState("");const [data,setData]=useState<any>(null);const [qr,setQr]=useState("");const [slide,setSlide]=useState(0);const [busy,setBusy]=useState(false);
+ const [code,setCode]=useState("");const [data,setData]=useState<any>(null);const [qr,setQr]=useState("");const [slide,setSlide]=useState(0);const [busy,setBusy]=useState(false);const [updatedAt,setUpdatedAt]=useState<Date|null>(null);
  useEffect(()=>{params.then(p=>setCode(p.code.toUpperCase()))},[params]);
- async function load(){if(!code)return;setBusy(true);const {data:d}=await supabase.functions.invoke("workshop-public",{body:{action:"demo_summary",code}});if(d&&!d.error)setData(d);setBusy(false)}
+ async function load(){if(!code)return;setBusy(true);const {data:d}=await supabase.functions.invoke("workshop-public",{body:{action:"demo_summary",code}});if(d&&!d.error){setData(d);setUpdatedAt(new Date())}setBusy(false)}
  useEffect(()=>{if(!code)return;load();const join=location.origin+"/w/"+code;QRCode.toDataURL(join,{width:500,margin:1}).then(setQr)},[code]);
  useEffect(()=>{if(!code)return;const t=setInterval(load,15000);return()=>clearInterval(t)},[code]);
  const max=useMemo(()=>data?Math.max(1,...Object.values(data.distribution).map(Number)):1,[data]);
@@ -18,7 +18,7 @@ export default function Present({params}:{params:Promise<{code:string}>}){
  if(!data)return <main className="facilitatorMode loading"><Activity/><h1>جاري تجهيز شاشة الورشة…</h1></main>;
  const t=data.totals,l=data.levels,ei=data.evaluation_intelligence;
  return <main className="facilitatorMode">
-  <div className="facilitatorChrome"><div><span className="liveDot"/> التمايز <small>{data.session.title}</small></div><div><button onClick={load}><RefreshCw className={busy?"spin":""}/></button><button onClick={()=>document.documentElement.requestFullscreen?.()}><Maximize2/></button></div></div>
+  <div className="facilitatorChrome"><div><span className="liveDot"/> التمايز <small>{data.session.title}</small></div><div className="presenterFreshness"><span><Wifi size={14}/> مباشر {updatedAt?`• ${updatedAt.toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"})}`:""}</span><button aria-label="تحديث البيانات" title="تحديث البيانات" onClick={load}><RefreshCw className={busy?"spin":""}/></button><button aria-label="ملء الشاشة" title="ملء الشاشة (F)" onClick={()=>document.documentElement.requestFullscreen?.()}><Maximize2/></button></div></div>
   {slide===0&&<section className="facSlide joinSlide"><div className="joinMessage"><span>لنبدأ التجربة</span><h1>امسح الرمز<br/>وادخل إلى الورشة.</h1><p>لا توجد إجابة صحيحة لبصمتك. أجب كما تعبّر عن نفسك فعلًا.</p><div className="sessionCode"><small>أو استخدم رمز الجلسة</small><b>{code}</b></div></div><div className="projectorQr">{qr&&<img src={qr} alt="QR"/>}<span><Users/> {t.participants} مشارك انضم</span></div></section>}
   {slide===1&&<section className="facSlide fingerprintSlide"><div className="slideTitle"><span>01 • البصمة التعبيرية</span><h1>لا توجد بصمة واحدة في القاعة.</h1><p>{t.fingerprints} من {t.participants} أكملوا المقياس حتى الآن.</p></div><div className="projectorBars">{Object.entries(data.distribution).map(([k,v]:any)=><div key={k}><b>{k}</b><span>{names[k]}</span><div><i style={{height:(Number(v)/max*100)+"%"}}/></div><strong>{v}</strong></div>)}</div></section>}
   {slide===2&&<section className="facSlide choiceSlide"><div className="slideTitle"><span>02 • حرية الاختيار</span><h1>البصمة تقترح دورًا.<br/>ولا تحبس المشارك في منتج.</h1><p>{t.products} مشاركًا اختاروا منتجاتهم بحرية.</p></div><div className="choiceVisual"><div><b>بصمتي</b><span>كيف أميل إلى التعبير؟</span></div><i>≠</i><div><b>منتجي</b><span>ماذا أختار أن أصنع؟</span></div><i>+</i><div className="accent"><b>دوري</b><span>كيف أضيف داخل الفريق؟</span></div></div></section>}
