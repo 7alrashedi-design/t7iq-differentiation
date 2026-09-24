@@ -14,27 +14,30 @@ jobs:
         run: |
           set -euo pipefail
           base="https://developers.hostinger.com/api/dns/v1/zones/t7iq.com"
-
           current=$(curl --fail --show-error --silent             -H "Authorization: Bearer $HOSTINGER_API_KEY"             -H "Accept: application/json"             "$base")
 
-          if echo "$current" | jq -e '.[] | select(.name=="diff" and .type=="A") | .records[] | select(.content=="76.13.133.122")' >/dev/null; then
-            echo "diff.t7iq.com already points to the VPS."
-          else
+          if ! echo "$current" | jq -e '.[] | select(.name=="diff" and .type=="A") | .records[] | select(.content=="76.13.133.122")' >/dev/null; then
             if echo "$current" | jq -e '.[] | select(.name=="diff" and .type=="CNAME")' >/dev/null; then
-              curl --fail --show-error --silent -X DELETE                 -H "Authorization: Bearer $HOSTINGER_API_KEY"                 -H "Content-Type: application/json"                 -H "Accept: application/json"                 -d '{"filters":[{"name":"diff","type":"CNAME"}]}'                 "$base"
+              curl --fail --show-error --silent -X DELETE                 -H "Authorization: Bearer $HOSTINGER_API_KEY"                 -H "Content-Type: application/json"                 -d '{"filters":[{"name":"diff","type":"CNAME"}]}'                 "$base"
               echo
             fi
-
-            curl --fail --show-error --silent -X PUT               -H "Authorization: Bearer $HOSTINGER_API_KEY"               -H "Content-Type: application/json"               -H "Accept: application/json"               -d '{"overwrite":true,"zone":[{"name":"diff","type":"A","ttl":300,"records":[{"content":"76.13.133.122"}]}]}'               "$base"
+            curl --fail --show-error --silent -X PUT               -H "Authorization: Bearer $HOSTINGER_API_KEY"               -H "Content-Type: application/json"               -d '{"overwrite":true,"zone":[{"name":"diff","type":"A","ttl":300,"records":[{"content":"76.13.133.122"}]}]}'               "$base"
             echo
           fi
 
-          echo "Current diff record:"
           curl --fail --show-error --silent             -H "Authorization: Bearer $HOSTINGER_API_KEY"             -H "Accept: application/json"             "$base" | jq -c '.[] | select(.name=="diff")'
 
-      - name: Read Traefik logs
+      - name: Restart app to retrigger ACME
         env:
           HOSTINGER_API_KEY: ${{ secrets.HOSTINGER_API_KEY }}
         run: |
-          curl --fail --show-error --silent             -H "Authorization: Bearer $HOSTINGER_API_KEY"             -H "Accept: application/json"             https://developers.hostinger.com/api/vps/v1/virtual-machines/1989843/docker/traefik-yo3c/logs
+          curl --fail --show-error --silent -X POST             -H "Authorization: Bearer $HOSTINGER_API_KEY"             -H "Accept: application/json"             https://developers.hostinger.com/api/vps/v1/virtual-machines/1989843/docker/t7iq-differentiation/restart
+          echo
+          sleep 40
+
+      - name: Verify HTTPS
+        run: |
+          set -e
+          getent ahostsv4 diff.t7iq.com || true
+          curl --fail --show-error --silent --location             --retry 5 --retry-delay 10 --retry-all-errors             https://diff.t7iq.com/api/health
           echo
