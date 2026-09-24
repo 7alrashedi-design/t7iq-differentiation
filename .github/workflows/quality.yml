@@ -29,6 +29,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Security static acceptance
+        run: npm run test:security
+
       - name: Production build
         run: npm run build
 
