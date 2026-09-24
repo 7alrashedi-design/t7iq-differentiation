@@ -158,7 +158,7 @@ export default function AdminPage() {
 
   async function setAccountStatus(id:string,status:"active"|"suspended"){
     if(id===profile?.id&&status==="suspended"){setNotice("لا يمكن إيقاف حساب مدير المنصة المستخدم حاليًا.");return}
-    setBusy(true);setNotice("");try{const supabase=getSupabaseBrowserClient();const {error}=await supabase.from("profiles").update({account_status:status}).eq("id",id);if(error)throw error;setNotice(status==="active"?"تمت إعادة تفعيل الحساب.":"تم إيقاف الحساب.");await refresh()}catch(e){setNotice(e instanceof Error?e.message:"تعذر تحديث الحساب.")}finally{setBusy(false)}
+    setBusy(true);setNotice("");try{const supabase=getSupabaseBrowserClient();const {data,error}=await supabase.functions.invoke("invite-platform-user",{body:{action:status==="active"?"activate":"suspend",user_id:id}});if(error)throw error;if(data?.error)throw new Error(data.error);setNotice(status==="active"?"تمت إعادة تفعيل الحساب.":"تم إيقاف الحساب ومنع تسجيل دخوله.");await refresh()}catch(e){setNotice(e instanceof Error?e.message:"تعذر تحديث الحساب.")}finally{setBusy(false)}
   }
 
   async function signOut(){
