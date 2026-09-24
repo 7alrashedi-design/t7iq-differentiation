@@ -66,3 +66,8 @@ curl -f http://127.0.0.1:3100/api/health
 ```
 
 After recovery, return the working tree to `main` before the next normal deployment.
+
+
+## Automated deployment
+
+Automated deployment is enabled for pushes to `main` through `.github/workflows/deploy-hostinger.yml` using the repository secret `HOSTINGER_API_KEY`.
