@@ -124,7 +124,7 @@ export default function WorkshopParticipant(){
   async function join(e:FormEvent){
     e.preventDefault();setBusy(true);setNotice("");
     try{
-      const d=await api("join",{code,full_name:name,organization_name:org,email:email||null,mobile:mobile||null});
+      const d=await api("join",{code,full_name:name});
       const t=d.participant.participant_token;
       setToken(t);
       setResumeCode(d.participant.resume_code||"");
@@ -361,8 +361,7 @@ export default function WorkshopParticipant(){
       {session.trainer_names?.length>0&&<div className="trainerLine">المدرب: {session.trainer_names.join("، ")}</div>}
       {!resumeMode?<form onSubmit={join} className="participantJoinForm">
         <label>الاسم<input required value={name} onChange={e=>setName(e.target.value)} placeholder="الاسم"/></label>
-        <label>الجهة<input value={org} onChange={e=>setOrg(e.target.value)} placeholder="المدرسة / الجهة"/></label>
-        <div className="joinOptional"><label>البريد <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="اختياري"/></label><label>الجوال<input value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="اختياري"/></label></div>
+        <p className="joinPrivacyNote">لا يحتاج الدخول إلى حساب أو بريد أو رقم جوال؛ اكتب اسمك فقط.</p>
         <button className="primaryButton" disabled={busy}>دخول الجلسة <ArrowLeft size={17}/></button>
       </form>:<form onSubmit={resumeWithCode} className="participantJoinForm resumeForm">
         <label>رمز الاستكمال<input required value={resumeCode} onChange={e=>setResumeCode(e.target.value.toUpperCase())} placeholder="مثال: A1B2C3D4E5" maxLength={10}/></label>
