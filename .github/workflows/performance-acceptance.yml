@@ -1,0 +1,21 @@
+name: Safe Performance Acceptance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "tests/performance-acceptance.cjs"
+      - ".github/workflows/performance-acceptance.yml"
+
+jobs:
+  performance-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run safe sequential production checks
+        run: node tests/performance-acceptance.cjs
