@@ -1530,3 +1530,10 @@ button,input,select,textarea{font-family:inherit}
   h1,h2,h3{break-after:avoid}.roleWorkspace,.mainArea{max-width:none!important;padding:0!important}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+/* Workshop v1.1 final projection polish */
+.presenterFreshness{display:flex;align-items:center;gap:9px}.presenterFreshness>span{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#6e8791;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(100,130,140,.12)}
+.facilitatorMode{min-height:100dvh}.facSlide{min-height:calc(100dvh - 120px)}
+.projectorQr img{image-rendering:auto;max-width:min(34vw,430px);height:auto}
+@media(min-width:1800px){.facSlide h1{font-size:clamp(48px,3.4vw,76px)!important}.facSlide p{font-size:clamp(18px,1.2vw,26px)!important}.projectorQr img{max-width:480px}.facilitatorChrome{font-size:18px}.presenterFreshness>span{font-size:13px}}
+@media(max-width:760px){.presenterFreshness>span{display:none}.facSlide{min-height:calc(100dvh - 96px)}}
