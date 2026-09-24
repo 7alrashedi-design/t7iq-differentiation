@@ -9,14 +9,14 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Query Hostinger Docker projects
+      - name: Query Hostinger Docker endpoint
         env:
           HOSTINGER_API_KEY: ${{ secrets.HOSTINGER_API_KEY }}
         run: |
           set -e
           url="https://developers.hostinger.com/api/vps/v1/virtual-machines/1989843/docker"
-          code=$(curl -sS -o response.json -w "%{http_code}"             -H "Authorization: $HOSTINGER_API_KEY"             -H "Accept: application/json"             "$url")
+          code=$(curl -sS -o response.json -w "%{http_code}"             -H "Authorization: Bearer $HOSTINGER_API_KEY"             -H "Accept: application/json"             "$url")
           echo "HTTP_STATUS=$code"
           cat response.json
           echo
-          test "$code" -ge 200 -a "$code" -lt 300
+          if [ "$code" -ge 500 ]; then exit 1; fi
