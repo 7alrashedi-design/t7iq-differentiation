@@ -36,7 +36,6 @@ test("رحلة الورشة كاملة بصريًا ووظيفيًا", async ({ 
   await screenshot(page,"01-join-desktop");
 
   await page.getByLabel("الاسم").fill("__E2E_VISUAL__");
-  await page.getByLabel("الجهة").fill("اختبار آلي");
   await page.getByRole("button",{name:/دخول الجلسة/}).click();
   await expect(page.getByText(/العبارة 1 من 50/)).toBeVisible();
 
