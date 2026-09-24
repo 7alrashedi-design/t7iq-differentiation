@@ -26,3 +26,14 @@ jobs:
           environment-variables: |
             NEXT_PUBLIC_SUPABASE_URL=https://mihalnbzprdqaaprjkha.supabase.co
             NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_8MvCl5qU4te0v_rWzZWN5g_G3um0uGg
+
+      - name: Verify public deployment
+        run: |
+          set -e
+          echo "Waiting for container and TLS routing..."
+          sleep 35
+          echo "DNS:"
+          getent ahostsv4 diff.t7iq.com || true
+          echo "Health:"
+          curl --fail --show-error --silent --location             --retry 6 --retry-delay 10 --retry-all-errors             https://diff.t7iq.com/api/health
+          echo
