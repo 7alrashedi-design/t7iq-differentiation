@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Copy, ExternalLink, Plus, QrCode, Radio, UsersRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Copy, ExternalLink, Plus, QrCode, Radio, Search, UsersRound } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Session = {
@@ -26,6 +26,8 @@ export default function WorkshopsAdminPage(){
   const [startsAt,setStartsAt]=useState("");
   const [busy,setBusy]=useState(false);
   const [notice,setNotice]=useState("");
+  const [query,setQuery]=useState("");
+  const [statusFilter,setStatusFilter]=useState("all");
 
   useEffect(()=>{void load()},[]);
 
@@ -135,6 +137,12 @@ export default function WorkshopsAdminPage(){
   }
 
   const programTitle=(id:string|null)=>programs.find(p=>p.id===id)?.title||"ورشة مستقلة";
+  const filteredSessions=useMemo(()=>sessions.filter(s=>{
+    const q=query.trim().toLowerCase();
+    const matchesStatus=statusFilter==="all"||s.status===statusFilter;
+    const hay=[s.title,s.session_code,s.venue??"",...(s.trainer_names??[]),programTitle(s.program_id)].join(" ").toLowerCase();
+    return matchesStatus&&(!q||hay.includes(q));
+  }),[sessions,query,statusFilter,programs]);
 
   if(!profile) return <main className="adminGate"><div className="adminGateCard refinedGate"><div className="differenceMark"><span>ت</span></div><h1>إدارة الورش</h1><p>يلزم تسجيل الدخول بحساب مدير المنصة.</p><Link href="/login" className="primaryButton">تسجيل الدخول</Link></div></main>;
   if(!allowed) return <main className="adminGate"><div className="adminGateCard refinedGate"><h1>لا توجد صلاحية</h1><p>إنشاء الورش وإسناد المدربين متاح لمدير المنصة فقط.</p><Link href="/" className="outlineButton">العودة</Link></div></main>;
@@ -176,9 +184,10 @@ export default function WorkshopsAdminPage(){
     </section>
 
     <section className="sessionListSection">
-      <div className="sectionTitleRow"><div><span className="sectionKicker">الجلسات</span><h2>الورش المنشأة</h2></div><span>{sessions.length} جلسة</span></div>
+      <div className="sectionTitleRow"><div><span className="sectionKicker">الجلسات</span><h2>الورش المنشأة</h2></div><span>{filteredSessions.length} من {sessions.length} جلسة</span></div>
+      <div className="workshopToolbar"><label><Search size={16}/><input aria-label="البحث في الورش" value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث بالاسم، الرمز، المدرب أو المكان"/></label><div className="statusFilters">{[["all","الكل"],["open","مفتوحة"],["live","مباشرة"],["closed","مغلقة"],["archived","مؤرشفة"]].map(([v,l])=><button type="button" key={v} className={statusFilter===v?"active":""} onClick={()=>setStatusFilter(v)}>{l}</button>)}</div></div>
       <div className="sessionCards">
-        {sessions.map(s=>{
+        {filteredSessions.map(s=>{
           const joinUrl=typeof window!=="undefined"?`${window.location.origin}/w/${s.session_code}`:`/w/${s.session_code}`;
           return <article key={s.id} className="sessionCard">
             <div className="sessionCardTop"><span className={`sessionStatus ${s.status}`}>{s.status==="open"?"مفتوحة":s.status==="live"?"مباشرة":s.status==="closed"?"مغلقة":s.status}</span><b className="sessionCode">{s.session_code}</b></div>
@@ -197,7 +206,7 @@ export default function WorkshopsAdminPage(){
             </div>
           </article>
         })}
-        {sessions.length===0&&<div className="emptyWorkshops">أنشئ أول جلسة، ثم أسند المدرب وافتح لوحة التشغيل.</div>}
+        {filteredSessions.length===0&&<div className="emptyWorkshops">{sessions.length===0?"أنشئ أول جلسة، ثم أسند المدرب وافتح لوحة التشغيل.":"لا توجد ورش مطابقة للبحث أو التصفية الحالية."}</div>}
       </div>
     </section>
   </main>
