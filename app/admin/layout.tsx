@@ -1,0 +1,4 @@
+import Link from "next/link";
+import { LayoutDashboard, Users, Presentation, GraduationCap, FileCheck2, Settings } from "lucide-react";
+const nav=[["/admin","لوحة التحكم",LayoutDashboard],["/admin/accounts","الحسابات والصلاحيات",Users],["/admin/workshops","الورش",Presentation],["/admin/training","التدريب والتقارير",GraduationCap],["/admin/training/acceptance","اختبار القبول",FileCheck2]] as const;
+export default function AdminLayout({children}:{children:React.ReactNode}){return <div className="adminCenterShell"><aside className="adminCenterSidebar" aria-label="إدارة المنصة"><div className="adminCenterBrand"><strong>التمايز</strong><span>مركز إدارة المنصة</span></div><nav>{nav.map(([href,label,Icon])=><Link key={href} href={href}><Icon size={18}/><span>{label}</span></Link>)}</nav><div className="adminCenterSidebarFoot"><Settings size={16}/><span>إدارة تشغيلية آمنة</span></div></aside><main className="adminCenterMain">{children}</main></div>}
