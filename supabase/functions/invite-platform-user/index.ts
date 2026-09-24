@@ -51,8 +51,8 @@ Deno.serve(async (req: Request) => {
     if (!allowedRoles.includes(role)) return Response.json({ error: "invalid_role" }, { status: 400, headers: corsHeaders });
     if (role === "platform_admin" && !isPlatformAdmin) return Response.json({ error: "platform_admin_only" }, { status: 403, headers: corsHeaders });
 
-    const organizationId = role === "platform_admin" ? null : isSchoolAdmin ? callerProfile?.organization_id : requestedOrg;
-    if (role !== "platform_admin" && !organizationId) return Response.json({ error: "organization_required" }, { status: 400, headers: corsHeaders });
+    const organizationId = (role === "platform_admin" || role === "trainer" || role === "supervisor") ? null : isSchoolAdmin ? callerProfile?.organization_id : requestedOrg;
+    if ((role === "teacher" || role === "school_admin") && !organizationId) return Response.json({ error: "organization_required" }, { status: 400, headers: corsHeaders });
 
     const admin = createClient(supabaseUrl, serviceRole);
     const { data: created, error: createError } = await admin.auth.admin.createUser({

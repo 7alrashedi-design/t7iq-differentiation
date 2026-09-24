@@ -166,7 +166,7 @@ Deno.serve(async (req: Request) => {
     if (action === "resume") {
       const [{ data: fp }, { data: pp }, { data: responseRows }] = await Promise.all([
         db.from("fingerprint_results").select("*").eq("participant_id", participant.id).maybeSingle(),
-        db.from("participant_products").select("id,product_id,current_level,status").eq("participant_id", participant.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
+        db.from("participant_products").select("id,product_id,current_level,status").eq("participant_id", participant.id).order("selected_at",{ascending:false}).limit(1).maybeSingle(),
         db.from("style_scale_responses").select("item_id,score").eq("participant_id",participant.id)
       ]);
       let product=null;
