@@ -16,6 +16,13 @@ services:
       - "3000"
     ports:
       - "127.0.0.1:3100:3000"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.t7iq-differentiation.rule: "Host(`diff.t7iq.com`)"
+      traefik.http.routers.t7iq-differentiation.entrypoints: "websecure"
+      traefik.http.routers.t7iq-differentiation.tls: "true"
+      traefik.http.routers.t7iq-differentiation.tls.certresolver: "letsencrypt"
+      traefik.http.services.t7iq-differentiation.loadbalancer.server.port: "3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
