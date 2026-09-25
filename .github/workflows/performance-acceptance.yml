@@ -2,6 +2,11 @@ name: Safe Performance Acceptance
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "tests/performance-acceptance.cjs"
+      - ".github/workflows/performance-acceptance.yml"
   pull_request:
     branches: [main]
     paths:
