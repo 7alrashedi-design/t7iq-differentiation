@@ -1583,3 +1583,17 @@ button,input,select,textarea{font-family:inherit}
 .asloobiInterpretationNote{border-right:4px solid #2f8f87;padding:14px 18px;background:#eff8f5;line-height:1.9;border-radius:8px}
 @media(max-width:720px){.asloobiExplanationGrid{grid-template-columns:1fr}}
 @media print{.asloobiExplanationGrid section,.asloobiInterpretationNote{break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* Live workshop: response completion and qualitative Asloobi report */
+.asloobiMissingAnswers{margin:14px 0;padding:14px 16px;border:1px solid #e6c883;background:#fffaf0;border-radius:12px;color:#704b20}
+.asloobiMissingAnswers>div{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.asloobiMissingAnswers button{font:inherit;border-radius:9px;border:1px solid #cea85f;padding:7px 12px;background:white;cursor:pointer;color:#704b20}
+.asloobiSaveStatus{font-weight:700;text-align:center;color:#256d66}
+.asloobiExpandedReport{grid-column:1/-1}
+.asloobiReportAxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
+.asloobiReportAxes section{padding:16px;background:#f5f9fb;border:1px solid #deeaed;border-radius:13px;break-inside:avoid}
+.asloobiReportAxes h3{margin:0 0 8px;font-size:16px;color:#23566c}
+.asloobiReportAxes p{font-size:14px;line-height:1.95;margin:0}
+.asloobiReportCaution{margin-top:16px;padding:14px 17px;background:#eff8f5;border-right:4px solid #2f8f87;border-radius:8px;line-height:1.9;font-size:13px}
+@media(max-width:720px){.asloobiReportAxes{grid-template-columns:1fr}}
+@media print{.asloobiMissingAnswers,.asloobiSaveStatus{display:none}.asloobiReportAxes section,.asloobiReportCaution{break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}}
