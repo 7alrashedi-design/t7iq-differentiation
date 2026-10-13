@@ -229,6 +229,40 @@ export default function WorkshopDemo(){
           <small>هذه البصمة تصف تفضيلاتك الحالية في التعبير عن التعلم، ولا تمثل حكمًا ثابتًا على قدراتك.</small>
         </article>
 
+        <article className="reportCard narrativeCard asloobiExplanation">
+          <span className="sectionKicker">قراءة نوعية موسّعة</span>
+          <h2>كيف تفهم بصمتك التعبيرية؟</h2>
+          <p>تعرض هذه القراءة تفضيلاتك التي وصفتها بنفسك عند اختيار شكل التعبير عن التعلم، وليست حكمًا على مستوى ذكائك أو قدراتك.</p>
+          <div className="asloobiExplanationGrid">
+            <section>
+              <h3>01 — أسلوبك الأكثر حضورًا</h3>
+              <p>سجّل <b>{styleMeta[primary.code].title}</b> متوسط <b>{primary.mean.toFixed(2)} من 5</b>، وهو الأعلى بين الأبعاد المقاسة. {styleMeta[primary.code].description}</p>
+              <p>هذا يعني أنك <b>تميل</b> إلى هذا النمط عند التعبير عن معرفتك، لكنه لا يعني أنك لا تستطيع النجاح بطرق أخرى.</p>
+            </section>
+            <section>
+              <h3>02 — أساليبك المساندة</h3>
+              <p>يأتي <b>{styleMeta[second.code].title}</b> بمتوسط {second.mean.toFixed(2)}، ثم <b>{styleMeta[third.code].title}</b> بمتوسط {third.mean.toFixed(2)}. يمكنك الجمع بينها؛ مثل استخدام أسلوبك الأول لإعداد الفكرة، والثاني لتوضيحها، والثالث لتقديم منتج أكثر اكتمالًا.</p>
+            </section>
+            <section>
+              <h3>03 — قوة التفضيل وتوزيع الأبعاد</h3>
+              <p>بلغ الفارق بين أعلى بعد وأقل بعد <b>{(result.rows[0].mean-result.rows[result.rows.length-1].mean).toFixed(2)} نقطة</b> على سلم من 1 إلى 5. كلما تقاربت المتوسطات كانت تفضيلاتك المصرّح بها أكثر تقاربًا؛ ولا تعني الفروق الصغيرة تفوقًا جوهريًا في المهارة.</p>
+            </section>
+            <section>
+              <h3>04 — ماذا يمكن أن تختار في المهام؟</h3>
+              <p>قد تناسبك أدوار مثل: <b>{styleMeta[primary.code].role}</b>. ابدأ بالمهمة التي تساعدك في إبراز فهمك، ثم جرّب مهمة من بعد مساند؛ فهدف المقياس توسيع خيارات التعبير وليس حصرها.</p>
+            </section>
+            <section>
+              <h3>05 — فرص التطوير</h3>
+              <p>{styleMeta[primary.code].growth} ويمكنك تخصيص تجربة قصيرة لتطوير <b>{styleMeta[result.rows[result.rows.length-1].code].title}</b> دون افتراض أن انخفاض تفضيله يعني ضعف قدرتك فيه.</p>
+            </section>
+            <section>
+              <h3>06 — خطة عملية لفهم نفسك بصورة أدق</h3>
+              <p>اختر موضوعًا تعرفه، وعبّر عنه بطريقتين مختلفتين، ثم قارن وضوح الفكرة والجهد والمتعة وجودة التغذية الراجعة. دوّن ما لاحظته؛ فهذه الملاحظات تكمل إجابات المقياس وتختبرها في ممارسة فعلية.</p>
+            </section>
+          </div>
+          <div className="asloobiInterpretationNote"><b>كيف تقرأ النتيجة علميًا؟</b> الدرجات تمثل متوسط إجاباتك الحالية على عبارات التفضيل. لا تصلح وحدها لتشخيص نمط تعلم ثابت أو تقرير مسار دراسي أو مهني، كما أن الفروق المتقاربة لا ينبغي المبالغة في تفسيرها.</div>
+        </article>
+
         <article className="reportCard topThreeCard">
           <span className="sectionKicker">أعلى ثلاثة أبعاد</span>
           <div className="topThree">

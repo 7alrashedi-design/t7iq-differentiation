@@ -94,7 +94,8 @@ export default function WorkshopParticipant(){
   const [resumeMode,setResumeMode]=useState(false);
 
   const result=useMemo(()=>calculate(answers),[answers]);
-  const answered=Object.keys(answers).length;
+  const answered=styleItems.filter(i=>Number(answers[i.id])>=1 && Number(answers[i.id])<=5).length;
+  const missingItems=styleItems.filter(i=>!(Number(answers[i.id])>=1 && Number(answers[i.id])<=5));
   const progress=Math.round((answered/50)*100);
   const item=styleItems[current];
 
@@ -165,7 +166,7 @@ export default function WorkshopParticipant(){
   }
 
   async function finishScale(){
-    if(answered<50){setNotice("أكمل جميع العبارات أولًا.");return}
+    if(missingItems.length){setCurrent(missingItems[0].id-1);setNotice("تبقت "+missingItems.length+" عبارة دون إجابة. انتقلنا إلى العبارة "+missingItems[0].id+"، ويمكنك مراجعة أرقام العبارات الناقصة أدناه.");return}
     setBusy(true);setNotice("");
     try{
       await api("save_responses",{participant_token:token,answers:Object.entries(answers).map(([id,score])=>({item_id:Number(id),score}))});
@@ -379,8 +380,10 @@ export default function WorkshopParticipant(){
       <div className="questionMetaRow"><div className="questionNumber">العبارة {item.id} من 50</div><span className="questionAnswered">{answers[item.id] ? "تمت الإجابة ✓" : "اختر إجابتك"}</span></div>
       <h1>{item.text}</h1><p>اختر الدرجة الأقرب لما تشعر به الآن، دون تفكير طويل.</p>
       <div className="answerScale">{scoreLabels.map(opt=><button key={opt.value} className={answers[item.id]===opt.value?"selected":""} onClick={()=>choose(opt.value)}><strong>{opt.value}</strong><span>{opt.label}</span>{answers[item.id]===opt.value&&<Check size={15}/>}</button>)}</div>
-      <div className="scaleNav"><button className="outlineButton" disabled={current===0} onClick={()=>setCurrent(x=>Math.max(0,x-1))}><ArrowRight size={16}/> السابق</button><span>تحفظ الإجابات في هذه الجلسة</span>{current===49?<button className="primaryButton" disabled={busy||answered<50} onClick={finishScale}>إظهار بصمتي <Sparkles size={16}/></button>:<button className="outlineButton" onClick={()=>setCurrent(x=>Math.min(49,x+1))}>التالي <ArrowLeft size={16}/></button>}</div>
-      {notice&&<div className="loginMessage">{notice}</div>}
+      <div className="scaleNav"><button className="outlineButton" disabled={current===0} onClick={()=>setCurrent(x=>Math.max(0,x-1))}><ArrowRight size={16}/> السابق</button><span>تحفظ الإجابات في هذه الجلسة</span>{current===49?<button className="primaryButton" disabled={busy} onClick={finishScale}>إظهار بصمتي <Sparkles size={16}/></button>:<button className="outlineButton" onClick={()=>setCurrent(x=>Math.min(49,x+1))}>التالي <ArrowLeft size={16}/></button>}</div>
+      {missingItems.length>0&&<div className="asloobiMissingAnswers"><b>عبارات لم تُستكمل ({missingItems.length}):</b><div>{missingItems.map(m=><button key={m.id} type="button" onClick={()=>{setCurrent(m.id-1);setNotice("")}}>العبارة {m.id}</button>)}</div></div>}
+      {busy&&<p role="status" className="asloobiSaveStatus">يجري حفظ الإجابات وإعداد بصمتك…</p>}
+      {notice&&<div className="loginMessage" role="alert">{notice}</div>}
     </section>
   </main>;
 
@@ -393,6 +396,20 @@ export default function WorkshopParticipant(){
         <article className="reportCard radarCard"><div className="reportCardHead"><div><span>الملف الكمي</span><h2>خريطة بصمتك</h2></div><BarChart3 size={21}/></div><Radar rows={result.rows}/></article>
         <article className="reportCard rankingCard"><div className="reportCardHead"><div><span>الترتيب</span><h2>أبعاد التعبير</h2></div></div><div className="rankingList">{result.rows.map((r,i)=><div key={r.code}><span className="rankNo">{i+1}</span><div className="rankText"><b>{styleMeta[r.code].title}</b><span>{r.code}</span></div><div className="rankBar"><i style={{width:(r.mean/5)*100+"%"}}/></div><strong>{r.mean.toFixed(1)}</strong></div>)}</div></article>
         <article className="reportCard narrativeCard"><span className="sectionKicker">اقرأ نفسك من خلال النتيجة</span><h2>ماذا تقول بصمتك؟</h2><p><b>{styleMeta[primary.code].title}</b> هو الأكثر حضورًا؛ {styleMeta[primary.code].description}</p><p>ثم يظهر <b>{styleMeta[second.code].title}</b> وبعده <b>{styleMeta[third.code].title}</b>. هذا لا يحصرك في منتج واحد، بل يوضح كيف يمكن أن تسهم بطريقتك داخل منتجات متنوعة.</p><div className="narrativeTiles"><div className="roleTile"><span>دور قد يناسبك</span><b>{styleMeta[primary.code].role}</b></div><div className="growthTile"><span>مساحة نمو</span><b>{styleMeta[primary.code].growth}</b></div><div className="topThreeTile"><span>أعلى ثلاثة أبعاد</span><b>{primary.code} {primary.mean.toFixed(1)} · {second.code} {second.mean.toFixed(1)} · {third.code} {third.mean.toFixed(1)}</b></div></div><small>هذه النتيجة تصف تفضيلات التعبير الحالية وليست حكمًا ثابتًا على قدراتك.</small></article>
+        <article className="reportCard narrativeCard asloobiExpandedReport">
+          <span className="sectionKicker">قراءة تحليلية شخصية</span>
+          <h2>ما الذي تقوله نتائجك عن أسلوبك في التعبير؟</h2>
+          <p>يعرض هذا التقرير كيف فضّلت التعبير عن أفكارك وفق إجاباتك على المقياس. الهدف مساعدتك على فهم ميولك واختيار وسيلة مناسبة للموقف، وليس تصنيفك في قالب ثابت.</p>
+          <div className="asloobiReportAxes">
+            <section><h3>01 · أسلوبك الأبرز</h3><p>حصل <b>{styleMeta[primary.code].title}</b> على متوسط <b>{primary.mean.toFixed(2)} من 5</b>، وهو أعلى أبعادك. {styleMeta[primary.code].description} وقد ينعكس ذلك على الطريقة التي تبدأ بها العمل أو تفضل أن تعرض بها ما تعلمته.</p></section>
+            <section><h3>02 · الأساليب المساندة</h3><p>يظهر <b>{styleMeta[second.code].title}</b> ({second.mean.toFixed(2)} من 5) ثم <b>{styleMeta[third.code].title}</b> ({third.mean.toFixed(2)} من 5). هذه ميول يمكن الجمع بينها مع أسلوبك الأول، ولا يلزم أن تختار نوعًا واحدًا في كل المواقف.</p></section>
+            <section><h3>03 · مدى تقارب تفضيلاتك</h3><p>الفارق بين أعلى أبعادك وأقلها هو <b>{(result.rows[0].mean-result.rows[result.rows.length-1].mean).toFixed(2)} نقطة</b> على مقياس من خمس درجات. تقارب المتوسطات يعني أن إجاباتك توزعت بصورة متشابهة بين أكثر من أسلوب؛ وهو لا يثبت تساوي المهارات أو اختلافها.</p></section>
+            <section><h3>04 · كيف توظف النتيجة؟</h3><p>من الأدوار التي قد تفضل تجربتها: <b>{styleMeta[primary.code].role}</b>. اختر المنتج الذي يخدم هدف التعلم أولًا، ثم وظّف الأسلوب الأكثر راحة لك مع تجربة أسلوب مساند لتحسين جودة عرضك.</p></section>
+            <section><h3>05 · مجالات النمو الممكنة</h3><p>{styleMeta[primary.code].growth} ويمكنك تجربة مهمة قصيرة في <b>{styleMeta[result.rows[result.rows.length-1].code].title}</b>، لا باعتباره موطن ضعف، بل بوصفه مجالًا أقل تفضيلًا في إجاباتك الحالية.</p></section>
+            <section><h3>06 · خطة تحقق عملية</h3><p>عبّر عن فكرة واحدة بطريقتين مختلفتين، ثم قارن وضوح الفكرة وجودة العمل ومدى راحتك في كل طريقة. دوّن ملاحظاتك واسأل زميلًا أو مدربًا عن رأيه؛ لأن الممارسة الفعلية تكمل نتيجة الاستبانة.</p></section>
+          </div>
+          <div className="asloobiReportCaution"><b>حدود النتيجة:</b> هذه متوسطات لتفضيلاتك المصرّح بها، وليست اختبارًا للقدرة أو الذكاء ولا تشخيصًا لنمط تعلم ثابت. يُفضّل عدم المبالغة في تفسير الفروق الصغيرة بين الأبعاد.</div>
+        </article>
       </section>
       <section className="reportNext"><div><span className="sectionKicker">المحطة التالية</span><h2>من البصمة إلى المنتج</h2><p>اختر منتجًا بحرية، ثم طوّره عبر ثلاثة مستويات وفق المحتوى والعرض والإبداع والتأمل.</p></div><button className="primaryButton" onClick={()=>setStage("products")}>استكشف المنتجات <ArrowLeft size={17}/></button></section>
       <footer className="reportFooter"><span>التمايز • diff.t7iq.com</span><span>المدرب: {session.trainer_names?.join("، ")}</span></footer>
