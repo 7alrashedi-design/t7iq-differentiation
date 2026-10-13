@@ -27,20 +27,29 @@ function calculate(answers:Record<number,number>){
   return {rows,top,fingerprint:top.map((x,i)=>codeText(x.code,i===0)).join("-")};
 }
 
+const radarPalette:Record<"W"|"O"|"V"|"T"|"K",string>={W:"#2875C7",O:"#E28A26",V:"#A650C7",T:"#D44F70",K:"#2B9B66"};
+function radarGroup(code:StyleCode):keyof typeof radarPalette {
+  if(code==="W"||code==="O"||code==="V"||code==="T") return code;
+  return "K";
+}
 function Radar({rows}:{rows:{code:StyleCode;mean:number}[]}){
-  const center=160,maxR=116,n=rows.length;
+  const center=160,maxR=110,n=rows.length;
   const point=(i:number,value:number)=>{
     const a=(-Math.PI/2)+(i/n)*Math.PI*2,r=(value/5)*maxR;
-    return [center+Math.cos(a)*r,center+Math.sin(a)*r];
+    return [center+Math.cos(a)*r,center+Math.sin(a)*r] as const;
   };
   const grids=[1,2,3,4,5].map(level=>rows.map((_,i)=>point(i,level).join(",")).join(" "));
-  const data=rows.map((r,i)=>point(i,r.mean).join(",")).join(" ");
-  return <svg className="fingerprintRadar" viewBox="0 0 320 320">
-    {grids.map((g,i)=><polygon key={i} points={g} fill="none" stroke="#dfeaec" strokeWidth="1"/>)}
-    {rows.map((_,i)=>{const p=point(i,5);return <line key={i} x1="160" y1="160" x2={p[0]} y2={p[1]} stroke="#e5edef"/>})}
-    <polygon points={data} fill="rgba(47,143,135,.16)" stroke="#2f8f87" strokeWidth="3"/>
-    {rows.map((r,i)=>{const p=point(i,r.mean),l=point(i,5.65);return <g key={r.code}><circle cx={p[0]} cy={p[1]} r="4" fill="#fff" stroke="#2f8f87" strokeWidth="2"/><text x={l[0]} y={l[1]} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="#526d78">{r.code}</text></g>})}
-  </svg>
+  const data=rows.map((r,i)=>point(i,r.mean));
+  return <div className="asloobiRadarBox">
+    <svg className="fingerprintRadar" viewBox="0 0 320 320" role="img" aria-label="رسم راداري ملون لأساليب التعبير الخمسة">
+      {grids.map((g,i)=><polygon key={i} points={g} fill="none" stroke="#dfeaec" strokeWidth="1"/>)}
+      {rows.map((_,i)=>{const p=point(i,5);return <line key={i} x1="160" y1="160" x2={p[0]} y2={p[1]} stroke="#e5edef"/>})}
+      {data.map((p,i)=>{const next=data[(i+1)%n],color=radarPalette[radarGroup(rows[i].code)];return <polygon key={rows[i].code} points={`160,160 ${p.join(",")} ${next.join(",")}`} fill={color} fillOpacity="0.20" stroke="none"/>})}
+      {data.map((p,i)=>{const next=data[(i+1)%n];return <line key={rows[i].code} x1={p[0]} y1={p[1]} x2={next[0]} y2={next[1]} stroke={radarPalette[radarGroup(rows[i].code)]} strokeWidth="3" strokeLinecap="round"/>})}
+      {rows.map((r,i)=>{const p=point(i,r.mean),l=point(i,5.75),color=radarPalette[radarGroup(r.code)];return <g key={r.code}><circle cx={p[0]} cy={p[1]} r="4.5" fill={color} stroke="#fff" strokeWidth="1.5"/><text x={l[0]} y={l[1]} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill={color} fontWeight="700">{r.code}</text></g>})}
+    </svg>
+    <div className="asloobiRadarLegend">{[["O","الشفهي"],["W","الكتابي"],["V","الفني/المرئي"],["K","الحركي"],["T","التقني"]].map(([c,label])=><span key={c}><i style={{background:radarPalette[c as keyof typeof radarPalette]}}/>{label}</span>)}</div>
+  </div>
 }
 
 function ParticipantJourney({active}:{active:number}){
@@ -187,6 +196,18 @@ export default function WorkshopParticipant(){
   const productGroups=useMemo<{code:Exclude<ProductFilter,"ALL">;label:string}[]>(()=>[
     {code:"W",label:"كتابي"},{code:"O",label:"شفهي"},{code:"V",label:"مرئي/صوتي"},{code:"T",label:"تقني"},{code:"K",label:"حركي"}
   ],[]);
+  const productTone:Record<Exclude<ProductFilter,"ALL">,{label:string;css:string}>={
+    O:{label:"شفهي",css:"asloobiOral"},W:{label:"كتابي",css:"asloobiWritten"},
+    V:{label:"فني / مرئي",css:"asloobiArtistic"},K:{label:"حركي",css:"asloobiKinesthetic"},
+    T:{label:"تقني",css:"asloobiTechnical"}
+  };
+  function productGroup(p:readonly unknown[]):Exclude<ProductFilter,"ALL">{
+    const id=String(p[0]);
+    if(id.startsWith("K-")) return "K";
+    const code=String(p[2]);
+    if(code==="W"||code==="O"||code==="V"||code==="T") return code;
+    return "K";
+  }
   const [productFilter,setProductFilter]=useState<ProductFilter>("ALL");
   const [productQuery,setProductQuery]=useState("");
   const [productLimit,setProductLimit]=useState(12);
@@ -401,12 +422,12 @@ export default function WorkshopParticipant(){
           <h2>ما الذي تقوله نتائجك عن أسلوبك في التعبير؟</h2>
           <p>يعرض هذا التقرير كيف فضّلت التعبير عن أفكارك وفق إجاباتك على المقياس. الهدف مساعدتك على فهم ميولك واختيار وسيلة مناسبة للموقف، وليس تصنيفك في قالب ثابت.</p>
           <div className="asloobiReportAxes">
-            <section><h3>01 · أسلوبك الأبرز</h3><p>حصل <b>{styleMeta[primary.code].title}</b> على متوسط <b>{primary.mean.toFixed(2)} من 5</b>، وهو أعلى أبعادك. {styleMeta[primary.code].description} وقد ينعكس ذلك على الطريقة التي تبدأ بها العمل أو تفضل أن تعرض بها ما تعلمته.</p></section>
-            <section><h3>02 · الأساليب المساندة</h3><p>يظهر <b>{styleMeta[second.code].title}</b> ({second.mean.toFixed(2)} من 5) ثم <b>{styleMeta[third.code].title}</b> ({third.mean.toFixed(2)} من 5). هذه ميول يمكن الجمع بينها مع أسلوبك الأول، ولا يلزم أن تختار نوعًا واحدًا في كل المواقف.</p></section>
-            <section><h3>03 · مدى تقارب تفضيلاتك</h3><p>الفارق بين أعلى أبعادك وأقلها هو <b>{(result.rows[0].mean-result.rows[result.rows.length-1].mean).toFixed(2)} نقطة</b> على مقياس من خمس درجات. تقارب المتوسطات يعني أن إجاباتك توزعت بصورة متشابهة بين أكثر من أسلوب؛ وهو لا يثبت تساوي المهارات أو اختلافها.</p></section>
-            <section><h3>04 · كيف توظف النتيجة؟</h3><p>من الأدوار التي قد تفضل تجربتها: <b>{styleMeta[primary.code].role}</b>. اختر المنتج الذي يخدم هدف التعلم أولًا، ثم وظّف الأسلوب الأكثر راحة لك مع تجربة أسلوب مساند لتحسين جودة عرضك.</p></section>
-            <section><h3>05 · مجالات النمو الممكنة</h3><p>{styleMeta[primary.code].growth} ويمكنك تجربة مهمة قصيرة في <b>{styleMeta[result.rows[result.rows.length-1].code].title}</b>، لا باعتباره موطن ضعف، بل بوصفه مجالًا أقل تفضيلًا في إجاباتك الحالية.</p></section>
-            <section><h3>06 · خطة تحقق عملية</h3><p>عبّر عن فكرة واحدة بطريقتين مختلفتين، ثم قارن وضوح الفكرة وجودة العمل ومدى راحتك في كل طريقة. دوّن ملاحظاتك واسأل زميلًا أو مدربًا عن رأيه؛ لأن الممارسة الفعلية تكمل نتيجة الاستبانة.</p></section>
+            <section><h3>01 · أسلوبك الأبرز</h3><p>حصل <b>{styleMeta[primary.code].title}</b> على متوسط <b>{primary.mean.toFixed(2)} من 5</b>، وهو أعلى أبعادك. {styleMeta[primary.code].description} وقد ينعكس هذا التفضيل على الطريقة التي تبدأ بها العمل، والطريقة التي تستريح إليها في شرح أفكارك وتوثيق النتائج. لاحظ المواقف التي تجد فيها هذا الأسلوب مفيدًا لك، وتلك التي تتطلب منك أسلوبًا مختلفًا. ارتفاع المتوسط يعبّر عن درجة موافقتك على العبارات المرتبطة بهذا البعد، لا عن تفوقك التلقائي على الآخرين فيه.</p></section>
+            <section><h3>02 · الأساليب المساندة</h3><p>يظهر <b>{styleMeta[second.code].title}</b> ({second.mean.toFixed(2)} من 5) ثم <b>{styleMeta[third.code].title}</b> ({third.mean.toFixed(2)} من 5). يمكن دمج هذين الأسلوبين مع أسلوبك الأبرز: الأول لتوليد الأفكار أو تنظيمها، والثاني لعرضها أو مناقشتها، والثالث لتوثيق المنتج وتحسينه. جرّب الأدوار المختلفة في عمل جماعي أو مهمة فردية، ثم لاحظ أيها يحقق لك الوضوح والجودة. لا يُشترط أن تعتمد أسلوبًا واحدًا، فطبيعة المهمة والجمهور والهدف تؤثر في الاختيار المناسب.</p></section>
+            <section><h3>03 · مدى تقارب تفضيلاتك</h3><p>الفارق بين أعلى أبعادك وأقلها هو <b>{(result.rows[0].mean-result.rows[result.rows.length-1].mean).toFixed(2)} نقطة</b> على مقياس من خمس درجات. إذا كانت الفروق محدودة فإن تفضيلاتك المعلنة متقاربة، وقد تجد أكثر من طريقة مناسبة للتعبير عن الفكرة نفسها. أما اتساع الفارق فيشير إلى ميل أوضح في إجاباتك الحالية لبعض الأبعاد مقارنة بغيرها. لا تمثل هذه الفروق وحدها اختبارًا لمستوى الأداء، ولا يصح اعتبار الفروق البسيطة تصنيفات حاسمة؛ فالسياق والخبرة السابقة والفرص المتاحة تؤثر جميعًا في الاستجابات.</p></section>
+            <section><h3>04 · كيف توظف النتيجة؟</h3><p>من الأدوار التي قد تفضل تجربتها: <b>{styleMeta[primary.code].role}</b>. ابدأ بتحديد ناتج التعلم الذي تريد إظهاره، ثم اختر المنتج الذي يتيح تقديم دليل واضح على فهمك. قد تتولى دورًا قريبًا من تفضيلك، لكن يمكنك أيضًا ممارسة دور غير مألوف وتطويره. عند العمل مع فريق، وزّع الأدوار استنادًا إلى المهام والمهارات المرصودة ورغبات الأفراد، ولا تجعل نتيجة المقياس وحدها أساس التوزيع.</p></section>
+            <section><h3>05 · مجالات النمو الممكنة</h3><p>{styleMeta[primary.code].growth} ويمكنك تجربة مهمة قصيرة في <b>{styleMeta[result.rows[result.rows.length-1].code].title}</b>، لا باعتباره موطن ضعف، بل بوصفه مجالًا أقل تفضيلًا في إجاباتك الحالية. خصص له مهمة قصيرة منخفضة المخاطر، واستعن بنموذج واضح وتغذية راجعة محددة. راقب ما إذا كانت الصعوبة ناتجة عن قلة الخبرة أو عدم الألفة أو طبيعة النشاط، ثم كرر المحاولة بصورة مختلفة قبل الحكم على ملاءمته لك.</p></section>
+            <section><h3>06 · خطة تحقق عملية</h3><p>عبّر عن فكرة واحدة بطريقتين مختلفتين، ثم قارن وضوح الفكرة وجودة العمل ومدى راحتك في كل طريقة. دوّن ملاحظاتك عن الوقت والجهد والوضوح وجودة المخرجات، واطلب من زميل أو مدرب تقديم تغذية راجعة مبنية على معايير معلنة. كرر التجربة في موضوع آخر أو موقف مختلف لترى هل يستمر تفضيلك أم يتغير. بهذه الطريقة تتكوّن لديك صورة أكثر توازنًا تجمع بين إجابات الاستبانة وأدلة الأداء الحقيقي، وتصبح النتيجة نقطة بداية للتأمل والتطوير لا حكمًا نهائيًا.</p></section>
           </div>
           <div className="asloobiReportCaution"><b>حدود النتيجة:</b> هذه متوسطات لتفضيلاتك المصرّح بها، وليست اختبارًا للقدرة أو الذكاء ولا تشخيصًا لنمط تعلم ثابت. يُفضّل عدم المبالغة في تفسير الفروق الصغيرة بين الأبعاد.</div>
         </article>
@@ -418,14 +439,23 @@ export default function WorkshopParticipant(){
 
   if(stage==="products") return <main className="workshopPage productPage">
     <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>من البصمة إلى المنتج</small></div></div><button className="outlineButton" onClick={()=>setStage("report")}><ArrowRight size={16}/> تقريري</button></header>
-    <ParticipantJourney active={3}/><section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي يشعل فضولك.</h1><p>كل المنتجات متاحة لك. بصمتك لا تقيد اختيارك؛ بل تساعدك في تحديد <b>الدور الذي تضيف به قوتك</b> داخل المنتج أو فريق العمل.</p></section>
+    <ParticipantJourney active={3}/><section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي يشعل فضولك.</h1><p>كل المنتجات متاحة لك. اللون يحدد فئة المنتج سريعًا، وتساعدك البصمة على اختيار دور مناسب دون تقييد خياراتك.</p></section>
     <div className="productDiscovery">
-      <nav className="productFilters"><button className={productFilter==="ALL"?"active":""} onClick={()=>{setProductFilter("ALL");setProductLimit(12)}}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={productFilter===g.code?"active":""} onClick={()=>{setProductFilter(g.code);setProductLimit(12)}}>{g.label}</button>)}</nav>
+      <nav className="productFilters asloobiProductFilters" aria-label="فئات المنتجات"><button className={productFilter==="ALL"?"active allTone": "allTone"} onClick={()=>{setProductFilter("ALL");setProductLimit(12)}}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={`${productTone[g.code].css} ${productFilter===g.code?"active":""}`} onClick={()=>{setProductFilter(g.code);setProductLimit(12)}}>{productTone[g.code].label}</button>)}</nav>
       <label className="productSearch"><span>ابحث عن منتج</span><input value={productQuery} onChange={e=>{setProductQuery(e.target.value);setProductLimit(12)}} placeholder="مثال: تقرير، فيديو، مجلة…"/></label>
     </div>
     <div className="productChoiceHint"><UsersRound size={18}/><div><b>فكر بالمنتج أولًا، ثم بالدور.</b><span>مثال: صاحب البصمة الكتابية يمكنه اختيار «فيلم» ويكون دوره كتابة السيناريو أو توثيق المحتوى، بينما يكمل زملاؤه الأدوار البصرية والتقنية والأدائية.</span></div></div>
     <div className="productResultMeta"><b>{filteredProducts.length}</b><span>منتجًا مطابقًا • نعرض الأقرب لبصمتك أولًا</span></div>
-    <section className="productGrid allProductGrid">{visibleProducts.map((p:any)=><article key={p[0]} className={"productCard "+(topCodes.includes(p[2] as StyleCode)?"directFit":"")}><div className="productCardTop"><span className="productCode">{p[0]}</span>{topCodes.includes(p[2] as StyleCode)&&<span className="recommendedTag">قريب من بصمتك</span>}</div><h2>{p[1]}</h2><p>{fitLabel(p)}</p><div className="productRole"><span>دورك المقترح وفق بصمتك</span><b>{roleFor(p)}</b></div><button className="outlineButton" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button></article>)}</section>
+    <section className="productGrid allProductGrid asloobiProductGrid">{visibleProducts.map((p:any)=>{
+      const tone=productTone[productGroup(p)];
+      const isMatch=topCodes.includes(p[2] as StyleCode);
+      return <article key={p[0]} className={`productCard asloobiCompactCard ${tone.css} ${isMatch?"directFit":""}`}>
+        <div className="productCardTop"><span className="asloobiProductCategory">{tone.label}</span><span className="productCode">{p[0]}</span></div>
+        <div className="asloobiCardTitle"><h2>{p[1]}</h2>{isMatch&&<span className="asloobiFitTag">قريب من بصمتك</span>}</div>
+        <p className="asloobiProductFit">{fitLabel(p)}</p>
+        <div className="productRole"><span>دورك المقترح</span><b>{roleFor(p)}</b></div>
+        <button type="button" className="outlineButton asloobiSelectProduct" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button>
+      </article>})}</section>
     {visibleProducts.length<filteredProducts.length&&<div className="productMore"><button className="outlineButton" onClick={()=>setProductLimit(x=>x+12)}>عرض 12 منتجًا إضافيًا</button><span>ظهر {visibleProducts.length} من {filteredProducts.length}</span></div>}
     {filteredProducts.length===0&&<div className="emptyJourney">لا توجد منتجات مطابقة. غيّر البحث أو التصنيف.</div>}
     {notice&&<div className="loginMessage">{notice}</div>}
