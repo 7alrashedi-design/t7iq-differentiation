@@ -29,7 +29,8 @@ function calculate(answers:Record<number,number>){
 
 const radarPalette:Record<"W"|"O"|"V"|"T"|"K",string>={W:"#2875C7",O:"#E28A26",V:"#A650C7",T:"#D44F70",K:"#2B9B66"};
 function radarGroup(code:StyleCode):keyof typeof radarPalette {
-  return code.startsWith("K")?"K":code;
+  if(code==="W"||code==="O"||code==="V"||code==="T") return code;
+  return "K";
 }
 function Radar({rows}:{rows:{code:StyleCode;mean:number}[]}){
   const center=160,maxR=110,n=rows.length;
@@ -195,6 +196,18 @@ export default function WorkshopParticipant(){
   const productGroups=useMemo<{code:Exclude<ProductFilter,"ALL">;label:string}[]>(()=>[
     {code:"W",label:"كتابي"},{code:"O",label:"شفهي"},{code:"V",label:"مرئي/صوتي"},{code:"T",label:"تقني"},{code:"K",label:"حركي"}
   ],[]);
+  const productTone:Record<Exclude<ProductFilter,"ALL">,{label:string;css:string}>={
+    O:{label:"شفهي",css:"asloobiOral"},W:{label:"كتابي",css:"asloobiWritten"},
+    V:{label:"فني / مرئي",css:"asloobiArtistic"},K:{label:"حركي",css:"asloobiKinesthetic"},
+    T:{label:"تقني",css:"asloobiTechnical"}
+  };
+  function productGroup(p:readonly unknown[]):Exclude<ProductFilter,"ALL">{
+    const id=String(p[0]);
+    if(id.startsWith("K-")) return "K";
+    const code=String(p[2]);
+    if(code==="W"||code==="O"||code==="V"||code==="T") return code;
+    return "K";
+  }
   const [productFilter,setProductFilter]=useState<ProductFilter>("ALL");
   const [productQuery,setProductQuery]=useState("");
   const [productLimit,setProductLimit]=useState(12);
@@ -426,14 +439,23 @@ export default function WorkshopParticipant(){
 
   if(stage==="products") return <main className="workshopPage productPage">
     <header className="workshopTop"><div className="platformBrand compact"><div className="differenceMark small"><span>ت</span></div><div><b>التمايز</b><small>من البصمة إلى المنتج</small></div></div><button className="outlineButton" onClick={()=>setStage("report")}><ArrowRight size={16}/> تقريري</button></header>
-    <ParticipantJourney active={3}/><section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي يشعل فضولك.</h1><p>كل المنتجات متاحة لك. بصمتك لا تقيد اختيارك؛ بل تساعدك في تحديد <b>الدور الذي تضيف به قوتك</b> داخل المنتج أو فريق العمل.</p></section>
+    <ParticipantJourney active={3}/><section className="productHero"><span className="smartBadge"><Sparkles size={15}/> بصمتك {result.fingerprint}</span><h1>اختر المنتج الذي يشعل فضولك.</h1><p>كل المنتجات متاحة لك. اللون يحدد فئة المنتج سريعًا، وتساعدك البصمة على اختيار دور مناسب دون تقييد خياراتك.</p></section>
     <div className="productDiscovery">
-      <nav className="productFilters"><button className={productFilter==="ALL"?"active":""} onClick={()=>{setProductFilter("ALL");setProductLimit(12)}}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={productFilter===g.code?"active":""} onClick={()=>{setProductFilter(g.code);setProductLimit(12)}}>{g.label}</button>)}</nav>
+      <nav className="productFilters asloobiProductFilters" aria-label="فئات المنتجات"><button className={productFilter==="ALL"?"active allTone": "allTone"} onClick={()=>{setProductFilter("ALL");setProductLimit(12)}}>الكل <small>{products.length}</small></button>{productGroups.map(g=><button key={g.code} className={`${productTone[g.code].css} ${productFilter===g.code?"active":""}`} onClick={()=>{setProductFilter(g.code);setProductLimit(12)}}>{productTone[g.code].label}</button>)}</nav>
       <label className="productSearch"><span>ابحث عن منتج</span><input value={productQuery} onChange={e=>{setProductQuery(e.target.value);setProductLimit(12)}} placeholder="مثال: تقرير، فيديو، مجلة…"/></label>
     </div>
     <div className="productChoiceHint"><UsersRound size={18}/><div><b>فكر بالمنتج أولًا، ثم بالدور.</b><span>مثال: صاحب البصمة الكتابية يمكنه اختيار «فيلم» ويكون دوره كتابة السيناريو أو توثيق المحتوى، بينما يكمل زملاؤه الأدوار البصرية والتقنية والأدائية.</span></div></div>
     <div className="productResultMeta"><b>{filteredProducts.length}</b><span>منتجًا مطابقًا • نعرض الأقرب لبصمتك أولًا</span></div>
-    <section className="productGrid allProductGrid">{visibleProducts.map((p:any)=><article key={p[0]} className={"productCard "+(topCodes.includes(p[2] as StyleCode)?"directFit":"")}><div className="productCardTop"><span className="productCode">{p[0]}</span>{topCodes.includes(p[2] as StyleCode)&&<span className="recommendedTag">قريب من بصمتك</span>}</div><h2>{p[1]}</h2><p>{fitLabel(p)}</p><div className="productRole"><span>دورك المقترح وفق بصمتك</span><b>{roleFor(p)}</b></div><button className="outlineButton" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button></article>)}</section>
+    <section className="productGrid allProductGrid asloobiProductGrid">{visibleProducts.map((p:any)=>{
+      const tone=productTone[productGroup(p)];
+      const isMatch=topCodes.includes(p[2] as StyleCode);
+      return <article key={p[0]} className={`productCard asloobiCompactCard ${tone.css} ${isMatch?"directFit":""}`}>
+        <div className="productCardTop"><span className="asloobiProductCategory">{tone.label}</span><span className="productCode">{p[0]}</span></div>
+        <div className="asloobiCardTitle"><h2>{p[1]}</h2>{isMatch&&<span className="asloobiFitTag">قريب من بصمتك</span>}</div>
+        <p className="asloobiProductFit">{fitLabel(p)}</p>
+        <div className="productRole"><span>دورك المقترح</span><b>{roleFor(p)}</b></div>
+        <button type="button" className="outlineButton asloobiSelectProduct" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button>
+      </article>})}</section>
     {visibleProducts.length<filteredProducts.length&&<div className="productMore"><button className="outlineButton" onClick={()=>setProductLimit(x=>x+12)}>عرض 12 منتجًا إضافيًا</button><span>ظهر {visibleProducts.length} من {filteredProducts.length}</span></div>}
     {filteredProducts.length===0&&<div className="emptyJourney">لا توجد منتجات مطابقة. غيّر البحث أو التصنيف.</div>}
     {notice&&<div className="loginMessage">{notice}</div>}
