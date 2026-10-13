@@ -56,27 +56,7 @@ export const styleItems: StyleItem[] = [
   {id:47,text:"أحب أن أكون ضمن فريق عمل تطوعي",code:"K3s"},
   {id:48,text:"أجيد التمثيل بطريقة مبدعة",code:"K4p"},
   {id:49,text:"أستخدم الأدوات العملية باحتراف",code:"K5h"},
-  {id:50,text:"أستخدم الآلات لتلحين المقاطع",code:"K6m"},
-  {id:51,text:"أجد متعة في تلخيص الأفكار المركبة كتابةً",code:"W"},
-  {id:52,text:"أفضل شرح النتائج في نقاش مباشر",code:"O"},
-  {id:53,text:"أستخدم الألوان والرسوم لتوضيح العلاقات",code:"V"},
-  {id:54,text:"أحب تجربة أدوات رقمية جديدة لإنتاج أعمالي",code:"T"},
-  {id:55,text:"أحول الأفكار إلى أعمال فنية محسوسة",code:"K1a"},
-  {id:56,text:"أخطط لتنفيذ مشروع عملي بموارد محددة",code:"K2c"},
-  {id:57,text:"أتعلم من خلال تنفيذ مبادرة تخدم الآخرين",code:"K3s"},
-  {id:58,text:"أستخدم الحركة والتمثيل لتوصيل الفكرة",code:"K4p"},
-  {id:59,text:"أفضل تركيب نموذج وتجربته بيدي",code:"K5h"},
-  {id:60,text:"أستخدم الإيقاع الصوتي في عرض الأفكار",code:"K6m"},
-  {id:61,text:"أحرص على مراجعة النصوص وتحسين صياغتها",code:"W"},
-  {id:62,text:"أستطيع عرض الحجج والأدلة شفهيًا",code:"O"},
-  {id:63,text:"أشرح المعلومات من خلال مخططات ورسوم",code:"V"},
-  {id:64,text:"أستمتع ببناء منتج برمجي أو تفاعلي",code:"T"},
-  {id:65,text:"أستمتع بابتكار هوية فنية لمشروع",code:"K1a"},
-  {id:66,text:"أفضل اختبار الفكرة ضمن تجربة ميدانية",code:"K2c"},
-  {id:67,text:"أميل إلى قيادة نشاط جماعي تطبيقي",code:"K3s"},
-  {id:68,text:"أستمتع بمحاكاة المواقف في نشاط عملي",code:"K4p"},
-  {id:69,text:"أفهم المفاهيم أكثر عند بناء مجسم",code:"K5h"},
-  {id:70,text:"أصمم أنشطة صوتية ذات إيقاع معبّر",code:"K6m"}
+  {id:50,text:"أستخدم الآلات لتلحين المقاطع",code:"K6m"}
 ];
 
 export const styleMeta: Record<StyleCode, {
@@ -173,24 +153,3 @@ export const scoreLabels = [
   {value:4,label:"مهتم"},
   {value:5,label:"مهتم جدًا"}
 ];
-
-/** واجهة الأنواع الخمسة. الأبعاد العشرة محفوظة للتحليل التفصيلي. */
-export type ProductMode = "oral" | "written" | "artistic" | "kinesthetic" | "technical";
-export const productModes: {id:ProductMode;title:string;color:string;description:string}[] = [
-  {id:"oral",title:"الشفهي",color:"#E28A26",description:"الحوار والعرض والإلقاء"},
-  {id:"written",title:"الكتابي",color:"#2875C7",description:"الكتابة والتحرير والتوثيق"},
-  {id:"artistic",title:"الفني",color:"#A650C7",description:"الفن والتصميم والتكوين البصري"},
-  {id:"kinesthetic",title:"الحركي",color:"#2B9B66",description:"النماذج والتجارب والأداء الميداني"},
-  {id:"technical",title:"التقني",color:"#D44F70",description:"البرمجة والحلول والأدوات الرقمية"}
-];
-export function productModeForStyle(code:StyleCode):ProductMode {
-  if(code==="O") return "oral";
-  if(code==="W") return "written";
-  if(code==="V" || code==="K1a") return "artistic";
-  if(code==="T") return "technical";
-  return "kinesthetic";
-}
-export function productModeForProduct(code:StyleCode, productId:string):ProductMode {
-  if(code==="K1a" || productId==="K-015") return "artistic";
-  return productModeForStyle(code);
-}
