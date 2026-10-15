@@ -1636,3 +1636,19 @@ button,input,select,textarea{font-family:inherit}
 @media(max-width:920px){.asloobiProductGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.asloobiProductGrid{grid-template-columns:1fr;gap:11px}.asloobiCompactCard{min-height:0;padding:13px}.asloobiProductFilters button{padding:8px 12px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.asloobiCompactCard,.asloobiProductFilters button{transition:none}}
+
+/* Trainer-controlled three-stage workshop */
+.workshopPhaseDirector{border:1px solid #dbe8ec;background:#fff;border-radius:20px;padding:20px;margin:14px 0 20px;display:grid;grid-template-columns:minmax(180px,.8fr) minmax(0,2fr);gap:20px}
+.workshopPhaseDirector h2{font-size:20px;margin:6px 0}
+.workshopPhaseDirector p{font-size:13px;line-height:1.8;color:#506576}
+.workshopPhaseControls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.workshopPhaseControls>div{border:1px solid #dbe5ea;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.workshopPhaseControls>div.phaseCurrent{border-color:#238b80;background:#edf9f6}
+.workshopPhaseControls b{font-size:14px;color:#1d4356}
+.workshopPhaseControls small{font-size:11px;line-height:1.8;color:#567181;flex:1}
+.workshopPhaseControls button{border:1px solid #288a81;background:#288a81;color:#fff;border-radius:10px;padding:10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.workshopPhaseControls button:disabled{background:#eff3f5;color:#6a8190;border-color:#dce5e9;cursor:default}
+.workshopPhaseWaiting{max-width:560px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:13px}
+.workshopPhaseWaiting p{line-height:1.9}
+@media(max-width:850px){.workshopPhaseDirector{grid-template-columns:1fr}}
+@media(max-width:620px){.workshopPhaseControls{grid-template-columns:1fr}}
