@@ -163,6 +163,22 @@ Deno.serve(async (req: Request) => {
       .eq("participant_token", token).maybeSingle();
     if (!participant) return json({ error: "invalid_participant" }, 401);
 
+    // Trainer-controlled workshop phases: stored on the session, enforced server-side.
+    const {data:phaseSession,error:phaseError}=await db.from("workshop_sessions")
+      .select("id,settings").eq("id",participant.session_id).maybeSingle();
+    if(phaseError) throw phaseError;
+    if(!phaseSession) return json({error:"session_not_found"},404);
+    const phaseRaw=Number(phaseSession.settings?.active_phase ?? 1);
+    const activePhase=[1,2,3].includes(phaseRaw)?phaseRaw:1;
+    const minimumPhase:Record<string,number>={
+      save_responses:1,save_fingerprint:1,
+      select_product:2,rubric:2,submit_evaluation:2,product_journey:2,
+      apply:3
+    };
+    if((minimumPhase[action]??1)>activePhase){
+      return json({error:"phase_locked",active_phase:activePhase,required_phase:minimumPhase[action]},403);
+    }
+
     if (action === "resume") {
       const [{ data: fp }, { data: pp }, { data: responseRows }] = await Promise.all([
         db.from("fingerprint_results").select("*").eq("participant_id", participant.id).maybeSingle(),
@@ -171,7 +187,7 @@ Deno.serve(async (req: Request) => {
       ]);
       let product=null;
       if(pp?.product_id){const {data:p}=await db.from("product_catalog").select("product_id,product_name,style_category,style_code").eq("product_id",pp.product_id).maybeSingle();product=p}
-      return json({participant,fingerprint:fp,participant_product:pp,product,answers:Object.fromEntries((responseRows??[]).map((r:any)=>[r.item_id,r.score]))});
+      return json({participant,fingerprint:fp,participant_product:pp,product,active_phase:activePhase,answers:Object.fromEntries((responseRows??[]).map((r:any)=>[r.item_id,r.score]))});
     }
 
     if (action === "save_responses") {
