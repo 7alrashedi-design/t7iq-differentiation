@@ -168,7 +168,7 @@ Deno.serve(async (req: Request) => {
       .select("id,settings").eq("id",participant.session_id).maybeSingle();
     if(phaseError) throw phaseError;
     if(!phaseSession) return json({error:"session_not_found"},404);
-    const phaseRaw=Number(phaseSession.settings?.active_phase ?? 0);
+    const phaseRaw=phaseSession.settings?.trainer_controlled_phases===true?Number(phaseSession.settings?.active_phase ?? 0):3;
     const activePhase=[0,1,2,3].includes(phaseRaw)?phaseRaw:0;
     const minimumPhase:Record<string,number>={
       save_responses:1,save_fingerprint:1,
