@@ -107,8 +107,8 @@ export default function WorkshopParticipant(){
   const missingItems=styleItems.filter(i=>!(Number(answers[i.id])>=1 && Number(answers[i.id])<=5));
   const progress=Math.round((answered/50)*100);
   const item=styleItems[current];
-  const phaseValue=Number(session?.settings?.active_phase??1);
-  const activePhase:1|2|3=(phaseValue===2||phaseValue===3)?phaseValue:1;
+  const phaseValue=Number(session?.settings?.active_phase??0);
+  const activePhase:0|1|2|3=([0,1,2,3].includes(phaseValue)?phaseValue:0) as 0|1|2|3;
   useEffect(()=>{
     if(!code)return;
     let enabled=true;
@@ -394,9 +394,9 @@ export default function WorkshopParticipant(){
       <div className="differenceMark"><span>ت</span></div>
       <span className="sectionKicker">المرحلة {phaseRequired} من 3</span>
       <h1>بانتظار إشارة المدرب</h1>
-      <p>أنجزت الجزء المتاح لك. سيُفتح ${phaseRequired===2?"اختيار المنتج وتقييمه":"تخطيط وحدات التمايز"} فور سماح المدرب بالانتقال، دون أن تحتاج إلى إعادة إجاباتك.</p>
+      <p>أنجزت الجزء المتاح لك. سيُفتح {phaseRequired===1?"مقياس أسلوبي":phaseRequired===2?"اختيار المنتج وتقييمه":"تخطيط وحدات التمايز"} فور سماح المدرب بالانتقال، دون أن تحتاج إلى إعادة إجاباتك.</p>
       <small>تتحقق المنصة من إذن المدرب تلقائيًا كل بضع ثوانٍ.</small>
-      <button className="outlineButton" type="button" onClick={()=>setStage(phaseRequired===2?"report":"products")}>العودة إلى الجزء السابق</button>
+      <button className="outlineButton" type="button" onClick={()=>setStage(phaseRequired===1?"join":phaseRequired===2?"report":"products")}>العودة إلى الجزء السابق</button>
     </section></main>;
   }
 
