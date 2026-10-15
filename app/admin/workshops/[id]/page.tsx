@@ -122,7 +122,7 @@ export default function WorkshopDashboard(){
 
   async function openWorkshopPhase(nextPhase:1|2|3){
     if(!session)return;
-    const active=Number(session.settings?.active_phase??1);
+    const active=Number(session.settings?.active_phase??0);
     if(nextPhase>active+1){setNotice("يجب فتح المراحل بالترتيب.");return}
     const supabase=getSupabaseBrowserClient();
     const settings={...(session.settings??{}),active_phase:nextPhase};
@@ -178,10 +178,10 @@ export default function WorkshopDashboard(){
     {notice&&<div className="adminNotice">{notice}</div>}
 
     <section className="workshopPhaseDirector" aria-label="مراحل الورشة وتحكم المدرب">
-      <div><span className="sectionKicker">تحكم المدرب بالانتقال</span><h2>المراحل الثلاث للورشة</h2><p>لا تظهر المرحلة التالية للمشارك ولا تقبل عملياتها حتى يأذن المدرب ببدئها. يمكن إرجاع المرحلة عند الحاجة دون حذف العمل المحفوظ.</p></div>
+      <div><span className="sectionKicker">تحكم المدرب بالانتقال</span><h2>المراحل الثلاث للورشة</h2><p><strong>{Number(session.settings?.active_phase??0)===0?"الورشة لم تبدأ بعد — المشاركون في الانتظار":"المرحلة المفتوحة: "+Number(session.settings?.active_phase??0)}</strong></p><p>لا تظهر المرحلة التالية للمشارك ولا تقبل عملياتها حتى يأذن المدرب ببدئها. يمكن إرجاع المرحلة عند الحاجة دون حذف العمل المحفوظ.</p></div>
       <div className="workshopPhaseControls">
-        {([{n:1,title:"1 · أسلوبي",detail:"اختبار أسلوب التعبير وقراءة البصمة"},{n:2,title:"2 · المنتج والتقييم",detail:"اختيار مهمة وفق الشفرة وتقييم L1–L3"},{n:3,title:"3 · تخطيط الوحدة",detail:"النماذج المختصرة والتنفيذية"}] as const).map(p=><div key={p.n} className={Number(session.settings?.active_phase??1)===p.n?"phaseCurrent":""}>
-          <b>{p.title}</b><small>{p.detail}</small><button disabled={Number(session.settings?.active_phase??1)===p.n||p.n>Number(session.settings?.active_phase??1)+1} onClick={()=>void openWorkshopPhase(p.n)}>{Number(session.settings?.active_phase??1)===p.n?"المرحلة الحالية":p.n<Number(session.settings?.active_phase??1)?"العودة إليها":"إذن البدء"}</button>
+        {([{n:1,title:"1 · أسلوبي",detail:"اختبار أسلوب التعبير وقراءة البصمة"},{n:2,title:"2 · المنتج والتقييم",detail:"اختيار مهمة وفق الشفرة وتقييم L1–L3"},{n:3,title:"3 · تخطيط الوحدة",detail:"النماذج المختصرة والتنفيذية"}] as const).map(p=><div key={p.n} className={Number(session.settings?.active_phase??0)===p.n?"phaseCurrent":""}>
+          <b>{p.title}</b><small>{p.detail}</small><button disabled={Number(session.settings?.active_phase??0)===p.n||p.n>Number(session.settings?.active_phase??0)+1} onClick={()=>void openWorkshopPhase(p.n)}>{Number(session.settings?.active_phase??0)===p.n?"المرحلة الحالية":p.n<Number(session.settings?.active_phase??0)?"العودة إليها":"إذن البدء"}</button>
         </div>)}
       </div>
     </section>
