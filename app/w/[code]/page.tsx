@@ -107,7 +107,7 @@ export default function WorkshopParticipant(){
   const missingItems=styleItems.filter(i=>!(Number(answers[i.id])>=1 && Number(answers[i.id])<=5));
   const progress=Math.round((answered/50)*100);
   const item=styleItems[current];
-  const phaseValue=Number(session?.settings?.active_phase??0);
+  const phaseValue=session?.settings?.trainer_controlled_phases===true?Number(session.settings?.active_phase??0):3;
   const activePhase:0|1|2|3=([0,1,2,3].includes(phaseValue)?phaseValue:0) as 0|1|2|3;
   useEffect(()=>{
     if(!code)return;
