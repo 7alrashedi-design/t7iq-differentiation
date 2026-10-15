@@ -120,6 +120,18 @@ export default function WorkshopDashboard(){
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر تحديث حالة التأهيل.")}finally{setBusyParticipant(null)}
   }
 
+  async function openWorkshopPhase(nextPhase:1|2|3){
+    if(!session)return;
+    const active=Number(session.settings?.active_phase??1);
+    if(nextPhase>active+1){setNotice("يجب فتح المراحل بالترتيب.");return}
+    const supabase=getSupabaseBrowserClient();
+    const settings={...(session.settings??{}),active_phase:nextPhase};
+    const {error}=await supabase.from("workshop_sessions").update({settings}).eq("id",session.id);
+    if(error){setNotice("تعذر تغيير المرحلة: "+error.message);return}
+    setNotice("المرحلة المتاحة الآن: "+(["","أسلوبي","اختيار المنتج وتقييمه","تخطيط الوحدات"][nextPhase]));
+    await load();
+  }
+
   async function copyLink(){
     if(!session) return;
     await navigator.clipboard.writeText(window.location.origin+"/w/"+session.session_code);
@@ -164,6 +176,15 @@ export default function WorkshopDashboard(){
     </header>
 
     {notice&&<div className="adminNotice">{notice}</div>}
+
+    <section className="workshopPhaseDirector" aria-label="مراحل الورشة وتحكم المدرب">
+      <div><span className="sectionKicker">تحكم المدرب بالانتقال</span><h2>المراحل الثلاث للورشة</h2><p>لا تظهر المرحلة التالية للمشارك ولا تقبل عملياتها حتى يأذن المدرب ببدئها. يمكن إرجاع المرحلة عند الحاجة دون حذف العمل المحفوظ.</p></div>
+      <div className="workshopPhaseControls">
+        {([{n:1,title:"1 · أسلوبي",detail:"اختبار أسلوب التعبير وقراءة البصمة"},{n:2,title:"2 · المنتج والتقييم",detail:"اختيار مهمة وفق الشفرة وتقييم L1–L3"},{n:3,title:"3 · تخطيط الوحدة",detail:"النماذج المختصرة والتنفيذية"}] as const).map(p=><div key={p.n} className={Number(session.settings?.active_phase??1)===p.n?"phaseCurrent":""}>
+          <b>{p.title}</b><small>{p.detail}</small><button disabled={Number(session.settings?.active_phase??1)===p.n||p.n>Number(session.settings?.active_phase??1)+1} onClick={()=>void openWorkshopPhase(p.n)}>{Number(session.settings?.active_phase??1)===p.n?"المرحلة الحالية":p.n<Number(session.settings?.active_phase??1)?"العودة إليها":"إذن البدء"}</button>
+        </div>)}
+      </div>
+    </section>
 
     <section className="liveHeroGrid">
       <article className="sessionAccessCard">
