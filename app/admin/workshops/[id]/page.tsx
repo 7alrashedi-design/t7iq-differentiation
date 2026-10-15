@@ -120,6 +120,28 @@ export default function WorkshopDashboard(){
     }catch(e){setNotice(e instanceof Error?e.message:"تعذر تحديث حالة التأهيل.")}finally{setBusyParticipant(null)}
   }
 
+  async function enableTrainerPhases(){
+    if(!session)return;
+    const supabase=getSupabaseBrowserClient();
+    const settings={...(session.settings??{}),trainer_controlled_phases:true,active_phase:0};
+    const {error}=await supabase.from("workshop_sessions").update({settings}).eq("id",session.id);
+    if(error){setNotice("تعذر تفعيل المراحل: "+error.message);return}
+    setNotice("تم تفعيل التحكم المرحلي. المشاركون الآن بانتظار بدء أسلوبي.");
+    await load();
+  }
+
+  async function openWorkshopPhase(nextPhase:1|2|3){
+    if(!session||session.settings?.trainer_controlled_phases!==true)return;
+    const active=Number(session.settings?.active_phase??0);
+    if(nextPhase>active+1){setNotice("يجب فتح المراحل بالترتيب.");return}
+    const supabase=getSupabaseBrowserClient();
+    const settings={...(session.settings??{}),active_phase:nextPhase};
+    const {error}=await supabase.from("workshop_sessions").update({settings}).eq("id",session.id);
+    if(error){setNotice("تعذر تغيير المرحلة: "+error.message);return}
+    setNotice("المرحلة المتاحة الآن: "+(["","أسلوبي","اختيار المنتج وتقييمه","تخطيط الوحدات"][nextPhase]));
+    await load();
+  }
+
   async function copyLink(){
     if(!session) return;
     await navigator.clipboard.writeText(window.location.origin+"/w/"+session.session_code);
@@ -164,6 +186,17 @@ export default function WorkshopDashboard(){
     </header>
 
     {notice&&<div className="adminNotice">{notice}</div>}
+
+    <section className="workshopPhaseDirector" aria-label="مراحل الورشة وتحكم المدرب">
+      <div><span className="sectionKicker">تحكم المدرب بالانتقال</span><h2>المراحل الثلاث للورشة</h2><p><strong>{session.settings?.trainer_controlled_phases!==true?"التحكم المرحلي غير مفعّل":Number(session.settings?.active_phase??0)===0?"الورشة لم تبدأ بعد — المشاركون في الانتظار":"المرحلة المفتوحة: "+Number(session.settings?.active_phase??0)}</strong></p><p>لا تظهر المرحلة التالية للمشارك ولا تقبل عملياتها حتى يأذن المدرب ببدئها. يمكن إرجاع المرحلة عند الحاجة دون حذف العمل المحفوظ.</p></div>
+      {session.settings?.trainer_controlled_phases!==true?
+        <div className="workshopPhaseActivation"><p>التحكم المرحلي غير مفعّل في هذه الجلسة. تفعيله يعيد المشاركين إلى انتظار المدرب دون حذف الإجابات المحفوظة.</p><button onClick={()=>void enableTrainerPhases()}>تفعيل التحكم وتهيئة انتظار الورشة</button></div>:
+      <div className="workshopPhaseControls">
+        {([{n:1,title:"1 · أسلوبي",detail:"اختبار أسلوب التعبير وقراءة البصمة"},{n:2,title:"2 · المنتج والتقييم",detail:"اختيار مهمة وفق الشفرة وتقييم L1–L3"},{n:3,title:"3 · تخطيط الوحدة",detail:"النماذج المختصرة والتنفيذية"}] as const).map(p=><div key={p.n} className={Number(session.settings?.active_phase??0)===p.n?"phaseCurrent":""}>
+          <b>{p.title}</b><small>{p.detail}</small><button disabled={Number(session.settings?.active_phase??0)===p.n||p.n>Number(session.settings?.active_phase??0)+1} onClick={()=>void openWorkshopPhase(p.n)}>{Number(session.settings?.active_phase??0)===p.n?"المرحلة الحالية":p.n<Number(session.settings?.active_phase??0)?"العودة إليها":"إذن البدء"}</button>
+        </div>)}
+      </div>}
+    </section>
 
     <section className="liveHeroGrid">
       <article className="sessionAccessCard">
