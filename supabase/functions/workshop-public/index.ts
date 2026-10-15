@@ -143,15 +143,42 @@ Deno.serve(async (req: Request) => {
         .eq("session_code", code).in("status", ["open","live"]).maybeSingle();
       if (!session) return json({ error: "session_not_found" }, 404);
 
+      if (code === "DEMO26" && fullName.startsWith("__E2E_")) {
+        const { data: oldRows } = await db.from("workshop_participants").select("id").eq("session_id", session.id).eq("full_name", fullName);
+        const oldIds=(oldRows??[]).map((x:any)=>x.id);
+        if(oldIds.length){
+          await db.from("workshop_participants").delete().in("id",oldIds);
+        }
+      }
+
+      const resumeCode = crypto.randomUUID().replaceAll("-","").slice(0,10).toUpperCase();
       const { data: participant, error } = await db.from("workshop_participants")
         .insert({
           session_id: session.id,
           full_name: fullName,
           organization_name: organizationName || null,
           email: body.email ? String(body.email).trim().toLowerCase() : null,
-          mobile: body.mobile ? String(body.mobile).trim() : null
-        }).select("id,participant_token,full_name,organization_name").single();
+          mobile: body.mobile ? String(body.mobile).trim() : null,
+          resume_code: resumeCode
+        }).select("id,participant_token,resume_code,full_name,organization_name").single();
       if (error) throw error;
+      return json({ session, participant });
+    }
+
+    if (action === "resume_by_code") {
+      const code = String(body.code ?? "").trim().toUpperCase();
+      const resumeCode = String(body.resume_code ?? "").trim().toUpperCase();
+      if (!code || !resumeCode) return json({ error: "resume_code_required" }, 400);
+      const { data: session } = await db.from("workshop_sessions")
+        .select("id,title,session_code,status,trainer_names,settings")
+        .eq("session_code", code).maybeSingle();
+      if (!session) return json({ error: "session_not_found" }, 404);
+      const { data: participant } = await db.from("workshop_participants")
+        .select("id,participant_token,resume_code,full_name,organization_name,email,mobile,qualification_status,qualified_at")
+        .eq("session_id", session.id)
+        .eq("resume_code", resumeCode)
+        .maybeSingle();
+      if (!participant) return json({ error: "invalid_resume_code" }, 404);
       return json({ session, participant });
     }
 
@@ -159,7 +186,7 @@ Deno.serve(async (req: Request) => {
     if (!token) return json({ error: "participant_token_required" }, 401);
 
     const { data: participant } = await db.from("workshop_participants")
-      .select("id,session_id,full_name,organization_name,email,mobile")
+      .select("id,session_id,full_name,organization_name,email,mobile,resume_code,qualification_status,qualified_at")
       .eq("participant_token", token).maybeSingle();
     if (!participant) return json({ error: "invalid_participant" }, 401);
 
@@ -187,7 +214,7 @@ Deno.serve(async (req: Request) => {
       ]);
       let product=null;
       if(pp?.product_id){const {data:p}=await db.from("product_catalog").select("product_id,product_name,style_category,style_code").eq("product_id",pp.product_id).maybeSingle();product=p}
-      return json({participant,fingerprint:fp,participant_product:pp,product,active_phase:activePhase,answers:Object.fromEntries((responseRows??[]).map((r:any)=>[r.item_id,r.score]))});
+      return json({participant,fingerprint:fp,participant_product:pp,product,answers:Object.fromEntries((responseRows??[]).map((r:any)=>[r.item_id,r.score]))});
     }
 
     if (action === "save_responses") {
@@ -249,6 +276,12 @@ Deno.serve(async (req: Request) => {
       const participantProductId = String(body.participant_product_id ?? "");
       const level = Number(body.level_no ?? 1);
       const scores = Array.isArray(body.scores) ? body.scores : [];
+      const notes = Array.isArray(body.notes) ? body.notes : [];
+      const evaluatorTypeRaw = String(body.evaluator_type ?? "self");
+      const evaluatorType = ["self","trainer","peer"].includes(evaluatorTypeRaw) ? evaluatorTypeRaw : "self";
+      const evaluatorName = String(body.evaluator_name ?? "").trim() || null;
+      const developmentPriority = String(body.development_priority ?? "").trim() || null;
+      const nextRecommendation = String(body.next_recommendation ?? "").trim() || null;
 
       const { data: pp } = await db.from("participant_products")
         .select("id,participant_id,current_level,status,product_id")
@@ -262,7 +295,8 @@ Deno.serve(async (req: Request) => {
         .or(`product_id.eq.${pp.product_id},product_id.is.null`)
         .order("product_id",{ascending:false,nullsFirst:false});
       const specificRows = (rubric ?? []).filter((r:any)=>r.product_id===pp.product_id);
-      const rubricRows = specificRows.length ? specificRows : (rubric ?? []).filter((r:any)=>!r.product_id);
+      const baseRubricRows = specificRows.length ? specificRows : (rubric ?? []).filter((r:any)=>!r.product_id);
+      const rubricRows = evaluatorType === "self" ? baseRubricRows : baseRubricRows.filter((r:any)=>r.section!=="التأمل");
       const allowed = new Set(rubricRows.map((r:any)=>r.id));
       const scoreMap = new Map(scores.filter((s:any)=>allowed.has(s.rubric_template_id)).map((s:any)=>[s.rubric_template_id, Number(s.score)]));
       if (scoreMap.size !== rubricRows.length) return json({ error: "all_criteria_required" }, 400);
@@ -280,19 +314,24 @@ Deno.serve(async (req: Request) => {
       const { data: attempt, error: attemptError } = await db.from("product_evaluation_attempts").insert({
         participant_product_id: pp.id,
         level_no: level,
-        evaluator_type: "self",
+        evaluator_type: evaluatorType,
         evaluator_participant_id: participant.id,
+        evaluator_name: evaluatorName,
         average_score: Number(avg.toFixed(2)),
         essential_pass: essentialPass,
         passed,
-        feedback: body.feedback ? String(body.feedback) : null
+        feedback: body.feedback ? String(body.feedback) : null,
+        development_priority: developmentPriority,
+        next_recommendation: nextRecommendation
       }).select("id,average_score,essential_pass,passed").single();
       if (attemptError) throw attemptError;
 
+      const noteMap = new Map(notes.filter((n:any)=>allowed.has(n.rubric_template_id)).map((n:any)=>[n.rubric_template_id, String(n.note ?? "").trim() || null]));
       const scoreRows = rubricRows.map((r:any)=>({
         attempt_id: attempt.id,
         rubric_template_id: r.id,
-        score: scoreMap.get(r.id) ?? 0
+        score: scoreMap.get(r.id) ?? 0,
+        note: noteMap.get(r.id) ?? null
       }));
       const { error: scoreError } = await db.from("product_evaluation_scores").insert(scoreRows);
       if (scoreError) throw scoreError;
@@ -303,6 +342,12 @@ Deno.serve(async (req: Request) => {
         if (level < 3) nextLevel = level + 1;
         else status = "completed";
         await db.from("participant_products").update({ current_level: nextLevel, status }).eq("id", pp.id);
+        if (status === "completed") {
+          await db.from("workshop_participants").update({
+            completed_at: new Date().toISOString(),
+            qualification_status: "completed"
+          }).eq("id", participant.id);
+        }
       }
 
       return json({ attempt, passed, average_score: Number(avg.toFixed(2)), essential_pass: essentialPass, required_average: levelThreshold, next_level: nextLevel, status, previous_average: previousAttempt?.average_score ?? null, improvement: previousAttempt ? Number((avg-Number(previousAttempt.average_score)).toFixed(2)) : null });
@@ -316,7 +361,7 @@ Deno.serve(async (req: Request) => {
       if (!pp) return json({ error: "product_selection_not_found" }, 404);
 
       const { data: attempts, error: attemptsError } = await db.from("product_evaluation_attempts")
-        .select("id,level_no,average_score,essential_pass,passed,feedback,created_at")
+        .select("id,level_no,evaluator_type,evaluator_name,average_score,essential_pass,passed,feedback,development_priority,next_recommendation,created_at")
         .eq("participant_product_id",pp.id).order("created_at",{ascending:true});
       if (attemptsError) throw attemptsError;
 
