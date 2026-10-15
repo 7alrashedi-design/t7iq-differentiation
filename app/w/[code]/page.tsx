@@ -107,6 +107,21 @@ export default function WorkshopParticipant(){
   const missingItems=styleItems.filter(i=>!(Number(answers[i.id])>=1 && Number(answers[i.id])<=5));
   const progress=Math.round((answered/50)*100);
   const item=styleItems[current];
+  const phaseValue=Number(session?.settings?.active_phase??1);
+  const activePhase:1|2|3=(phaseValue===2||phaseValue===3)?phaseValue:1;
+  useEffect(()=>{
+    if(!code)return;
+    let enabled=true;
+    const refresh=async()=>{try{
+      const d=await api("session",{code});
+      if(enabled&&d.session)setSession(d.session);
+    }catch{/* preserve participant progress during temporary connectivity issues */}};
+    const timer=window.setInterval(()=>{void refresh()},4000);
+    return()=>{enabled=false;window.clearInterval(timer)};
+  },[code]);
+  const phaseRequired=stage==="products"||stage==="evaluate"||stage==="journey"?2:
+    ["diagnosis","differentiate","lesson","apply","finalReport","done"].includes(stage)?3:1;
+
 
   async function shareReport(){const text="تقريري في "+(session?.title||"ورشة التمايز")+" • بصمتي: "+result.fingerprint+(selectedProduct?.product_name?" • المنتج: "+selectedProduct.product_name:"");if(typeof navigator!=="undefined"&&navigator.share){try{await navigator.share({title:"تقرير تجربة التمايز",text,url:window.location.href})}catch{}}else if(typeof navigator!=="undefined"){await navigator.clipboard.writeText(text+" "+window.location.href);setNotice("تم نسخ ملخص التقرير والرابط.")}}
   function printNamed(kind:string){
@@ -373,6 +388,17 @@ export default function WorkshopParticipant(){
   }
 
   if(!session) return <main className="participantGate"><div className="participantGateCard"><div className="differenceMark"><span>ت</span></div><h1>التمايز</h1><p>{notice||"جارٍ التحقق من جلسة الورشة..."}</p></div></main>;
+
+  if(stage!=="join"&&phaseRequired>activePhase){
+    return <main className="participantGate"><section className="participantGateCard workshopPhaseWaiting" role="status">
+      <div className="differenceMark"><span>ت</span></div>
+      <span className="sectionKicker">المرحلة {phaseRequired} من 3</span>
+      <h1>بانتظار إشارة المدرب</h1>
+      <p>أنجزت الجزء المتاح لك. سيُفتح ${phaseRequired===2?"اختيار المنتج وتقييمه":"تخطيط وحدات التمايز"} فور سماح المدرب بالانتقال، دون أن تحتاج إلى إعادة إجاباتك.</p>
+      <small>تتحقق المنصة من إذن المدرب تلقائيًا كل بضع ثوانٍ.</small>
+      <button className="outlineButton" type="button" onClick={()=>setStage(phaseRequired===2?"report":"products")}>العودة إلى الجزء السابق</button>
+    </section></main>;
+  }
 
   if(stage==="join") return <main className="participantGate">
     <section className="participantJoinCard">
