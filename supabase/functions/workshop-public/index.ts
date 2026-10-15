@@ -168,8 +168,8 @@ Deno.serve(async (req: Request) => {
       .select("id,settings").eq("id",participant.session_id).maybeSingle();
     if(phaseError) throw phaseError;
     if(!phaseSession) return json({error:"session_not_found"},404);
-    const phaseRaw=Number(phaseSession.settings?.active_phase ?? 1);
-    const activePhase=[1,2,3].includes(phaseRaw)?phaseRaw:1;
+    const phaseRaw=Number(phaseSession.settings?.active_phase ?? 0);
+    const activePhase=[0,1,2,3].includes(phaseRaw)?phaseRaw:0;
     const minimumPhase:Record<string,number>={
       save_responses:1,save_fingerprint:1,
       select_product:2,rubric:2,submit_evaluation:2,product_journey:2,
