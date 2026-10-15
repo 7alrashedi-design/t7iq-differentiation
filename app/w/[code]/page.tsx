@@ -38,11 +38,11 @@ function Radar({rows}:{rows:{code:StyleCode;mean:number}[]}){
     const a=(-Math.PI/2)+(i/n)*Math.PI*2,r=(value/5)*maxR;
     return [center+Math.cos(a)*r,center+Math.sin(a)*r] as const;
   };
-  const grids=[1,2,3,4,5].map(level=>rows.map((_,i)=>point(i,level).join(",")).join(" "));
+  const rings=[1,2,3,4,5];
   const data=rows.map((r,i)=>point(i,r.mean));
   return <div className="asloobiRadarBox">
     <svg className="fingerprintRadar" viewBox="0 0 320 320" role="img" aria-label="رسم راداري ملون لأساليب التعبير الخمسة">
-      {grids.map((g,i)=><polygon key={i} points={g} fill="none" stroke="#dfeaec" strokeWidth="1"/>)}
+      {rings.map(level=><g key={level}><circle cx="160" cy="160" r={level/5*maxR} fill="none" stroke="#dfeaec" strokeWidth="1"/><text x="163" y={160-level/5*maxR+9} fill="#728898" fontSize="8">{level}</text></g>)}
       {rows.map((_,i)=>{const p=point(i,5);return <line key={i} x1="160" y1="160" x2={p[0]} y2={p[1]} stroke="#e5edef"/>})}
       {data.map((p,i)=>{const next=data[(i+1)%n],color=radarPalette[radarGroup(rows[i].code)];return <polygon key={rows[i].code} points={`160,160 ${p.join(",")} ${next.join(",")}`} fill={color} fillOpacity="0.20" stroke="none"/>})}
       {data.map((p,i)=>{const next=data[(i+1)%n];return <line key={rows[i].code} x1={p[0]} y1={p[1]} x2={next[0]} y2={next[1]} stroke={radarPalette[radarGroup(rows[i].code)]} strokeWidth="3" strokeLinecap="round"/>})}
@@ -103,6 +103,19 @@ export default function WorkshopParticipant(){
   const [resumeMode,setResumeMode]=useState(false);
 
   const result=useMemo(()=>calculate(answers),[answers]);
+  const narrativeSignature=useMemo(()=>{
+    const codes=result.top.map(x=>x.code);
+    const spread=result.rows[0].mean-result.rows[result.rows.length-1].mean;
+    const lead=result.rows[0].mean;
+    return {
+      closeness:spread<0.4?"متقاربة جدًا":spread<1?"متوسطة التباعد":"متباعدة نسبيًا",
+      context:lead>=4?"تظهر استجاباتك ميلًا مرتفعًا":lead>=3?"تظهر استجاباتك ميلًا متوسطًا":"تشير استجاباتك إلى تفضيل أقل وضوحًا",
+      combination:codes[0]?.startsWith("K")?"ابدأ بنموذج عملي ملموس ثم وثّق خطواته وناقش نتائجه":codes[0]==="W"?"ابدأ بمسودة مكتوبة، ثم حوّل خلاصتها إلى عرض أو نشاط":codes[0]==="O"?"ابدأ بحوار يختبر الفكرة، ثم وثّق ما توصلت إليه":codes[0]==="T"?"ابدأ بتجربة رقمية بسيطة، ثم اشرح منطق الحل ودليل نجاحه":"ابدأ بتصور بصري للفكرة، ثم أضف شرحًا يفسر عناصرها",
+      partner:codes[1]?.startsWith("K")?"بالتطبيق العملي":codes[1]==="W"?"بالتوثيق المكتوب":codes[1]==="O"?"بالحوار والشرح":codes[1]==="T"?"بأداة رقمية":"بالتمثيل المرئي",
+      contrast:spread<0.4?"لا يوجد فارق واضح يدعو إلى تفضيل أسلوب واحد على البقية":"قد تكون بعض الوسائل أكثر حضورًا في تفضيلاتك الحالية، مع بقاء جميع الخيارات متاحة"
+    };
+  },[result]);
+
   const answered=styleItems.filter(i=>Number(answers[i.id])>=1 && Number(answers[i.id])<=5).length;
   const missingItems=styleItems.filter(i=>!(Number(answers[i.id])>=1 && Number(answers[i.id])<=5));
   const progress=Math.round((answered/50)*100);
@@ -202,10 +215,9 @@ export default function WorkshopParticipant(){
     T:{label:"تقني",css:"asloobiTechnical"}
   };
   function productGroup(p:readonly unknown[]):Exclude<ProductFilter,"ALL">{
-    const id=String(p[0]);
-    if(id.startsWith("K-")) return "K";
-    const code=String(p[2]);
-    if(code==="W"||code==="O"||code==="V"||code==="T") return code;
+    const id=String(p[0]), code=String(p[2]);
+    if(code==="V" || code==="K1a" || ["K-004","K-006","K-011","K-015"].includes(id)) return "V";
+    if(code==="W"||code==="O"||code==="T") return code;
     return "K";
   }
   const [productFilter,setProductFilter]=useState<ProductFilter>("ALL");
@@ -213,7 +225,7 @@ export default function WorkshopParticipant(){
   const [productLimit,setProductLimit]=useState(12);
   const topCodes=result.top.map(t=>t.code);
   const filteredProducts=useMemo(()=>products
-    .filter(p=>productFilter==="ALL" ? true : productFilter==="K" ? String(p[0]).startsWith("K-") : p[2]===productFilter)
+    .filter(p=>productFilter==="ALL" ? true : productGroup(p)===productFilter)
     .filter(p=>!productQuery.trim() || String(p[1]).includes(productQuery.trim()) || String(p[0]).toLowerCase().includes(productQuery.trim().toLowerCase()))
     .sort((a:any,b:any)=>Number(topCodes.includes(b[2] as StyleCode))-Number(topCodes.includes(a[2] as StyleCode)))
   ,[productFilter,productQuery,result.fingerprint]);
@@ -421,6 +433,7 @@ export default function WorkshopParticipant(){
           <span className="sectionKicker">قراءة تحليلية شخصية</span>
           <h2>ما الذي تقوله نتائجك عن أسلوبك في التعبير؟</h2>
           <p>يعرض هذا التقرير كيف فضّلت التعبير عن أفكارك وفق إجاباتك على المقياس. الهدف مساعدتك على فهم ميولك واختيار وسيلة مناسبة للموقف، وليس تصنيفك في قالب ثابت.</p>
+          <p className="asloobiPersonalizedLead"><b>قراءتك المركّبة ({result.fingerprint}):</b> {narrativeSignature.context} نحو {styleMeta[result.top[0].code].title}، مع مساندة {styleMeta[result.top[1].code].title} و{styleMeta[result.top[2].code].title}. تفضيلاتك {narrativeSignature.closeness}، ولذلك فإن التوصية هي: {narrativeSignature.combination}، مع تعزيز المنتج {narrativeSignature.partner}. {narrativeSignature.contrast}.</p>
           <div className="asloobiReportAxes">
             <section><h3>01 · أسلوبك الأبرز</h3><p>حصل <b>{styleMeta[primary.code].title}</b> على متوسط <b>{primary.mean.toFixed(2)} من 5</b>، وهو أعلى أبعادك. {styleMeta[primary.code].description} وقد ينعكس هذا التفضيل على الطريقة التي تبدأ بها العمل، والطريقة التي تستريح إليها في شرح أفكارك وتوثيق النتائج. لاحظ المواقف التي تجد فيها هذا الأسلوب مفيدًا لك، وتلك التي تتطلب منك أسلوبًا مختلفًا. ارتفاع المتوسط يعبّر عن درجة موافقتك على العبارات المرتبطة بهذا البعد، لا عن تفوقك التلقائي على الآخرين فيه.</p></section>
             <section><h3>02 · الأساليب المساندة</h3><p>يظهر <b>{styleMeta[second.code].title}</b> ({second.mean.toFixed(2)} من 5) ثم <b>{styleMeta[third.code].title}</b> ({third.mean.toFixed(2)} من 5). يمكن دمج هذين الأسلوبين مع أسلوبك الأبرز: الأول لتوليد الأفكار أو تنظيمها، والثاني لعرضها أو مناقشتها، والثالث لتوثيق المنتج وتحسينه. جرّب الأدوار المختلفة في عمل جماعي أو مهمة فردية، ثم لاحظ أيها يحقق لك الوضوح والجودة. لا يُشترط أن تعتمد أسلوبًا واحدًا، فطبيعة المهمة والجمهور والهدف تؤثر في الاختيار المناسب.</p></section>
@@ -454,7 +467,7 @@ export default function WorkshopParticipant(){
         <div className="asloobiCardTitle"><h2>{p[1]}</h2>{isMatch&&<span className="asloobiFitTag">قريب من بصمتك</span>}</div>
         <p className="asloobiProductFit">{fitLabel(p)}</p>
         <div className="productRole"><span>دورك المقترح</span><b>{roleFor(p)}</b></div>
-        <button type="button" className="outlineButton asloobiSelectProduct" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button>
+        <div className="asloobiLevelHint">يبدأ تقييم هذا المنتج بالمستوى الأول L1 بعد الاختيار</div><button type="button" className="outlineButton asloobiSelectProduct" disabled={busy} onClick={()=>selectProduct(p)}>اختيار هذا المنتج</button>
       </article>})}</section>
     {visibleProducts.length<filteredProducts.length&&<div className="productMore"><button className="outlineButton" onClick={()=>setProductLimit(x=>x+12)}>عرض 12 منتجًا إضافيًا</button><span>ظهر {visibleProducts.length} من {filteredProducts.length}</span></div>}
     {filteredProducts.length===0&&<div className="emptyJourney">لا توجد منتجات مطابقة. غيّر البحث أو التصنيف.</div>}
