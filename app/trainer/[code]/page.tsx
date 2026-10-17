@@ -3,7 +3,7 @@ import {useEffect,useMemo,useState} from "react";
 import {Activity,BarChart3,CheckCircle2,Clock3,RefreshCw,Users,Boxes,ScanLine} from "lucide-react";
 import {createClient} from "@supabase/supabase-js";
 
-const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
 const styleNames:Record<string,string>={W:"كتابي",O:"شفهي",V:"بصري",T:"تقني",K:"أدائي/عملي"};
 const styleLabels:Record<string,string>={W:"W",O:"O",V:"V",T:"T",K:"K"};
 
