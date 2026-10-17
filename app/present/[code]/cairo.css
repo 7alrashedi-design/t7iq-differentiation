@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap');
+.cairoPresenter{background:#fff!important;color:#347fb9!important;font-family:'El Messiri',Arial,sans-serif!important}
+.cairoPresenter:before{background:#37d0dc!important;width:8%!important;clip-path:polygon(0 0,100% 0,35% 80%,0 80%)}
+.cairoPresenter:after{border:none!important;background:#d1e800!important;left:auto!important;right:-10%!important;bottom:-70%!important;width:20%!important;clip-path:polygon(0 0,100% 5%,40% 100%,0 100%)}
+.cairoPresenter .presenterTopline,.cairoPresenter .presenterBottom{color:#357fbf!important}
+.cairoPresenter .presenterContent h1{color:#3980bf!important;font-family:'El Messiri',Arial,sans-serif!important}
+.cairoPresenter .presenterContent p{color:#315e88!important;font-family:'El Messiri',Arial,sans-serif!important}
+.cairoPresenter .presenterTopline span:last-child{background:#35cedc!important;color:#fff!important;border:none!important}
+.cairoPresenter .presenterProgress{background:#098be3!important}
+.cairoPresenter .presenterBottom{border-color:#dfe9ef!important}
