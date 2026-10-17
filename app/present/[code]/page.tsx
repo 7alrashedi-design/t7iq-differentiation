@@ -1,5 +1,5 @@
 "use client";
-import {useCallback,useEffect,useState} from "react";
+import {useCallback,useEffect,useMemo,useState} from "react";
 import {useParams} from "next/navigation";
 import QRCode from "qrcode";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
@@ -11,7 +11,7 @@ const labels:{[key:string]:string}={W:"كتابي",O:"شفهي",V:"فني",K:"ح
 const hues:{[key:string]:string}={W:"#2585c7",O:"#e28a26",V:"#a650c7",K:"#2d9b66",T:"#d44f70"};
 export default function InteractiveWorkshop(){
  const params=useParams<{code:string}>(),code=String(params.code??"").toUpperCase();
- const db=getSupabaseBrowserClient();
+ const db=useMemo(()=>getSupabaseBrowserClient(),[]);
  const [session,setSession]=useState<any>(null),[stats,setStats]=useState<Stats|null>(null),[qr,setQr]=useState("");
  const [page,setPage]=useState(0),[panel,setPanel]=useState(false),[auth,setAuth]=useState(false);
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({title:"",body:"",accent:"#3485c2",scale:"normal"});
