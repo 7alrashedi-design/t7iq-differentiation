@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default async function WorkshopManageLayout({children,params}:{children:React.ReactNode;params:Promise<{id:string}>}){const {id}=await params;return <><div dir='rtl' style={{display:'flex',justifyContent:'flex-end',padding:'12px 22px',background:'#edf8fa',borderBottom:'1px solid #cee8ec'}}><Link href={'/admin/workshops/'+id+'/slides'} style={{fontWeight:700,color:'#197da6',textDecoration:'none'}}>تحرير شرائح العرض التفاعلي • خط El Messiri</Link></div>{children}</>}
