@@ -9,7 +9,7 @@ const labels:Record<string,string>={intro:"الافتتاح",one:"المرحلة
 const colors:Record<string,string>={intro:"#127F88",one:"#2875C7",two:"#E28A26",three:"#2B9B66",outro:"#A650C7"};
 export default function InteractiveWorkshop({params}:{params:Promise<{code:string}>}){
  const [code,setCode]=useState("");const [session,setSession]=useState<any>(null);const [stats,setStats]=useState<any>(null);
- const [slide,setSlide]=useState(0);const [qr,setQr]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [updated,setUpdated]=useState("");
+ const [slide,setSlide]=useState(0);const [qr,setQr]=useState("");const [error,setError]=useState("");const [updated,setUpdated]=useState("");
  useEffect(()=>{params.then(p=>setCode(p.code.toUpperCase()))},[params]);
  useEffect(()=>{if(!code)return;QRCode.toDataURL(location.origin+"/w/"+code,{width:400,margin:1}).then(setQr).catch(()=>{});},[code]);
  useEffect(()=>{if(!code)return;let alive=true;async function poll(){
@@ -21,7 +21,7 @@ export default function InteractiveWorkshop({params}:{params:Promise<{code:strin
  const phase=session?.settings?.trainer_controlled_phases===true?Number(session.settings.active_phase??0):3;
  const item=content[slide];const phaseId=item[2]==="one"?1:item[2]==="two"?2:item[2]==="three"?3:0;
  const locked=phaseId>phase;
- const resource=slide===6?"scale":slide===9?"product":slide===26?"plan":"";
+
  function go(n:number){setSlide(Math.max(0,Math.min(content.length-1,n)))}
  function fullscreen(){document.documentElement.requestFullscreen?.().catch(()=>{})}
  useEffect(()=>{const handle=(e:KeyboardEvent)=>{if(e.key==="ArrowLeft")setSlide(s=>Math.min(s+1,content.length-1));if(e.key==="ArrowRight")setSlide(s=>Math.max(s-1,0));if(e.key.toLowerCase()==="f")fullscreen()};window.addEventListener("keydown",handle);return()=>window.removeEventListener("keydown",handle)},[]);
@@ -43,12 +43,12 @@ export default function InteractiveWorkshop({params}:{params:Promise<{code:strin
       <span style={{color:colors[item[2]],fontWeight:800}}>{labels[item[2]]}</span><span>المرجع: شريحة {slide+1} / 49</span>
     </div>
     <div style={{padding:"12px 40px 35px",minHeight:335}}>
-      <div style={{fontSize:14,color:"#597381"}}>{item[0]}</div>
-      <h1 style={{fontSize:"clamp(25px,3.4vw,42px)",lineHeight:1.4,margin:"16px 0"}}>{item[1]}</h1>
-      <p style={{fontSize:"clamp(17px,2vw,24px)",lineHeight:2,color:"#36596a"}}>{item[1].includes("المقياس")?"":item[1]===item[0]?"":""}{item[1]&&item[1]!==item[0]?item[1]:""}</p>
-      <p style={{fontSize:21,lineHeight:1.9,color:"#395b6d"}}>{item[1] && item[0] === "غلاف الورشة" ? "عرض تفاعلي مستند إلى المادة المرجعية للدكتور محمد بن عوض رواس." : item[1]===item[0]?"":item[1].includes("أسلوبي")?"ابدأ النشاط عند إشارة المدرب.":""}</p>
-      <p style={{fontSize:20,lineHeight:1.9,color:"#395b6d"}}>{item[1]&&item[1]!==item[0] ? "" : ""}{content[slide][1] ? "" : ""}</p>
-      <div style={{fontSize:21,lineHeight:1.95,background:"#f4f9fa",borderRadius:14,padding:"15px 22px"}}>{item[1]===item[0]?item[0]:item[1]}<hr style={{opacity:.15}}/>{item[0]==="الغلاف"?"من التقييم إلى اختيار المنتج وتخطيط الوحدات.":item[1]}</div>
+      <div style={{fontSize:15,color:"#597381"}}>الصفحة المرجعية {slide+1} — {item[0]}</div>
+      <h1 style={{fontSize:"clamp(27px,3.4vw,41px)",lineHeight:1.45,margin:"18px 0 28px"}}>{item[0]}</h1>
+      <div style={{fontSize:"clamp(18px,2.1vw,25px)",lineHeight:2,background:"#f4f9fa",borderRight:"5px solid "+colors[item[2]],borderRadius:14,padding:"22px 26px",whiteSpace:"pre-line"}}>{item[1]}</div>
+      {slide===6&&<div style={{display:"flex",gap:12,marginTop:18,alignItems:"center",flexWrap:"wrap"}}><a className="outlineButton" href={link} target="_blank" rel="noreferrer">ابدأ مقياس أسلوبي <ExternalLink size={14}/></a><span>يلزم تصريح المدرب بالمرحلة الأولى لإكمال المقياس.</span></div>}
+      {slide===9&&<div style={{marginTop:18}}><a className="outlineButton" href={link} target="_blank" rel="noreferrer">اختيار منتج داخل المنصة <ExternalLink size={14}/></a></div>}
+      {slide===26&&<div style={{marginTop:18}}><a className="outlineButton" href="/teacher/lab/bloom" target="_blank" rel="noreferrer">معمل بلوم للتخطيط <ExternalLink size={14}/></a><p style={{fontSize:14}}>هذه أداة تخطيط مساندة وليست تأكيدًا لاكتمال النماذج التنفيذية الثلاثة.</p></div>}
       {locked&&<div style={{background:"#fff6df",padding:16,borderRadius:12,marginTop:16,color:"#835419"}}><LockKeyhole size={16}/> المرحلة لم يفتحها المدرب بعد. يمكنك عرض المفهوم لكن التطبيق مغلق.</div>}
       {(slide===6||slide===8||slide===9)&&<div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap",marginTop:20}}>
         {qr&&<img src={qr} alt="رمز QR لدخول جلسة المتدربين" width={125} height={125}/>}
@@ -67,7 +67,7 @@ export default function InteractiveWorkshop({params}:{params:Promise<{code:strin
      <b>إدارة سير الورشة</b><p style={{fontSize:13,color:"#5f7c8b"}}>المرحلة المسموح بها: {phase===0?"انتظار":phase}</p>
      {["الافتتاح","أسلوبي","المنتج والتقويم","التخطيط","الختام"].map((v,i)=><button key={v} onClick={()=>go([0,4,9,18,45][i])} style={{display:"block",width:"100%",margin:"8px 0",padding:12,textAlign:"right",borderRadius:10,border:"1px solid #d8e6e9",background:i===(phase||0)?"#e8f5f3":"white",cursor:"pointer"}}>{v}</button>)}
      <hr/><p style={{fontSize:13}}>لتفعيل مرحلة جديدة: افتح لوحة المدرب واضغط «إذن البدء». لا يُسمح للمتدربين بتجاوزها.</p>
-     <button className="outlineButton" onClick={()=>setBusy(v=>!v)}><RefreshCw size={15}/> {updated||"آخر تحديث غير متاح"}</button>
+     <div style={{display:"flex",gap:5,alignItems:"center",fontSize:12,color:"#66818b"}}><RefreshCw size={14}/> {updated||"آخر تحديث غير متاح"}</div>
    </aside>
   </div>
  </main>
