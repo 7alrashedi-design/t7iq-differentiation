@@ -1652,3 +1652,11 @@ button,input,select,textarea{font-family:inherit}
 .workshopPhaseWaiting p{line-height:1.9}
 @media(max-width:850px){.workshopPhaseDirector{grid-template-columns:1fr}}
 @media(max-width:620px){.workshopPhaseControls{grid-template-columns:1fr}}
+
+/* Interactive workshop stage — responsive and projector friendly */
+.interactiveWorkshop{font-family:Arial,"Noto Sans Arabic",sans-serif}
+.interactiveWorkshop button,.interactiveWorkshop a{font-family:inherit}
+.interactiveWorkshop button:focus-visible,.interactiveWorkshop a:focus-visible{outline:3px solid #208c85;outline-offset:3px}
+.interactiveWorkshop progress{accent-color:#208c85;min-width:140px;flex:1}
+@media(max-width:880px){.workshopPresentationLayout{grid-template-columns:1fr!important}.interactiveWorkshop{padding:8px!important}.interactiveWorkshop h1{font-size:27px!important}}
+@media print{.interactiveWorkshop header,.interactiveWorkshop aside,.interactiveWorkshop button{display:none!important}.workshopPresentationLayout{display:block!important}.interactiveWorkshop section{box-shadow:none!important}}
