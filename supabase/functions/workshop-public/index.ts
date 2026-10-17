@@ -32,6 +32,48 @@ Deno.serve(async (req: Request) => {
       return json({ session: data });
     }
 
+    if (action === "live_summary") {
+      const code = String(body.code ?? "").trim().toUpperCase();
+      if (!/^[A-Z0-9_-]{4,24}$/.test(code)) return json({error:"invalid_code"},400);
+      const {data:activeSession}=await db.from("workshop_sessions")
+        .select("id,status").eq("session_code",code).in("status",["open","live"]).maybeSingle();
+      if (!activeSession) return json({error:"session_not_found"},404);
+      const {data:participants,error:partErr}=await db.from("workshop_participants")
+        .select("id,completed_at").eq("session_id",activeSession.id);
+      if (partErr) throw partErr;
+      const ids=(participants??[]).map((p:any)=>p.id);
+      let completedFingerprints=0,productCount=0,completedProducts=0;
+      const distribution:Record<string,number>={W:0,O:0,V:0,T:0,K:0};
+      const levels:Record<string,number>={L1:0,L2:0,L3:0};
+      if (ids.length) {
+        // Scoped to the active session; do not expose names or participant-level records.
+        for(let i=0;i<ids.length;i+=100) {
+          const group=ids.slice(i,i+100);
+          const [{data:fps},{data:pps}]=await Promise.all([
+            db.from("fingerprint_results").select("primary_code").in("participant_id",group),
+            db.from("participant_products").select("current_level,status").in("participant_id",group)
+          ]);
+          for(const fp of fps??[]) {
+            completedFingerprints++;
+            const raw=String((fp as any).primary_code??"").toUpperCase();
+            const label=raw.startsWith("K")?"K":raw;
+            if(label in distribution)distribution[label]++;
+          }
+          for(const pp of pps??[]) {
+            productCount++;
+            if((pp as any).status==="completed")completedProducts++;
+            const lvl=Number((pp as any).current_level);
+            if(lvl>=1&&lvl<=3)levels["L"+lvl]++;
+          }
+        }
+      }
+      return json({
+        totals:{participants:ids.length,fingerprints:completedFingerprints,products:productCount,
+          completed_products:completedProducts,completed_workshop:(participants??[]).filter((p:any)=>p.completed_at).length},
+        distribution,levels
+      });
+    }
+
     if (action === "demo_summary") {
       const code = String(body.code ?? "DEMO26").trim().toUpperCase();
       const { data: demoSession } = await db.from("workshop_sessions")
