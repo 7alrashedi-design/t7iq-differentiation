@@ -116,7 +116,7 @@ export default function InteractiveWorkshop(){
  {allowedResults&&<button onClick={()=>void updateSettings({presenter_mode:"results",presenter_target_slide:page})} disabled={busy||!auth}>إظهار نتائج {resultScreen?.label}</button>}
  {mode!=="slide"&&<button onClick={()=>void updateSettings({presenter_mode:"slide",presenter_target_slide:page})} disabled={busy||!auth}>العودة إلى الشريحة</button>}
  </div>}
- {!allowedActivity&&!allowedResults&&<div className="kahootControlNotice">شريحة معرفية للشرح. أدوات بدء النشاط والباركود والنتائج تظهر فقط في الشرائح المخصصة.</div>
+ {!allowedActivity&&!allowedResults&&<div className="kahootControlNotice">شريحة معرفية للشرح. أدوات بدء النشاط والباركود والنتائج تظهر فقط في الشرائح المخصصة.</div>}
  <div className="kahootControlNotice">{auth?"أوامر المدرب محمية بصلاحيات حساب الورشة.":"لإدارة الأنشطة، افتح العرض وأنت مسجل دخولك بحساب المدرب."}</div>
  </aside></div>
  <nav className="cairoBar kahootNav"><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={!page}>السابق</button><button onClick={()=>setPage(p=>Math.min(43,p+1))} disabled={page===43}>التالي</button><button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button><button onClick={()=>setPanel(p=>!p)}>الشرائح / التحرير</button></nav>
