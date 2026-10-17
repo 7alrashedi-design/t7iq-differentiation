@@ -31,3 +31,53 @@
 .cairoAlert{font-size:1.2vw;color:#8b5c21;background:#fff2d0;padding:.4em .8em;max-width:65%}
 @media(hover:none){.cairoBar{opacity:1}}
 @media(max-width:650px){.cairoBody h1{font-size:clamp(20px,4vw,29px)}.cairoBody p{font-size:clamp(12px,3vw,20px)}.cairoHead{font-size:9px}.cairoFoot{font-size:8px}.cairoBar{opacity:1}.cairoEntry img{width:70px}}
+
+/* Trainer-controlled live presentation: Cairo visual language, El Messiri, 16:9 stage. */
+.kahootRoom{font-family:'El Messiri',Arial,sans-serif!important}
+.kahootFrame{display:grid;grid-template-columns:minmax(0,1fr) clamp(220px,19vw,340px);width:min(100vw,1920px);height:min(100dvh,1080px);align-items:stretch;direction:ltr;background:#f2f8fb}
+.kahootMain{width:100%;height:100%;min-width:0;aspect-ratio:auto;direction:rtl}
+.kahootMain .cairoHead{display:flex;justify-content:space-between;gap:15px}
+.kahootLiveTag{background:#e5eff7;border:1px solid #bee4ec;color:#3277a6;border-radius:18px;padding:3px 12px;font-size:.78em}
+.kahootBody{padding-right:7%;padding-left:6%}
+.kahootBody h1{color:var(--local-accent,#3485c2)}
+.kahootSlideContent{cursor:pointer;border:2px solid transparent;border-radius:18px;padding:8px 12px;transition:border-color .2s}
+.kahootSlideContent:hover{border-color:#a6e9ed;background:#f8fcfe}
+.kahootLarge h1{font-size:clamp(34px,4.5vw,84px)}.kahootLarge p{font-size:clamp(22px,2.6vw,50px)}
+.kahootRight{direction:rtl;display:flex;flex-direction:column;gap:10px;background:#102f4a;color:white;padding:clamp(12px,1.4vw,26px);border-right:5px solid #34d0db;overflow-y:auto;min-height:0}
+.kahootRightTitle{font-weight:800;font-size:clamp(16px,1.45vw,28px);display:flex;justify-content:space-between;align-items:center}
+.kahootRight p{color:#b8d2de;font-size:13px;line-height:1.7}
+.kahootPulse{width:10px;height:10px;border-radius:100%;background:#48e0ad;box-shadow:0 0 12px #48e0ad}
+.kahootStat{border-radius:14px;background:#ffffff13;display:flex;align-items:center;gap:13px;padding:10px 13px}
+.kahootStat b{font-size:clamp(25px,2.25vw,46px);font-weight:850;min-width:50px;color:#7de6e0}
+.kahootStat span{font-size:clamp(12px,1vw,17px);line-height:1.6}
+.kahootRight small{font-size:11px;color:#a8c5d3}
+.kahootActions{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+.kahootActions button{font:inherit;border-radius:10px;border:1px solid #ffffff40;background:#238a9e;color:white;font-size:12px;font-weight:750;padding:12px;cursor:pointer}
+.kahootActions button:nth-child(2){background:#3a7bc0}
+.kahootActions button:nth-child(3){background:#ffffff18}
+.kahootActions button:disabled{opacity:.45;cursor:not-allowed}
+.kahootControlNotice{font-size:11px;color:#bed5e2;line-height:1.75}
+.kahootJoin{display:flex;align-items:center;gap:clamp(15px,3vw,55px);margin-top:2vw}
+.kahootJoin img{width:clamp(160px,20vw,320px);max-height:32vh;aspect-ratio:1;object-fit:contain;border:10px solid #fff;box-shadow:0 3px 15px #0002;border-radius:16px}
+.kahootJoin div{display:flex;flex-direction:column;gap:10px;font-size:clamp(16px,1.5vw,26px);color:#2679b6}
+.kahootJoin strong{font-size:1.25em}.kahootJoin code{font-family:Arial,sans-serif;font-size:.6em;overflow-wrap:anywhere;direction:ltr}
+.kahootSummary{font-size:clamp(16px,1.3vw,26px)!important}
+.kahootMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:95%}
+.kahootMetrics>div{display:flex;flex-direction:column;text-align:center;background:#ecf8fa;border-radius:16px;padding:13px;border-bottom:6px solid #35cfdb}
+.kahootMetrics b{font-family:Arial,sans-serif;font-size:clamp(30px,3.8vw,70px);color:#2682ba}
+.kahootMetrics span{font-size:clamp(12px,1.15vw,21px);color:#35709a}
+.kahootDistribution{display:flex;flex-direction:column;gap:8px;width:85%;margin-top:12px}
+.kahootDistribution>div{display:grid;grid-template-columns:95px 1fr 45px;align-items:center;gap:10px;color:#2571a1;font-size:clamp(13px,1.2vw,20px)}
+.kahootDistribution>div>div{height:17px;background:#e7f0f5;border-radius:20px;overflow:hidden}
+.kahootDistribution i{display:block;height:100%;background:#2a9dba;border-radius:20px}
+.kahootNav{opacity:.15}.kahootNav:hover,.kahootNav:focus-within{opacity:1}
+.kahootPanel{width:340px;max-height:90dvh;overflow:auto}
+.kahootSlides{display:flex;flex-direction:column;gap:4px;max-height:52dvh;overflow:auto}
+.kahootSlides button{text-align:right;border:1px solid #c6e2ea;border-radius:8px;background:#f5fafb;padding:7px 9px;cursor:pointer;font:inherit;color:#2e6794}
+.kahootSlides button.selected{background:#daf3f0;border-color:#28a6a8}
+.kahootBackdrop{position:fixed;inset:0;background:#0a1b2bbd;display:flex;align-items:center;justify-content:center;z-index:100;padding:15px;direction:rtl}
+.kahootEditDialog{width:min(650px,95vw);max-height:92dvh;overflow:auto;background:white;color:#1d4f78;border-radius:20px;box-shadow:0 18px 80px #0008;padding:27px;font:inherit;display:flex;flex-direction:column;gap:12px}
+.kahootEditDialog h2{font-size:24px}.kahootEditDialog label{display:flex;flex-direction:column;gap:5px;font-weight:700}
+.kahootEditDialog input,.kahootEditDialog textarea,.kahootEditDialog select{font:inherit;padding:10px;border:1px solid #b9dce6;border-radius:9px;color:#205476;background:white}
+.kahootEditDialog>div{display:flex;gap:10px}.kahootEditDialog button{font:inherit;padding:10px 20px;border:0;border-radius:9px;background:#2784aa;color:white;cursor:pointer}
+@media(max-width:800px){.kahootFrame{grid-template-columns:minmax(0,1fr) 170px}.kahootRight{padding:8px;gap:7px}.kahootStat{padding:6px}.kahootStat b{font-size:20px;min-width:24px}.kahootStat span{font-size:10px}.kahootRightTitle{font-size:13px}.kahootActions button{font-size:10px;padding:7px}.kahootBody{padding:5%}.kahootBody h1{font-size:clamp(20px,3vw,34px)}.kahootBody p{font-size:clamp(13px,2vw,21px)}.kahootJoin img{width:120px}}
