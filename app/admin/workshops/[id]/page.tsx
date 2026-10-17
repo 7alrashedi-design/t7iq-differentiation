@@ -178,6 +178,7 @@ export default function WorkshopDashboard(){
         <p>{session.trainer_names?.join("، ")} {session.venue?"• "+session.venue:""}</p>
       </div>
       <div className="liveHeaderActions">
+        <Link className="outlineButton" href={"/present/"+session.session_code} target="_blank">قاعة العرض التفاعلية <ExternalLink size={15}/></Link>
         <button className="outlineButton" onClick={()=>setAuto(v=>!v)}>{auto?<PauseCircle size={16}/>:<PlayCircle size={16}/>} {auto?"إيقاف التحديث":"تشغيل التحديث"}</button>
         <button className="outlineButton" onClick={()=>void load()}><RefreshCw size={16}/> تحديث</button>
         <button className="outlineButton" onClick={exportCSV}><Download size={16}/> CSV</button>
