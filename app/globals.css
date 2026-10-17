@@ -1660,3 +1660,36 @@ button,input,select,textarea{font-family:inherit}
 .interactiveWorkshop progress{accent-color:#208c85;min-width:140px;flex:1}
 @media(max-width:880px){.workshopPresentationLayout{grid-template-columns:1fr!important}.interactiveWorkshop{padding:8px!important}.interactiveWorkshop h1{font-size:27px!important}}
 @media print{.interactiveWorkshop header,.interactiveWorkshop aside,.interactiveWorkshop button{display:none!important}.workshopPresentationLayout{display:block!important}.interactiveWorkshop section{box-shadow:none!important}}
+
+/* Projector-first immersive presenter. Screen contains no administrative sidebar. */
+.presenterStage{position:relative;min-height:100dvh;background:#071827;color:#fff;display:flex;justify-content:center;align-items:center;overflow:hidden;padding:0!important;font-family:Arial,"Noto Sans Arabic",sans-serif}
+.presenterCanvas{width:min(100vw,177.778dvh);height:min(100dvh,56.25vw);aspect-ratio:16/9;position:relative;display:flex;flex-direction:column;background:radial-gradient(ellipse at 5% 85%,#143d51 0%,transparent 45%),linear-gradient(125deg,#0a1d31,#102e44 65%,#173947);overflow:hidden;isolation:isolate}
+.presenterCanvas:before{content:"";position:absolute;inset:0 auto 0 0;width:1.1%;background:var(--phase-color);z-index:2}
+.presenterCanvas:after{content:"";position:absolute;width:37%;aspect-ratio:1;border:2px solid #ffffff1a;border-radius:50%;left:-15%;bottom:-45%;pointer-events:none}
+.presenterTopline,.presenterBottom{display:flex;align-items:center;justify-content:space-between;gap:1.5em;position:relative;z-index:1;color:#c6e2e8}
+.presenterTopline{padding:3.1% 5% 1%;font-size:clamp(11px,1.25vw,25px);font-weight:700}
+.presenterTopline span:last-child{color:#fff;background:color-mix(in srgb,var(--phase-color),transparent 65%);border:1px solid var(--phase-color);border-radius:2em;padding:.35em .9em}
+.presenterContent{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 7% 3%;min-height:0;position:relative;z-index:1}
+.presenterEyebrow{color:#95d9d2;font-size:clamp(13px,1.35vw,26px);margin-bottom:1.3%}
+.presenterContent h1{font-size:clamp(29px,4.2vw,83px);line-height:1.45;font-weight:850;color:#fff;max-width:95%;margin:0 0 2%;letter-spacing:-.025em}
+.presenterContent p{font-size:clamp(21px,2.45vw,48px);line-height:1.75;font-weight:500;color:#e0eef3;max-width:94%;margin:0}
+.presenterBottom{font-size:clamp(12px,1.2vw,24px);padding:1.4% 5% 2.1%;border-top:1px solid #ffffff20}
+.presenterProgress{position:absolute;right:0;bottom:0;height:5px;background:var(--phase-color);transition:width .25s}
+.presenterToolbar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px;background:#091a2beb;border:1px solid #ffffff30;border-radius:48px;z-index:40;opacity:.1;transition:opacity .2s}
+.presenterToolbar:hover,.presenterToolbar:focus-within{opacity:1}
+.presenterToolbar button{display:flex;align-items:center;gap:6px;justify-content:center;background:#ffffff16;color:#fff;border:0;border-radius:28px;padding:10px 15px;cursor:pointer;font:inherit;font-size:14px}
+.presenterToolbar button:disabled{opacity:.25;cursor:default}
+.presenterControls{position:fixed;top:12px;left:12px;z-index:50;width:min(330px,90vw);max-height:90vh;overflow:auto;border:1px solid #ffffff35;background:#0f293c;color:#fff;border-radius:18px;padding:20px;box-shadow:0 12px 60px #0009;display:flex;flex-direction:column;gap:10px}
+.presenterControls header{display:flex;align-items:center;justify-content:space-between}
+.presenterControls button,.presenterControls a{border:1px solid #ffffff35;border-radius:10px;padding:10px 13px;color:#fff;background:#ffffff12;text-align:right;cursor:pointer;text-decoration:none}
+.presenterControls p,.presenterControls small{font-size:13px;line-height:1.7;color:#c8e0e8}
+.presenterActivity{display:flex;gap:2.4vw;align-items:center;margin-top:2vw}
+.presenterQr{width:clamp(105px,13vw,270px);height:auto;aspect-ratio:1;background:#fff;padding:10px;border-radius:14px}
+.presenterActivity div{display:flex;flex-direction:column;gap:10px}
+.presenterActivity strong{font-size:clamp(18px,2vw,34px)}
+.presenterActivity span{font-size:clamp(13px,1.1vw,20px);color:#d4e2ec;overflow-wrap:anywhere}
+.presenterActivity a{color:#a3e7db;font-size:clamp(14px,1.2vw,22px)}
+.presenterLock,.presenterNotice{margin-top:1.4vw;font-size:clamp(14px,1.4vw,26px);background:#f8b93820;border:1px solid #f8b93877;color:#ffe3a1;padding:.7em 1em;border-radius:12px;display:flex;gap:10px;align-items:center}
+.presenterStats{margin-top:1.3vw;width:min(70%,850px)}.presenterStats h2{font-size:1.5vw}.presenterStats>div{display:flex;gap:1.2vw;align-items:center;margin:7px 0;font-size:1.25vw}.presenterStats progress{flex:1;accent-color:#4bd8be;height:15px}
+@media(hover:none){.presenterToolbar{opacity:1}}
+@media(max-width:680px){.presenterContent h1{font-size:clamp(20px,5vw,31px)}.presenterContent p{font-size:clamp(13px,3.4vw,22px)}.presenterTopline{font-size:11px}.presenterEyebrow{font-size:12px}.presenterBottom{font-size:10px}.presenterToolbar{opacity:1}.presenterQr{width:85px}.presenterActivity{margin-top:8px}}
