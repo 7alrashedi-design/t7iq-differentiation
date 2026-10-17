@@ -42,7 +42,8 @@ Deno.serve(async (req: Request) => {
         .select("id,completed_at").eq("session_id",activeSession.id);
       if (partErr) throw partErr;
       const ids=(participants??[]).map((p:any)=>p.id);
-      let completedFingerprints=0,productCount=0,completedProducts=0;
+      let completedFingerprints=0,completedProducts=0;
+      const selectedParticipants=new Set<string>();
       const distribution:Record<string,number>={W:0,O:0,V:0,T:0,K:0};
       const levels:Record<string,number>={L1:0,L2:0,L3:0};
       if (ids.length) {
@@ -51,7 +52,7 @@ Deno.serve(async (req: Request) => {
           const group=ids.slice(i,i+100);
           const [{data:fps},{data:pps}]=await Promise.all([
             db.from("fingerprint_results").select("primary_code").in("participant_id",group),
-            db.from("participant_products").select("current_level,status").in("participant_id",group)
+            db.from("participant_products").select("participant_id,current_level,status").in("participant_id",group)
           ]);
           for(const fp of fps??[]) {
             completedFingerprints++;
@@ -60,7 +61,7 @@ Deno.serve(async (req: Request) => {
             if(label in distribution)distribution[label]++;
           }
           for(const pp of pps??[]) {
-            productCount++;
+            selectedParticipants.add(String((pp as any).participant_id));
             if((pp as any).status==="completed")completedProducts++;
             const lvl=Number((pp as any).current_level);
             if(lvl>=1&&lvl<=3)levels["L"+lvl]++;
@@ -68,7 +69,7 @@ Deno.serve(async (req: Request) => {
         }
       }
       return json({
-        totals:{participants:ids.length,fingerprints:completedFingerprints,products:productCount,
+        totals:{participants:ids.length,fingerprints:completedFingerprints,products:selectedParticipants.size,
           completed_products:completedProducts,completed_workshop:(participants??[]).filter((p:any)=>p.completed_at).length},
         distribution,levels
       });
