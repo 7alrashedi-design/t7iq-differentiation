@@ -65,4 +65,3 @@ export default function InteractiveWorkshop({params}:{params:Promise<{code:strin
   </aside>}
  </main>
 }
-}
