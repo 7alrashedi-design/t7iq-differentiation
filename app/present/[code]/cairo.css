@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap');
+.cairoPresenter{background:#fff!important;color:#347fb9!important;font-family:'El Messiri',Arial,sans-serif!important}
+.cairoPresenter:before{background:#37d0dc!important;width:8%!important;clip-path:polygon(0 0,100% 0,35% 80%,0 80%)}
+.cairoPresenter:after{border:none!important;background:#d1e800!important;left:auto!important;right:-10%!important;bottom:-70%!important;width:20%!important;clip-path:polygon(0 0,100% 5%,40% 100%,0 100%)}
+.cairoPresenter .presenterTopline,.cairoPresenter .presenterBottom{color:#357fbf!important}
+.cairoPresenter .presenterContent h1{color:#3980bf!important;font-family:'El Messiri',Arial,sans-serif!important}
+.cairoPresenter .presenterContent p{color:#315e88!important;font-family:'El Messiri',Arial,sans-serif!important}
+.cairoPresenter .presenterTopline span:last-child{background:#35cedc!important;color:#fff!important;border:none!important}
+.cairoPresenter .presenterProgress{background:#098be3!important}
+.cairoPresenter .presenterBottom{border-color:#dfe9ef!important}
+
+.cairoShell{position:fixed;inset:0;background:#e9edf1;display:flex;justify-content:center;align-items:center;font-family:'El Messiri',Arial,sans-serif;color:#347fb9;direction:rtl;z-index:50}
+.cairoStage{height:min(100dvh,56.25vw);width:min(100vw,177.778dvh);background:#fff;position:relative;overflow:hidden;aspect-ratio:16/9;display:flex;flex-direction:column;isolation:isolate}
+.cairoTopAngle{position:absolute;right:0;top:0;width:21%;height:74%;background:#34d3de;clip-path:polygon(0 0,100% 0,100% 100%,57% 100%);z-index:-1}
+.cairoLimeAngle{position:absolute;left:0;bottom:0;width:18%;height:55%;background:#d3df00;clip-path:polygon(0 0,100% 100%,0 100%);z-index:-1}
+.cairoHead{font-size:clamp(12px,1.25vw,24px);color:#3d85bf;margin:3% 7% 0;text-align:right;font-weight:700}
+.cairoBody{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 10%;min-height:0;gap:1.1vw}
+.cairoBody small{font-size:clamp(11px,1vw,20px);color:#5b95bd}
+.cairoBody h1{font-family:'El Messiri',Arial,sans-serif;font-size:clamp(25px,4vw,75px);line-height:1.45;color:#3d86c0;margin:0;max-width:90%;font-weight:700}
+.cairoBody p{font-size:clamp(17px,2.25vw,44px);line-height:1.75;color:#336c9c;margin:0;max-width:85%}
+.cairoFoot{margin:0 5% 2%;height:5%;border-bottom:5px solid #0f8cdd;display:flex;justify-content:space-between;align-items:center;color:#47818c;font-size:clamp(10px,1vw,20px)}
+.cairoFoot b{background:#e0e900;padding:0 12px;font-weight:700;color:#235e87}
+.cairoBar{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:7px;background:#12324de8;padding:8px;border-radius:35px;opacity:.12;transition:opacity .2s;z-index:60}
+.cairoBar:hover,.cairoBar:focus-within{opacity:1}.cairoBar button{background:#ffffff20;border:0;color:white;border-radius:30px;padding:8px 14px;cursor:pointer;font:inherit}.cairoBar button:disabled{opacity:.3}
+.cairoPanel{position:fixed;left:12px;top:12px;background:#fff;box-shadow:0 12px 45px #0005;border:1px solid #c6dce7;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;z-index:70}
+.cairoPanel a,.cairoPanel button{padding:9px;border-radius:7px;background:#e9f5f8;border:1px solid #c4dce7;color:#136a9e;text-align:center;text-decoration:none;cursor:pointer;font:inherit}
+.cairoFormula{display:flex;align-items:center;gap:1vw;margin-top:1vw;flex-wrap:wrap}.cairoFormula span{background:#32cada;color:#154b7c;padding:.4em .6em;font-size:1.7vw;font-weight:700}.cairoFormula span:nth-child(3n){background:#dbdf00}
+.cairoBloom{display:flex;gap:.5vw;flex-wrap:wrap}.cairoBloom span{color:#fff;padding:.5em .7em;font-size:1.6vw;font-weight:700}
+.cairoMatrix{width:83%;display:grid;grid-template-columns:repeat(3,1fr);font-size:1.2vw;text-align:center}.cairoMatrix>b{background:#3b85c0;color:#fff;padding:.35em}.cairoMatrixRow{display:contents}.cairoMatrixRow span{padding:.2em;background:#e9eff3;border-bottom:1px solid white;color:#2e698f}
+.cairoEntry{display:flex;align-items:center;gap:2vw}.cairoEntry img{width:min(12vw,180px);border:2px solid #e4f1f4}.cairoEntry span{font-size:1.4vw}
+.cairoAlert{font-size:1.2vw;color:#8b5c21;background:#fff2d0;padding:.4em .8em;max-width:65%}
+@media(hover:none){.cairoBar{opacity:1}}
+@media(max-width:650px){.cairoBody h1{font-size:clamp(20px,4vw,29px)}.cairoBody p{font-size:clamp(12px,3vw,20px)}.cairoHead{font-size:9px}.cairoFoot{font-size:8px}.cairoBar{opacity:1}.cairoEntry img{width:70px}}
