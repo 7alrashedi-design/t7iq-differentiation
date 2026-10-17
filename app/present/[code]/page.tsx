@@ -48,7 +48,7 @@ export default function InteractiveWorkshop(){
  useEffect(()=>{void refresh();const timer=setInterval(()=>void refresh(),4000);return()=>clearInterval(timer)},[refresh]);
  useEffect(()=>{if(!code)return;QRCode.toDataURL(location.origin+"/w/"+code,{width:500,margin:1}).then(setQr).catch(()=>{})},[code]);
  useEffect(()=>{void db.auth.getUser().then(({data})=>setAuth(Boolean(data.user)));const {data}=db.auth.onAuthStateChange((_event,s)=>setAuth(Boolean(s?.user)));return()=>data.subscription.unsubscribe()},[db]);
- useEffect(()=>{const f=(e:KeyboardEvent)=>{if((e.target as HTMLElement)?.closest("input,textarea,select,[contenteditable]"))return;if(e.key==="ArrowLeft")navigate(page+1);if(e.key==="ArrowRight")navigate(page-1);if(e.key.toLowerCase()==="f")void document.documentElement.requestFullscreen?.().catch(()=>{})};window.addEventListener("keydown",f);return()=>window.removeEventListener("keydown",f)},[]);
+ useEffect(()=>{const f=(e:KeyboardEvent)=>{if((e.target as HTMLElement)?.closest("input,textarea,select,[contenteditable]"))return;if(e.key==="ArrowLeft")setPage(p=>Math.min(43,p+1));if(e.key==="ArrowRight")setPage(p=>Math.max(0,p-1));if(e.key.toLowerCase()==="f")void document.documentElement.requestFullscreen?.().catch(()=>{})};window.addEventListener("keydown",f);return()=>window.removeEventListener("keydown",f)},[]);
  function edit(){if(!auth){setStatus("سجّل الدخول بحساب المدرب قبل التحرير.");return}setDraft({title,body,accent,scale});setEditing(true);setPanel(false)}
  async function updateSettings(change:Record<string,unknown>){
   if(!session?.id||!auth){setStatus("يلزم تسجيل الدخول بحساب مخول لإدارة الورشة.");return false}
