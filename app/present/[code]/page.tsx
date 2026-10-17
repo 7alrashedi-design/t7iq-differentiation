@@ -7,6 +7,9 @@ import {cairoDeck} from "@/lib/workshop/cairoDeck";
 import "./cairo.css";
 type Stats={totals:{participants:number;fingerprints:number;products:number;completed_products:number;completed_workshop:number};distribution:Record<string,number>;levels:Record<string,number>};
 type Mode="slide"|"activity"|"results";
+// Each interactive mode belongs exclusively to its designated slide; all other slides stay educational.
+const activityScreens:Record<number,{phase:number;label:string}>={3:{phase:1,label:"مقياس أسلوبي"},28:{phase:2,label:"اختيار المنتج وتقييمه"}};
+const resultScreens:Record<number,{phase:number;label:string}>={4:{phase:1,label:"نتائج أسلوبي"},30:{phase:2,label:"ملخص المنتجات"}};
 const labels:{[key:string]:string}={W:"كتابي",O:"شفهي",V:"فني",K:"حركي",T:"تقني"};
 const hues:{[key:string]:string}={W:"#2585c7",O:"#e28a26",V:"#a650c7",K:"#2d9b66",T:"#d44f70"};
 export default function InteractiveWorkshop(){
@@ -23,7 +26,10 @@ export default function InteractiveWorkshop(){
  const scale=override.scale==="large"?"large":"normal";
  const activePhase=session?.settings?.trainer_controlled_phases===true?Number(session.settings.active_phase??0):3;
  const kind=current[2],required=kind==="style"?1:kind==="assessment"?2:kind==="planning"||kind==="table"||kind==="bloom"?3:0;
- const mode:Mode=session?.settings?.presenter_mode==="results"?"results":session?.settings?.presenter_mode==="activity"?"activity":"slide";
+ const activityScreen=activityScreens[page];const resultScreen=resultScreens[page];
+ const allowedActivity=Boolean(activityScreen),allowedResults=Boolean(resultScreen);
+ const savedMode=session?.settings?.presenter_mode;
+ const mode:Mode=(session?.settings?.presenter_target_slide===page&&savedMode==="activity"&&allowedActivity)?"activity":(session?.settings?.presenter_target_slide===page&&savedMode==="results"&&allowedResults)?"results":"slide";
  const joinUrl=typeof window!=="undefined"?location.origin+"/w/"+code:"";
  const refresh=useCallback(async()=>{
   if(!code)return;
@@ -42,7 +48,7 @@ export default function InteractiveWorkshop(){
  useEffect(()=>{void refresh();const timer=setInterval(()=>void refresh(),4000);return()=>clearInterval(timer)},[refresh]);
  useEffect(()=>{if(!code)return;QRCode.toDataURL(location.origin+"/w/"+code,{width:500,margin:1}).then(setQr).catch(()=>{})},[code]);
  useEffect(()=>{void db.auth.getUser().then(({data})=>setAuth(Boolean(data.user)));const {data}=db.auth.onAuthStateChange((_event,s)=>setAuth(Boolean(s?.user)));return()=>data.subscription.unsubscribe()},[db]);
- useEffect(()=>{const f=(e:KeyboardEvent)=>{if((e.target as HTMLElement)?.closest("input,textarea,select,[contenteditable]"))return;if(e.key==="ArrowLeft")setPage(p=>Math.min(43,p+1));if(e.key==="ArrowRight")setPage(p=>Math.max(0,p-1));if(e.key.toLowerCase()==="f")void document.documentElement.requestFullscreen?.().catch(()=>{})};window.addEventListener("keydown",f);return()=>window.removeEventListener("keydown",f)},[]);
+ useEffect(()=>{const f=(e:KeyboardEvent)=>{if((e.target as HTMLElement)?.closest("input,textarea,select,[contenteditable]"))return;if(e.key==="ArrowLeft")navigate(page+1);if(e.key==="ArrowRight")navigate(page-1);if(e.key.toLowerCase()==="f")void document.documentElement.requestFullscreen?.().catch(()=>{})};window.addEventListener("keydown",f);return()=>window.removeEventListener("keydown",f)},[]);
  function edit(){if(!auth){setStatus("سجّل الدخول بحساب المدرب قبل التحرير.");return}setDraft({title,body,accent,scale});setEditing(true);setPanel(false)}
  async function updateSettings(change:Record<string,unknown>){
   if(!session?.id||!auth){setStatus("يلزم تسجيل الدخول بحساب مخول لإدارة الورشة.");return false}
@@ -55,13 +61,15 @@ export default function InteractiveWorkshop(){
  }
  async function save(){const entries={...(session?.settings?.presenter_slides??{}),[String(page)]:draft};if(await updateSettings({presenter_slides:entries}))setEditing(false)}
  async function startActivity(){
-  if(required===0){await updateSettings({presenter_mode:"activity"});return}
+  if(!allowedActivity){setStatus("الباركود متاح فقط في شريحة بدء النشاط المخصصة.");return}
   if(session?.settings?.trainer_controlled_phases!==true){setStatus("فعّل التحكم المرحلي من لوحة إدارة الورشة أولًا.");return}
   if(required>activePhase+1){setStatus("يجب فتح المراحل التعليمية بالترتيب.");return}
-  await updateSettings({presenter_mode:"activity",active_phase:Math.max(activePhase,required)});
+  await updateSettings({presenter_mode:"activity",presenter_target_slide:page,active_phase:Math.max(activePhase,required)});
  }
  const total=stats?.totals.participants??0,finished=kind==="style"?stats?.totals.fingerprints??0:kind==="assessment"?stats?.totals.products??0:stats?.totals.completed_workshop??0;
- const resultsKind=kind==="style"?"بصمات أسلوبي":kind==="assessment"?"تقييم المنتجات":"مخرجات الورشة";
+ const resultsKind=resultScreen?.label??"نتائج النشاط";
+ function navigate(next:number){setPage(Math.max(0,Math.min(43,next)));setStatus("")}
+ const rightCountLabel=activityScreen?.label??resultScreen?.label??"متابعة الجلسة";
  return <main className="cairoShell kahootRoom" dir="rtl">
  <div className="kahootFrame">
  <section className="cairoStage kahootMain" style={{["--local-accent" as string]:accent}}>
@@ -96,21 +104,23 @@ export default function InteractiveWorkshop(){
  </section>
  <aside className="kahootRight" aria-label="متابعة الجلسة الحالية">
  <div className="kahootRightTitle">إحصاءات الجلسة <span className="kahootPulse"/></div>
- <p>{session?.title??"جارٍ تحميل الجلسة"}</p>
+ <p>{session?.title??"جارٍ تحميل الجلسة"}</p><div className="kahootPhaseLabel">{rightCountLabel}</div>
  <div className="kahootStat"><b>{total}</b><span>متدرب في هذه الجلسة</span></div>
  <div className="kahootStat"><b>{stats?.totals.fingerprints??0}</b><span>أكملوا أسلوبي</span></div>
  <div className="kahootStat"><b>{stats?.totals.products??0}</b><span>اختاروا المنتج</span></div>
  <div className="kahootStat"><b>{stats?.totals.completed_workshop??0}</b><span>أكملوا الورشة</span></div>
  <small>آخر تحديث: {last||"بانتظار الاتصال"}</small>
- <div className="kahootActions">
- <button onClick={()=>void startActivity()} disabled={busy||!auth}>بدء النشاط وعرض QR</button>
- <button onClick={()=>void updateSettings({presenter_mode:"results"})} disabled={busy||!auth}>إنهاء العرض وإظهار النتائج</button>
- <button onClick={()=>void updateSettings({presenter_mode:"slide"})} disabled={busy||!auth}>العودة إلى الشريحة</button>
- </div>
+ {(allowedActivity||allowedResults)&&<div className="kahootActions">
+ {allowedActivity&&<button onClick={()=>void startActivity()} disabled={busy||!auth}>بدء {activityScreen?.label} وعرض QR</button>}
+ {allowedActivity&&<button onClick={()=>navigate(page===3?4:30)} disabled={busy}>الانتقال إلى شريحة النتائج</button>}
+ {allowedResults&&<button onClick={()=>void updateSettings({presenter_mode:"results",presenter_target_slide:page})} disabled={busy||!auth}>إظهار نتائج {resultScreen?.label}</button>}
+ {mode!=="slide"&&<button onClick={()=>void updateSettings({presenter_mode:"slide",presenter_target_slide:page})} disabled={busy||!auth}>العودة إلى الشريحة</button>}
+ </div>}
+ {!allowedActivity&&!allowedResults&&<div className="kahootControlNotice">شريحة معرفية للشرح. أدوات بدء النشاط والباركود والنتائج تظهر فقط في الشرائح المخصصة.</div>
  <div className="kahootControlNotice">{auth?"أوامر المدرب محمية بصلاحيات حساب الورشة.":"لإدارة الأنشطة، افتح العرض وأنت مسجل دخولك بحساب المدرب."}</div>
  </aside></div>
  <nav className="cairoBar kahootNav"><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={!page}>السابق</button><button onClick={()=>setPage(p=>Math.min(43,p+1))} disabled={page===43}>التالي</button><button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button><button onClick={()=>setPanel(p=>!p)}>الشرائح / التحرير</button></nav>
- {panel&&<aside className="cairoPanel kahootPanel"><h2>الشرائح وإدارة الورشة</h2><button onClick={edit} disabled={!auth}>تحرير الشريحة الحالية</button><div className="kahootSlides">{cairoDeck.map((row,i)=><button key={i} onClick={()=>{setPage(i);setPanel(false)}} className={page===i?"selected":""}>{i+1}. {row[0]}</button>)}</div><a href={session?.id?"/admin/workshops/"+session.id:"/trainer"} target="_blank">إدارة الجلسة</a><button onClick={()=>setPanel(false)}>إغلاق</button></aside>}
+ {panel&&<aside className="cairoPanel kahootPanel"><h2>الشرائح وإدارة الورشة</h2><button onClick={edit} disabled={!auth}>تحرير الشريحة الحالية</button><div className="kahootSlides">{cairoDeck.map((row,i)=><button key={i} onClick={()=>{navigate(i);setPanel(false)}} className={page===i?"selected":""}>{i+1}. {row[0]}</button>)}</div><a href={session?.id?"/admin/workshops/"+session.id:"/trainer"} target="_blank">إدارة الجلسة</a><button onClick={()=>setPanel(false)}>إغلاق</button></aside>}
  {editing&&<div className="kahootBackdrop"><section className="kahootEditDialog" role="dialog" aria-modal="true" aria-label="تحرير الشريحة"><h2>تحرير الشريحة {page+1} مباشرة</h2>
  <label>العنوان<input value={draft.title} onChange={e=>setDraft(v=>({...v,title:e.target.value}))}/></label>
  <label>النص<textarea rows={5} value={draft.body} onChange={e=>setDraft(v=>({...v,body:e.target.value}))}/></label>
