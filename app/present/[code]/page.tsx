@@ -95,7 +95,7 @@ export default function InteractiveWorkshop(){
  <h1>{title}</h1><p>{body}</p></div>
  {kind==="kwl"&&<div className="practicalKwl"><div>ماذا تعرف؟</div><div>ماذا تريد أن تعرف؟</div><div>ماذا تعلمت؟</div><div>ماذا تريد أن تفعل؟</div>{Array.from({length:16},(_,i)=><div key={i} className="practicalBlank">ـــــــــــــــــــــــ</div>)}</div>}
  {kind==="products"&&<div className="practicalProducts">{[{name:"المنتجات التقنية",color:"#41cddb"},{name:"المنتجات الشفهية",color:"#e2a32b"},{name:"المنتجات الحركية",color:"#45a272"},{name:"المنتجات المرئية",color:"#a257c2"},{name:"المنتجات الكتابية",color:"#3985c7"}].map(x=><div key={x.name} style={{borderTop:"8px solid "+x.color}}>{x.name}</div>)}</div>}
- {kind==="infographic"&&<div className="practicalCards">{body.split(" • ").filter(Boolean).slice(0,6).map((x,i)=><div key={i}><span>{i+1}</span><strong>{x}</strong></div>)}</div>}
+ {kind==="infographic"&&<div className="practicalCards">{String(body).split(" • ").filter(Boolean).slice(0,6).map((x:string,i:number)=><div key={i}><span>{i+1}</span><strong>{x}</strong></div>)}</div>}
  {kind==="formula"&&<div className="cairoFormula">{["المحتوى","+","العملية","+","المنتج","=","تجربة تعلم"].map((x,i)=><span key={i}>{x}</span>)}</div>}
  {kind==="bloom"&&<div className="cairoBloom">{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><span key={i} style={{background:["#d7e800","#54c9d5","#3bb0df","#388acb","#2870ae","#194f7f"][i]}}>{x}</span>)}</div>}
  {kind==="table"&&<div className="cairoMatrix"><b>العملية</b><b>المحتوى</b><b>المنتج</b>{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><div key={x} className="cairoMatrixRow"><span>{x}</span><span>{"الوحدة التعليمية"}</span><span>{["مثال","رسم","شرح","بحث","تبرير","تصميم"][i]}</span></div>)}</div>}
