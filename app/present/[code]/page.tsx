@@ -110,13 +110,18 @@ export default function InteractiveWorkshop(){
  <div className="kahootStat"><b>{stats?.totals.products??0}</b><span>اختاروا المنتج</span></div>
  <div className="kahootStat"><b>{stats?.totals.completed_workshop??0}</b><span>أكملوا الورشة</span></div>
  <small>آخر تحديث: {last||"بانتظار الاتصال"}</small>
- {(allowedActivity||allowedResults)&&<div className="kahootActions">
- {allowedActivity&&<button onClick={()=>void startActivity()} disabled={busy||!auth}>بدء {activityScreen?.label} وعرض QR</button>}
- {allowedActivity&&<button onClick={()=>navigate(page===3?4:30)} disabled={busy}>الانتقال إلى شريحة النتائج</button>}
- {allowedResults&&<button onClick={()=>void updateSettings({presenter_mode:"results",presenter_target_slide:page})} disabled={busy||!auth}>إظهار نتائج {resultScreen?.label}</button>}
- {mode!=="slide"&&<button onClick={()=>void updateSettings({presenter_mode:"slide",presenter_target_slide:page})} disabled={busy||!auth}>العودة إلى الشريحة</button>}
- </div>}
- {!allowedActivity&&!allowedResults&&<div className="kahootControlNotice">شريحة معرفية للشرح. أدوات بدء النشاط والباركود والنتائج تظهر فقط في الشرائح المخصصة.</div>}
+ <div className="kahootContextualActions">
+ {allowedActivity ? <div className="kahootActions">
+ <button onClick={()=>void startActivity()} disabled={busy||!auth}>بدء {activityScreen?.label} وعرض QR</button>
+ <button onClick={()=>navigate(page===3?4:30)} disabled={busy}>انتقل إلى شريحة النتائج</button>
+ {mode!=="slide" ? <button onClick={()=>void updateSettings({presenter_mode:"slide",presenter_target_slide:page})} disabled={busy||!auth}>العودة إلى الشريحة</button> : null}
+ </div> : null}
+ {allowedResults ? <div className="kahootActions">
+ <button onClick={()=>void updateSettings({presenter_mode:"results",presenter_target_slide:page})} disabled={busy||!auth}>إظهار نتائج {resultScreen?.label}</button>
+ {mode!=="slide" ? <button onClick={()=>void updateSettings({presenter_mode:"slide",presenter_target_slide:page})} disabled={busy||!auth}>العودة إلى الشريحة</button> : null}
+ </div> : null}
+ {!allowedActivity && !allowedResults ? <div className="kahootControlNotice">شريحة تعليمية؛ أدوات النشاط تظهر فقط في الشرائح المخصصة.</div> : null}
+ </div>
  <div className="kahootControlNotice">{auth?"أوامر المدرب محمية بصلاحيات حساب الورشة.":"لإدارة الأنشطة، افتح العرض وأنت مسجل دخولك بحساب المدرب."}</div>
  </aside></div>
  <nav className="cairoBar kahootNav"><button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={!page}>السابق</button><button onClick={()=>setPage(p=>Math.min(43,p+1))} disabled={page===43}>التالي</button><button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button><button onClick={()=>setPanel(p=>!p)}>الشرائح / التحرير</button></nav>
