@@ -15,8 +15,8 @@ export default function SlideEditor(){
  }
  return <main dir="rtl" style={{maxWidth:840,margin:"auto",padding:24,fontFamily:"El Messiri,Arial",lineHeight:1.8}}>
  <Link href={"/admin/workshops/"+id}>العودة لإدارة الورشة</Link><h1>محرر عرض الورشة</h1>
- <p>الشرائح 1–44 وفق العرض المرجعي؛ التعديلات خاصة بهذه الجلسة. لا تُغير المقياس أو نتائجه.</p>
- <label>رقم الشريحة <select value={index} onChange={e=>setIndex(Number(e.target.value))}>{Array.from({length:44},(_,i)=><option key={i} value={i}>{i+1}</option>)}</select></label>
+ <p>الشرائح 1–38 وفق ملف الجزء العملي المرفق (أكتوبر 2026)؛ التعديلات خاصة بهذه الجلسة. لا تُغير المقياس أو نتائجه.</p>
+ <label>رقم الشريحة <select value={index} onChange={e=>setIndex(Number(e.target.value))}>{Array.from({length:38},(_,i)=><option key={i} value={i}>{i+1}</option>)}</select></label>
  <label style={{display:"block"}}>العنوان<input style={{display:"block",width:"100%",padding:12}} value={title} onChange={e=>setTitle(e.target.value)}/></label>
  <label style={{display:"block"}}>المتن<textarea rows={6} style={{display:"block",width:"100%",padding:12}} value={body} onChange={e=>setBody(e.target.value)}/></label>
  <button onClick={()=>void save()} disabled={!session}>حفظ التعديل</button><p role="status">{msg}</p>
