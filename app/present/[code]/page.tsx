@@ -4,12 +4,13 @@ import {useParams} from "next/navigation";
 import QRCode from "qrcode";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 import {cairoDeck} from "@/lib/workshop/cairoDeck";
+import ReferenceVisual from "./ReferenceVisual";
 import "./cairo.css";
 type Stats={totals:{participants:number;fingerprints:number;products:number;completed_products:number;completed_workshop:number};distribution:Record<string,number>;levels:Record<string,number>};
 type Mode="slide"|"activity"|"results";
 // Each interactive mode belongs exclusively to its designated slide; all other slides stay educational.
-const activityScreens:Record<number,{phase:number;label:string}>={10:{phase:1,label:"مقياس أسلوبي"},11:{phase:2,label:"منتجات التعلم"}};
-const resultScreens:Record<number,{phase:number;label:string}>={10:{phase:1,label:"ملخص أسلوبي"},11:{phase:2,label:"ملخص المنتجات"}};
+const activityScreens:Record<number,{phase:number;label:string}>={10:{phase:1,label:"مقياس أسلوبي"}};
+const resultScreens:Record<number,{phase:number;label:string}>={10:{phase:1,label:"ملخص أسلوبي"}};
 const labels:{[key:string]:string}={W:"كتابي",O:"شفهي",V:"فني",K:"حركي",T:"تقني"};
 const hues:{[key:string]:string}={W:"#2585c7",O:"#e28a26",V:"#a650c7",K:"#2d9b66",T:"#d44f70"};
 export default function InteractiveWorkshop(){
@@ -96,9 +97,10 @@ export default function InteractiveWorkshop(){
  {kind==="kwl"&&<div className="practicalKwl"><div>ماذا تعرف؟</div><div>ماذا تريد أن تعرف؟</div><div>ماذا تعلمت؟</div><div>ماذا تريد أن تفعل؟</div>{Array.from({length:16},(_,i)=><div key={i} className="practicalBlank">ـــــــــــــــــــــــ</div>)}</div>}
  {kind==="products"&&<div className="practicalProducts">{[{name:"المنتجات التقنية",color:"#41cddb"},{name:"المنتجات الشفهية",color:"#e2a32b"},{name:"المنتجات الحركية",color:"#45a272"},{name:"المنتجات المرئية",color:"#a257c2"},{name:"المنتجات الكتابية",color:"#3985c7"}].map(x=><div key={x.name} style={{borderTop:"8px solid "+x.color}}>{x.name}</div>)}</div>}
  {kind==="infographic"&&<div className="practicalCards">{String(body).split(" • ").filter(Boolean).slice(0,6).map((x:string,i:number)=><div key={i}><span>{i+1}</span><strong>{x}</strong></div>)}</div>}
- {kind==="formula"&&<div className="cairoFormula">{["المحتوى","+","العملية","+","المنتج","=","تجربة تعلم"].map((x,i)=><span key={i}>{x}</span>)}</div>}
- {kind==="bloom"&&<div className="cairoBloom">{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><span key={i} style={{background:["#d7e800","#54c9d5","#3bb0df","#388acb","#2870ae","#194f7f"][i]}}>{x}</span>)}</div>}
- {kind==="table"&&<div className="cairoMatrix"><b>العملية</b><b>المحتوى</b><b>المنتج</b>{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><div key={x} className="cairoMatrixRow"><span>{x}</span><span>{"الوحدة التعليمية"}</span><span>{["مثال","رسم","شرح","بحث","تبرير","تصميم"][i]}</span></div>)}</div>}
+ <ReferenceVisual page={page} title={title} body={body}/>
+ {false&&kind==="formula"&&<div className="cairoFormula">{["المحتوى","+","العملية","+","المنتج","=","تجربة تعلم"].map((x,i)=><span key={i}>{x}</span>)}</div>}
+ {false&&kind==="bloom"&&<div className="cairoBloom">{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><span key={i} style={{background:["#d7e800","#54c9d5","#3bb0df","#388acb","#2870ae","#194f7f"][i]}}>{x}</span>)}</div>}
+ {false&&kind==="table"&&<div className="cairoMatrix"><b>العملية</b><b>المحتوى</b><b>المنتج</b>{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><div key={x} className="cairoMatrixRow"><span>{x}</span><span>{"الوحدة التعليمية"}</span><span>{["مثال","رسم","شرح","بحث","تبرير","تصميم"][i]}</span></div>)}</div>}
  </>}
  {mode==="slide"&&required>activePhase&&<div className="cairoAlert">هذه المرحلة لم يفتحها المدرب بعد.</div>}
  {status&&<div className="cairoAlert" role="status">{status}</div>}
