@@ -93,6 +93,9 @@ export default function InteractiveWorkshop(){
  </>:<>
  <div className="kahootSlideContent" onClick={auth?edit:undefined} role={auth?"button":undefined} tabIndex={auth?0:undefined} onKeyDown={e=>{if(auth&&(e.key==="Enter"||e.key===" "))edit()}}>
  <h1>{title}</h1><p>{body}</p></div>
+ {kind==="kwl"&&<div className="practicalKwl"><div>ماذا تعرف؟</div><div>ماذا تريد أن تعرف؟</div><div>ماذا تعلمت؟</div><div>ماذا تريد أن تفعل؟</div>{Array.from({length:16},(_,i)=><div key={i} className="practicalBlank">ـــــــــــــــــــــــ</div>)}</div>}
+ {kind==="products"&&<div className="practicalProducts">{[{name:"المنتجات التقنية",color:"#41cddb"},{name:"المنتجات الشفهية",color:"#e2a32b"},{name:"المنتجات الحركية",color:"#45a272"},{name:"المنتجات المرئية",color:"#a257c2"},{name:"المنتجات الكتابية",color:"#3985c7"}].map(x=><div key={x.name} style={{borderTop:"8px solid "+x.color}}>{x.name}</div>)}</div>}
+ {kind==="infographic"&&<div className="practicalCards">{body.split(" • ").filter(Boolean).slice(0,6).map((x,i)=><div key={i}><span>{i+1}</span><strong>{x}</strong></div>)}</div>}
  {kind==="formula"&&<div className="cairoFormula">{["المحتوى","+","العملية","+","المنتج","=","تجربة تعلم"].map((x,i)=><span key={i}>{x}</span>)}</div>}
  {kind==="bloom"&&<div className="cairoBloom">{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><span key={i} style={{background:["#d7e800","#54c9d5","#3bb0df","#388acb","#2870ae","#194f7f"][i]}}>{x}</span>)}</div>}
  {kind==="table"&&<div className="cairoMatrix"><b>العملية</b><b>المحتوى</b><b>المنتج</b>{["أتذكر","أفهم","أطبق","أحلل","أقيم","أبدع"].map((x,i)=><div key={x} className="cairoMatrixRow"><span>{x}</span><span>{"الوحدة التعليمية"}</span><span>{["مثال","رسم","شرح","بحث","تبرير","تصميم"][i]}</span></div>)}</div>}
@@ -100,7 +103,7 @@ export default function InteractiveWorkshop(){
  {mode==="slide"&&required>activePhase&&<div className="cairoAlert">هذه المرحلة لم يفتحها المدرب بعد.</div>}
  {status&&<div className="cairoAlert" role="status">{status}</div>}
  </article>
- <footer className="cairoFoot"><span>مستند إلى عرض د. محمد رواس ود. جوليا روبرتس • القاهرة 2021</span><b>{page+1}</b></footer>
+ <footer className="cairoFoot"><span>الجزء العملي • المؤتمر العلمي الدولي الثامن عشر • 26 أكتوبر 2026</span><b>{page+1}</b></footer>
  </section>
  <aside className="kahootRight" aria-label="متابعة الجلسة الحالية">
  <div className="kahootRightTitle">إحصاءات الجلسة <span className="kahootPulse"/></div>
@@ -112,8 +115,8 @@ export default function InteractiveWorkshop(){
  <small>آخر تحديث: {last||"بانتظار الاتصال"}</small>
  {(allowedActivity||allowedResults)&&<div className="kahootActions">
  {allowedActivity&&<button onClick={()=>void startActivity()} disabled={busy||!auth}>بدء {activityScreen?.label} وعرض QR</button>}
- {allowedActivity&&<button onClick={()=>navigate(page)} disabled={busy}>الانتقال إلى شريحة النتائج</button>}
- {allowedResults&&<button onClick={()=>void updateSettings({presenter_mode:"results",presenter_target_slide:page})} disabled={busy||!auth}>إظهار نتائج {resultScreen?.label}</button>}
+
+ {allowedResults&&<button onClick={()=>void updateSettings({presenter_mode:"results",presenter_target_slide:page})} disabled={busy||!auth}>إنهاء النشاط وإظهار {resultScreen?.label}</button>}
  {mode!=="slide"&&<button onClick={()=>void updateSettings({presenter_mode:"slide",presenter_target_slide:page})} disabled={busy||!auth}>العودة إلى الشريحة</button>}
  </div>}
  {!allowedActivity&&!allowedResults&&<div className="kahootControlNotice">شريحة معرفية للشرح. أدوات بدء النشاط والباركود والنتائج تظهر فقط في الشرائح المخصصة.</div>}
