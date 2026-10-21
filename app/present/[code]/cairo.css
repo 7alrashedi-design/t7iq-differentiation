@@ -101,3 +101,26 @@
 .practicalCards>div span{background:#228bc1;border-radius:50%;color:white;display:grid;place-items:center;min-width:1.8em;height:1.8em}
 .practicalCards strong{font-size:inherit}
 @media(max-width:800px){.practicalProducts>div{font-size:9px;padding:.8em .2em}.practicalCards>div{font-size:9px;padding:.4em}.practicalKwl{font-size:9px}}
+
+/* Faithful reference pages, no permanent leaderboard or overlay on theory slides. */
+.exactDeckRoot{position:fixed;inset:0;z-index:50;background:#152c3e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'El Messiri',Arial,sans-serif;direction:rtl;overflow:hidden}
+.exactDeckPage{position:relative;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.exactDeckIframe{border:0;width:100%;height:100%;background:#fff}
+.exactDeckBar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px;padding:9px;background:#102c43;color:white;width:100%;z-index:2}
+.exactDeckBar button,.exactDeckControls button{border:1px solid #9fc1ce55;background:#ffffff13;border-radius:9px;color:white;padding:8px 12px;cursor:pointer;font:inherit;font-size:13px}
+.exactDeckBar button:disabled{opacity:.25;cursor:default}
+.exactDeckBar span{font-size:13px;margin:0 8px;white-space:nowrap}
+.exactDeckBar .exactPrimary,.exactPrimary{background:#168a9c!important;border:1px solid #26a2ae!important;color:white!important;cursor:pointer;font:inherit;padding:9px 18px;border-radius:9px}
+.exactActivityLayer{position:absolute;inset:4%;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;overflow:auto;background:#fffffff7;box-shadow:0 15px 75px #10283e5e;border:4px solid #35d0dc;border-radius:20px;padding:3%;color:#206c9c;text-align:center}
+.exactActivityLayer h2{font-size:clamp(24px,2.3vw,45px);margin:0}.exactActivityLayer p{font-size:clamp(16px,1.4vw,26px);margin:0}
+.exactJoinCard{display:flex;justify-content:center;align-items:center;gap:30px;flex-wrap:wrap}
+.exactJoinCard img{width:min(29vh,220px);height:auto;background:white;border:1px solid #cfe3e8;padding:9px}
+.exactJoinCard div{display:flex;flex-direction:column;gap:12px;text-align:right;max-width:500px;overflow-wrap:anywhere}
+.exactJoinCard strong{font-size:36px;color:#158e8c}.exactJoinCard span{font-size:17px}
+.exactClose{position:absolute;left:15px;top:9px;font-size:26px;color:#256f9a;background:none;border:0;cursor:pointer}
+.exactMetrics{display:flex;gap:16px}.exactMetrics div{background:#e6f5f7;border-radius:15px;padding:14px 28px;display:flex;gap:5px;flex-direction:column}.exactMetrics b{font-size:clamp(26px,3vw,48px)}
+.exactBars{width:min(650px,85%);display:flex;flex-direction:column;gap:10px}.exactBars>div{display:grid;grid-template-columns:60px 1fr 40px;gap:12px;align-items:center}.exactBars progress{width:100%;accent-color:#26a6bc}
+.exactDeckControls{position:fixed;top:12px;left:12px;z-index:70;background:#102e43;color:white;border-radius:14px;box-shadow:0 12px 40px #0008;padding:18px;display:flex;flex-direction:column;gap:12px;max-width:330px}
+.exactDeckControls a{color:#b3f3ec}.exactDeckControls small{color:#d9e7ed}
+.exactDeckNotice{position:fixed;top:12px;right:12px;background:#fff5cc;color:#77501b;padding:10px 15px;border-radius:9px;z-index:90;font-size:13px}
+@media(max-width:680px){.exactDeckBar{gap:4px;padding:5px}.exactDeckBar button{font-size:11px;padding:6px}.exactDeckBar span{font-size:11px}.exactJoinCard img{width:110px}.exactJoinCard span{font-size:12px}}
