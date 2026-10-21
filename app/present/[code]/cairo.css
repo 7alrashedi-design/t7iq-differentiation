@@ -89,3 +89,15 @@
 .kahootBody .kahootSlideContent{min-width:0;max-width:100%}
 .kahootBody .kahootSlideContent p{white-space:pre-line}
 @media(max-width:800px){.kahootPhaseLabel{font-size:10px;padding:6px}.kahootRight .kahootActions{padding-top:6px}}
+
+/* Practical workshop 2026 reference-inspired native editable diagrams */
+.practicalKwl{width:95%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));direction:rtl;gap:2px;margin-top:2vh;background:#b9d8ee;padding:2px;border-radius:8px;overflow:hidden;font-size:clamp(10px,1.1vw,22px)}
+.practicalKwl>div{background:#348bc9;color:white;padding:.55em;text-align:center;font-weight:700}
+.practicalKwl>.practicalBlank{background:#f1f7fc;color:#a2bfd1;font-weight:400}
+.practicalProducts{width:94%;display:grid;grid-template-columns:repeat(5,1fr);gap:1vw;margin-top:2vh}
+.practicalProducts>div{background:#ecf7fc;border-radius:10px;box-shadow:0 2px 10px #2f668419;padding:1.3em .45em;font-size:clamp(11px,1.35vw,24px);font-weight:700;text-align:center;color:#266d9b}
+.practicalCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1vw;width:96%;margin-top:1vh}
+.practicalCards>div{background:linear-gradient(180deg,#d7f1fa,#fff);border:1px solid #bfe4ed;border-radius:14px;display:flex;align-items:center;gap:.7em;padding:1em;min-height:3.7vw;color:#2f729d;font-size:clamp(11px,1.1vw,22px)}
+.practicalCards>div span{background:#228bc1;border-radius:50%;color:white;display:grid;place-items:center;min-width:1.8em;height:1.8em}
+.practicalCards strong{font-size:inherit}
+@media(max-width:800px){.practicalProducts>div{font-size:9px;padding:.8em .2em}.practicalCards>div{font-size:9px;padding:.4em}.practicalKwl{font-size:9px}}
