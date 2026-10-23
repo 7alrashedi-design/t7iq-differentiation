@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:security": "node tests/security-static-acceptance.cjs"
+    "test:security": "node tests/security-static-acceptance.cjs",
+    "test:workshop": "node tests/workshop-slide-navigation.cjs"
   },
   "dependencies": {
     "next": "15.5.24",
