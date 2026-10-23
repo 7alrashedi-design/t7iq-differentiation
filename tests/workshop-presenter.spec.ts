@@ -58,3 +58,21 @@ test("المشغل الموحد: انتقال الشرائح 1–38 والأنش
  await page.setViewportSize({width:390,height:844});
  await page.screenshot({path:"test-results/presenter-mobile-slide-38.png",fullPage:true});
 });
+
+test("جميع الشرائح الثماني والثلاثين: تنقل متصل ومحتوى مختلف في كل انتقال",async({page})=>{
+ test.setTimeout(180000);
+ await page.setViewportSize({width:1280,height:800});
+ await page.goto(BASE+"/present/DEMO26",{waitUntil:"domcontentloaded"});
+ let previous:number|null=null;
+ for(let current=1;current<=38;current++){
+  await expect(getCanvas(page)).toHaveAttribute("aria-label",new RegExp("الشريحة "+current+" من 38"),{timeout:45000});
+  await expect(page.getByText(new RegExp("الشريحة "+current+" / 38"))).toBeVisible({timeout:45000});
+  const next=page.getByRole("button",{name:"التالي"});
+  if(current<38)await expect(next).toBeEnabled({timeout:45000});
+  const signature=await slideSignature(page);
+  if(previous!==null)expect(signature).not.toBe(previous);
+  previous=signature;
+  if(current<38)await next.click();
+ }
+ await expect(page.getByRole("button",{name:"التالي"})).toBeDisabled();
+});
