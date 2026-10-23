@@ -88,7 +88,15 @@ Deno.serve(async (req: Request) => {
         if(!permitted)return json({error:"trainer_forbidden"},403);
       }
       const counted=(entries??[]).reduce((acc:Record<string,number>,e:any)=>(acc[e.stage]=(acc[e.stage]??0)+1,acc),{});
-      const base={run:run??{stage:0,stage_ends_at:null},counts:counted};
+      // Questions in W that have an explicit L answer; otherwise unresolved (not necessarily incorrect).
+      const questions=(entries??[]).filter((e:any)=>e.stage===2);
+      const answeredQuestionIds=new Set((entries??[]).filter((e:any)=>e.stage===3&&e.related_question_id).map((e:any)=>e.related_question_id));
+      const kwlr_progress={
+        questions:questions.length,
+        linked_answered_questions:questions.filter((e:any)=>answeredQuestionIds.has(e.id)).length,
+        unlinked_questions:questions.filter((e:any)=>!answeredQuestionIds.has(e.id)).length
+      };
+      const base={run:run??{stage:0,stage_ends_at:null},counts:counted,kwlr_progress};
       if(isTrainer)return json({...base,entries:(entries??[]).map((e:any)=>({id:e.id,stage:e.stage,response_text:e.response_text,related_question_id:e.related_question_id})),unique_participants:new Set((entries??[]).map((e:any)=>e.participant_id)).size});
       const token=String(body.participant_token??"");
       const {data:participant}=await db.from("workshop_participants").select("id").eq("participant_token",token).eq("session_id",session.id).maybeSingle();
