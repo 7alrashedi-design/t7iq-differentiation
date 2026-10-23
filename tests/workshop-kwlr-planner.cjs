@@ -19,4 +19,6 @@ assert.match(api,/linked_answered_questions/);
 assert.match(api,/unlinked_questions/);
 assert.match(api,/answeredQuestionIds/);
 assert.match(trainer,/kwlr_progress/);
+assert.doesNotMatch(api,/SUPABASE_ANON_KEY"\)\?\?serviceRole/,"Never use a privileged key as anon client fallback");
+assert.match(api,/db\.auth\.getUser\(bearer\)/,"Trainer access must verify bearer token");
 console.log("PASS: KWLR activity table isolation, staged API gates, trainer controls, Bloom catalogs (static checks only)");
