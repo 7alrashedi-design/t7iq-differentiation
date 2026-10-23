@@ -134,3 +134,5 @@
 .exactNativeBody .rawasVisual{margin-top:0}
 .exactDeckBar select{max-width:240px;border-radius:8px;background:#f5fcff;color:#174e6e;padding:7px;font-family:inherit}
 @media(max-width:700px){.exactNativeStage{width:100vw;height:56.25vw}.exactNativeBody{padding:2% 7%}.exactNativeBody h1{font-size:clamp(12px,3vw,20px)}.exactNativeBody p{font-size:clamp(9px,1.8vw,15px)}.exactDeckBar select{max-width:120px}}
+
+.exactDeckBar .exactToolLink{border:1px solid #9fc1ce55;background:#168a9c;color:white;text-decoration:none;padding:8px 12px;border-radius:9px;font-size:13px}
