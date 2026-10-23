@@ -4,16 +4,18 @@ import {useParams} from "next/navigation";
 import QRCode from "qrcode";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 import "./cairo.css";
+import ReferenceVisual from "./ReferenceVisual";
+import {cairoDeck} from "@/lib/workshop/cairoDeck";
 
 const deckId="1pLBZx1olhefO_lGhEkecRSW3yQTXhoJgZ5achnxvLD0";
-const firstSourcePage=2, lastSourcePage=38;
+const firstSourcePage=1, lastSourcePage=cairoDeck.length;
 const ASLOOBI_PAGE=11;
 type Counts={totals:{participants:number;fingerprints:number;products:number};distribution:Record<string,number>};
 export default function ExactWorkshopPresentation(){
  const params=useParams<{code:string}>();
  const code=String(params.code??"").toUpperCase();
  const db=useMemo(()=>getSupabaseBrowserClient(),[]);
- const [sourcePage,setSourcePage]=useState(2);
+ const [sourcePage,setSourcePage]=useState(1);
  const [session,setSession]=useState<any>(null);
  const [stats,setStats]=useState<Counts|null>(null);
  const [qr,setQr]=useState("");
@@ -25,6 +27,10 @@ export default function ExactWorkshopPresentation(){
  const [loading,setLoading]=useState(false);
  const joinUrl=typeof window!=="undefined"?location.origin+"/w/"+code:"";
  const slideId="refpage_"+String(sourcePage).padStart(3,"0");
+ const baseSlide=cairoDeck[sourcePage-1];
+ const slideOverride=session?.settings?.presenter_slides?.[String(sourcePage-1)]??{};
+ const displayTitle=slideOverride.title||baseSlide?.[0]||"";
+ const displayBody=slideOverride.body||baseSlide?.[1]||"";
  const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000#slide=id."+slideId;
  const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit#slide=id."+slideId;
  const isActivityPage=sourcePage===ASLOOBI_PAGE;
@@ -63,7 +69,16 @@ export default function ExactWorkshopPresentation(){
  const completed=stats?.totals.fingerprints??null;
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
-    <iframe key={slideId} className="exactDeckIframe" src={slideUrl} title={`الصفحة الأصلية ${sourcePage} من العرض المرجعي`} allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>
+    <article key={sourcePage} className="cairoStage exactNativeStage" data-source-page={sourcePage} data-slide-identity={sourcePage+":"+baseSlide?.[0]} aria-label={`الشريحة ${sourcePage} من 38`}>
+      <div className="cairoTopAngle"/><div className="cairoLimeAngle"/>
+      <header className="cairoHead">التعليم المتمايز في فصول الموهوبين – الجزء العملي</header>
+      <div className="cairoBody exactNativeBody">
+        {displayTitle&&<h1>{displayTitle}</h1>}
+        {displayBody&&<p>{displayBody}</p>}
+        <ReferenceVisual page={sourcePage-1} title={displayTitle} body={displayBody}/>
+      </div>
+      <footer className="cairoFoot"><span>المؤتمر العلمي الدولي الثامن عشر • 26 أكتوبر 2026</span><b>{sourcePage} / 38</b></footer>
+    </article>
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
       <button className="exactClose" onClick={()=>setActivity("none")} aria-label="إغلاق">×</button>
       {activity==="join"?<>
@@ -80,19 +95,21 @@ export default function ExactWorkshopPresentation(){
    </div>
    <nav className="exactDeckBar" aria-label="أدوات المدرب">
      <button onClick={()=>setSourcePage(p=>Math.max(firstSourcePage,p-1))} disabled={sourcePage===firstSourcePage}>السابق</button>
-     <span>الصفحة {sourcePage-1} / 37</span>
+     <span>الصفحة {sourcePage} / {lastSourcePage}</span>
      <button onClick={()=>setSourcePage(p=>Math.min(lastSourcePage,p+1))} disabled={sourcePage===lastSourcePage}>التالي</button>
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
-     {isActivityPage&&<button onClick={()=>setActivity("results")}>نتائج أسلوبي</button>}
+     {isActivityPage&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
+     <select aria-label="الانتقال المباشر إلى شريحة" value={sourcePage} onChange={e=>setSourcePage(Number(e.target.value))}>{cairoDeck.map((slide,i)=><option value={i+1} key={i}>{i+1} — {slide[0]||"ختام"}</option>)}</select>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
      <button onClick={()=>setShowControls(v=>!v)}>خيارات</button>
    </nav>
    {showControls&&<aside className="exactDeckControls">
       <b>جلسة {code}</b><small>{session?.title??"لم تُحمّل الجلسة بعد"}</small>
-      <span>آخر تحديث: {refreshTime||"—"}</span>
-      <span>متدربون: {total??"—"} • استكملوا: {completed??"—"}</span>
-      <span>المرحلة المفتوحة: {activePhase}</span>
-      <a href={deckUrl} target="_blank" rel="noreferrer">فتح الصفحة الأصلية في Google Slides</a>
+      {isActivityPage&&activity!=="none"&&<span>آخر تحديث: {refreshTime||"—"}</span>}
+      {isActivityPage&&activity!=="none"&&<span>متدربون: {total??"—"} • استكملوا: {completed??"—"} • لم يكملوا: {total!==null&&completed!==null?Math.max(0,total-completed):"—"}</span>}
+      {isActivityPage&&activity!=="none"&&<span>المرحلة المفتوحة: {activePhase}</span>}
+      <a href={deckUrl} target="_blank" rel="noreferrer">فتح المرجع في Google Slides</a>
+      <a href={session?.id?"/admin/workshops/"+session.id+"/slides":"/trainer"} target="_blank" rel="noreferrer">تحرير نصوص الشرائح</a>
       <a href={session?.id?"/admin/workshops/"+session.id:"/trainer"} target="_blank" rel="noreferrer">إدارة الورشة</a>
       <button onClick={()=>setShowControls(false)}>إغلاق</button>
     </aside>}
