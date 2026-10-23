@@ -32,6 +32,12 @@ jobs:
       - name: Security static acceptance
         run: npm run test:security
 
+      - name: Workshop Google Slides navigation regression
+        run: npm run test:workshop
+
+      - name: KWLR and Bloom integration static checks
+        run: npm run test:kwlr
+
       - name: Production build
         run: npm run build
 
