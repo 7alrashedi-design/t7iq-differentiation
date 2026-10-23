@@ -43,9 +43,12 @@ Deno.serve(async (req: Request) => {
         if(session.created_by!==userData.user.id&&!["admin","platform_admin","super_admin"].includes(role))return json({error:"trainer_forbidden"},403);
         const next=Number(body.stage);
         if(!Number.isInteger(next)||next<0||next>4)return json({error:"invalid_stage"},400);
+        const prior=Number(run?.stage??0);
+        if(next!==prior && next!==prior+1)return json({error:"kwlr_stage_must_advance_in_order"},409);
+        if(prior===4&&next!==4)return json({error:"kwlr_completed_new_session_required"},409);
         const mins:Record<number,number>={0:0,1:2,2:2,3:3,4:0};
         const now=new Date();
-        const stageEnds=mins[next]?new Date(now.getTime()+mins[next]*60000).toISOString():null;
+        const stageEnds=next===prior?run?.stage_ends_at??null:(mins[next]?new Date(now.getTime()+mins[next]*60000).toISOString():null);
         const payload={session_id:session.id,stage:next,stage_ends_at:stageEnds};
         const {data:updated,error:writeError}=await db.from("workshop_kwlr_runs").upsert(payload,{onConflict:"session_id"}).select("*").single();
         if(writeError)throw writeError;
