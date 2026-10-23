@@ -7,7 +7,6 @@ import "./cairo.css";
 
 const deckId="1pLBZx1olhefO_lGhEkecRSW3yQTXhoJgZ5achnxvLD0";
 
-const ASLOOBI_PAGE=11;
 type Counts={totals:{participants:number;fingerprints:number;products:number};distribution:Record<string,number>};
 export default function ExactWorkshopPresentation(){
  const params=useParams<{code:string}>();
@@ -29,7 +28,6 @@ export default function ExactWorkshopPresentation(){
  const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit";
  const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000";
  const isActivityPage=selectedTool==="asloobi";
- const activePhase=session?.settings?.trainer_controlled_phases===true?Number(session.settings.active_phase??0):3;
  const load=useCallback(async()=>{
   if(!code)return;
   try{
