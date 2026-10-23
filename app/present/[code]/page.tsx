@@ -34,6 +34,8 @@ export default function ExactWorkshopPresentation(){
  const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000#slide=id."+slideId;
  const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit#slide=id."+slideId;
  const isActivityPage=sourcePage===ASLOOBI_PAGE;
+ const isKWLRPage=sourcePage>=16&&sourcePage<=18;
+ const isPlanningPage=sourcePage>=25&&sourcePage<=37;
  const activePhase=session?.settings?.trainer_controlled_phases===true?Number(session.settings.active_phase??0):3;
  const load=useCallback(async()=>{
   if(!code)return;
@@ -97,6 +99,8 @@ export default function ExactWorkshopPresentation(){
      <button onClick={()=>setSourcePage(p=>Math.max(firstSourcePage,p-1))} disabled={sourcePage===firstSourcePage}>السابق</button>
      <span>الصفحة {sourcePage} / {lastSourcePage}</span>
      <button onClick={()=>setSourcePage(p=>Math.min(lastSourcePage,p+1))} disabled={sourcePage===lastSourcePage}>التالي</button>
+     {isKWLRPage&&session?.id&&<a className="exactToolLink" href={"/admin/workshops/"+session.id+"/kwlr"} target="_blank" rel="noreferrer">إدارة نشاط KWLR</a>}
+     {isPlanningPage&&<a className="exactToolLink" href="/admin/training/bloom-planner" target="_blank" rel="noreferrer">مخطط وحدة بلوم التفاعلي</a>}
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
      {isActivityPage&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
      <select aria-label="الانتقال المباشر إلى شريحة" value={sourcePage} onChange={e=>setSourcePage(Number(e.target.value))}>{cairoDeck.map((slide,i)=><option value={i+1} key={i}>{i+1} — {slide[0]||"ختام"}</option>)}</select>
