@@ -1,0 +1,55 @@
+name: Workshop Presenter Acceptance
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/present/**"
+      - "tests/workshop-presenter.spec.ts"
+      - ".github/workflows/presenter-acceptance.yml"
+  workflow_dispatch:
+jobs:
+  presenter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://mihalnbzprdqaaprjkha.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_8MvCl5qU4te0v_rWzZWN5g_G3um0uGg
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install app dependencies
+        run: npm ci
+      - name: Production build
+        run: npm run build
+      - name: Install Chromium and test runner
+        run: |
+          npm install --no-save @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start the preview server
+        run: |
+          nohup npm run start > /tmp/presenter-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000/api/health > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/presenter-server.log
+          exit 1
+      - name: Run Google Slides 38-page browser acceptance
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: npx playwright test tests/workshop-presenter.spec.ts --project=chromium --reporter=line
+      - name: Upload acceptance screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workshop-presenter-acceptance
+          path: |
+            test-results/*.png
+            test-results/*/*.png
+            test-results/*/*.webm
+            test-results/*/trace.zip
+          if-no-files-found: ignore
+          retention-days: 7
