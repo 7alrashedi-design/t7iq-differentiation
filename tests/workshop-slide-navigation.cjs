@@ -21,7 +21,9 @@ assert.ok(presenter.includes("setPage(p=>Math.min(38,p+1))"),"Synchronized next 
 assert.ok(presenter.includes("page===11"),"Asloobi must be bound to exactly slide 11");
 assert.ok(presenter.includes("setSynced(false)"),"Fail closed to unsynchronized view if thumbnail API unavailable");
 const pdfRenderer=fs.readFileSync("app/present/[code]/SnapshotPdfSlide.tsx","utf8");
-assert.ok(presenter.includes('onReady={()=>setPageReady(true)}'),"Only a rendered snapshot page marks a slide ready");
+assert.ok(presenter.includes('onReady={()=>setRenderedPage(page)}'),"Completed render must identify the exact requested page");
+assert.ok(presenter.includes("renderedPage===page"),"Old slide cannot be marked ready as the new slide");
+assert.ok(presenter.includes("key={page}"),"Every navigation must allocate a fresh slide canvas");
 assert.ok(pdfRenderer.includes("await task.promise"),"PDF page render must fully complete before onReady");
 assert.ok(pdfRenderer.includes("doc.numPages!==38"),"Canonical Google snapshot must contain 38 pages");
 assert.ok(pdfRenderer.includes("workshop-public-assets/google-slides-canonical-2026-10-23.pdf"),"Snapshot must come from exported Google Slides");
