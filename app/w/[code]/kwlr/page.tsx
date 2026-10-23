@@ -24,7 +24,7 @@ export default function KWLRParticipant(){
  const linked=new Set(mine.filter((x:any)=>x.stage===3&&x.related_question_id).map((x:any)=>x.related_question_id));
  const unanswered=questions.filter((x:any)=>!linked.has(x.id));
  async function submit(){
-  if(busy||!answer.trim()||remaining<=0)return;
+  if(busy||!answer.trim()||remaining<=0||(stage===3&&questions.length>0&&!questionId))return;
   setBusy(true);setError("");
   const {data,error}=await db.functions.invoke("workshop-public",{body:{action:"kwlr_submit",code,participant_token:token,response_text:answer.trim(),related_question_id:stage===3?questionId||null:null}});
   setBusy(false);
@@ -46,12 +46,12 @@ export default function KWLRParticipant(){
     {stage===3&&<article aria-label="النص القرائي الكامل للمدرسة الانطباعية" style={{background:"#f4f9fd",border:"1px solid #c3e2ee",padding:18,maxHeight:340,overflowY:"auto",lineHeight:2,fontSize:16,borderRadius:12,marginBottom:14}}>{impressionismReading.map((para,i)=>i===0||i===7?<h3 key={i}>{para}</h3>:<p key={i}>{para}</p>)}</article>}
     {stage===3&&<label style={{display:"block",marginBottom:12}}>السؤال الذي تريد الإجابة عنه
       <select value={questionId} onChange={e=>setQuestionId(e.target.value)} style={{display:"block",width:"100%",padding:12,marginTop:6,font:"inherit",borderRadius:8}}>
-       <option value="">معلومة تعلمتها دون ارتباط بسؤال</option>
+       <option value="">{questions.length?"اختر السؤال الذي تجيب عنه":"معلومة تعلمتها دون سؤال سابق"}</option>
        {questions.map((q:any)=><option key={q.id} value={q.id}>{q.response_text}</option>)}
       </select>
      </label>}
     {stage>=1&&stage<=3&&<><textarea aria-label={stage===1?"معلوماتي السابقة":stage===2?"سؤال أريد معرفته":"إجابتي أو ما تعلمته"} value={answer} onChange={e=>setAnswer(e.target.value)} disabled={!token||remaining===0||busy} rows={4} maxLength={2000} placeholder={stage===1?"اكتب معلومة واحدة في كل إرسال، ثم أضف المزيد":stage===2?"اكتب سؤالًا واحدًا في كل إرسال، ويمكنك إضافة أسئلة أخرى":"اكتب الإجابة المستندة إلى النص ثم أرسل، ويمكنك الإجابة عن سؤال آخر"} style={{display:"block",width:"100%",padding:13,boxSizing:"border-box",border:"1px solid #b4d8e8",borderRadius:11,font:"inherit"}}/>
-      <button type="button" disabled={!token||!answer.trim()||remaining===0||busy} onClick={()=>void submit()} style={{padding:"12px 21px",marginTop:13,background:"#137f96",color:"#fff",border:0,borderRadius:10,font:"inherit"}}>{busy?"جارٍ الإرسال":"إضافة استجابة"}</button>
+      <button type="button" disabled={!token||!answer.trim()||remaining===0||busy||(stage===3&&questions.length>0&&!questionId)} onClick={()=>void submit()} style={{padding:"12px 21px",marginTop:13,background:"#137f96",color:"#fff",border:0,borderRadius:10,font:"inherit"}}>{busy?"جارٍ الإرسال":"إضافة استجابة"}</button>
       <p>استجاباتك في هذه المرحلة: {mine.filter((x:any)=>x.stage===stage).length} — يمكنك إضافة أكثر من استجابة قبل انتهاء المؤقت.</p>
      </>}
     {stage>=1&&stage<=3&&<div><h3>استجاباتك المحفوظة</h3>{mine.filter((x:any)=>x.stage===stage).map((x:any,i:number)=><p key={x.id} style={{padding:10,background:"#f5fafe",borderRadius:8}}>{i+1}. {x.response_text}</p>)}</div>}
