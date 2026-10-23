@@ -59,7 +59,7 @@ export default function ExactWorkshopPresentation(){
  useEffect(()=>{let active=true;fetch("/api/workshop-slide?page=1",{cache:"no-store"}).then(async res=>{if(!res.ok)throw new Error("unavailable");const data=await res.blob();if(active&&data.type.startsWith("image/"))setSynced(true)}).catch(()=>{});return()=>{active=false}},[]);
  useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
  useEffect(()=>{if(!synced||!pageReady||page<16||page>18){setShowKwlrResults(false);setShowKwlrJoin(false);setKwlrResults(null)}},[synced,page,pageReady]);
- useEffect(()=>{if(!authorized||!code){setTrainerVerified(false);return}let live=true;db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}}).then(({data,error})=>{if(live)setTrainerVerified(!error&&!data?.error)}).catch(()=>{if(live)setTrainerVerified(false)});return()=>{live=false}},[authorized,code,db]);
+ useEffect(()=>{if(!authorized||!code){setTrainerVerified(false);setShowKwlrResults(false);setKwlrResults(null);return}let live=true;db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}}).then(({data,error})=>{if(live){const allowed=!error&&!data?.error;setTrainerVerified(allowed);if(!allowed){setShowKwlrResults(false);setKwlrResults(null)}}}).catch(()=>{if(live){setTrainerVerified(false);setShowKwlrResults(false);setKwlrResults(null)}});return()=>{live=false}},[authorized,code,db]);
  async function fetchKwlrResults(){
   if(!trainerVerified||!session?.id){setNotice("النتائج متاحة للمدرب المصرح له فقط.");return}
   const {data,error}=await db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}});
