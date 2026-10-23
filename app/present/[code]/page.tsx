@@ -22,6 +22,7 @@ export default function ExactWorkshopPresentation(){
  const [kwlrQr,setKwlrQr]=useState("");
  const [showKwlrJoin,setShowKwlrJoin]=useState(false);
  const [authorized,setAuthorized]=useState(false);
+ const [trainerVerified,setTrainerVerified]=useState(false);
  const [embedLoaded,setEmbedLoaded]=useState(false);
  const [showControls,setShowControls]=useState(false);
  const [activity,setActivity]=useState<"none"|"join"|"results">("none");
@@ -58,8 +59,9 @@ export default function ExactWorkshopPresentation(){
  useEffect(()=>{let active=true;fetch("/api/workshop-slide?page=1",{cache:"no-store"}).then(async res=>{if(!res.ok)throw new Error("unavailable");const data=await res.blob();if(active&&data.type.startsWith("image/"))setSynced(true)}).catch(()=>{});return()=>{active=false}},[]);
  useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
  useEffect(()=>{if(!synced||!pageReady||page<16||page>18){setShowKwlrResults(false);setShowKwlrJoin(false);setKwlrResults(null)}},[synced,page,pageReady]);
+ useEffect(()=>{if(!authorized||!code){setTrainerVerified(false);return}let live=true;db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}}).then(({data,error})=>{if(live)setTrainerVerified(!error&&!data?.error)}).catch(()=>{if(live)setTrainerVerified(false)});return()=>{live=false}},[authorized,code,db]);
  async function fetchKwlrResults(){
-  if(!authorized||!session?.id){setNotice("يجب تسجيل الدخول بصفة المدرب المصرح له.");return}
+  if(!trainerVerified||!session?.id){setNotice("النتائج متاحة للمدرب المصرح له فقط.");return}
   const {data,error}=await db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}});
   if(error||data?.error){setNotice("تعذر جلب نتائج KWLR المصرح بها لهذه الجلسة.");return}
   setKwlrResults(data);setShowKwlrResults(true);setNotice("");
@@ -105,9 +107,9 @@ export default function ExactWorkshopPresentation(){
      <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
      {synced&&pageReady&&page>=16&&page<=18&&<button className="exactPrimary" onClick={()=>{setShowKwlrResults(false);setShowKwlrJoin(true)}}>عرض QR لنشاط KWLR</button>}
-     {synced&&pageReady&&page>=16&&page<=18&&<button onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج KWLR</button>}
-     {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
-     {isActivityPage&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
+     {synced&&pageReady&&page>=16&&page<=18&&trainerVerified&&<button onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج KWLR</button>}
+     {isActivityPage&&trainerVerified&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
+     {isActivityPage&&trainerVerified&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
    </nav>
    {showControls&&<aside className="exactDeckControls">
       <b>أدوات المدرب — جلسة {code}</b>
