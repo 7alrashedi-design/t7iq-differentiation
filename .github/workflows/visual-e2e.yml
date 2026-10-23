@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "app/w/**"
+      - "app/present/**"
       - "app/admin/**"
       - "app/login/**"
       - "app/globals.css"
@@ -38,7 +39,7 @@ jobs:
       - name: Run visual journey
         env:
           BASE_URL: https://diff.t7iq.com
-        run: npx playwright test tests/visual-journey.spec.ts --project=chromium --reporter=line
+        run: npx playwright test tests/visual-journey.spec.ts tests/workshop-presenter.spec.ts --project=chromium --workers=1 --reporter=line
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
