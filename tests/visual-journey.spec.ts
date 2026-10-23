@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 
 const BASE = process.env.BASE_URL || "https://diff.t7iq.com";
+const TEST_SESSION=process.env.WORKSHOP_E2E_CODE||"E2E26";
 
 async function screenshot(page:any, name:string){
   await page.screenshot({path:`test-results/${name}.png`, fullPage:true});
@@ -31,7 +32,7 @@ test("رحلة الورشة كاملة بصريًا ووظيفيًا", async ({ 
   test.setTimeout(180000);
   await page.setViewportSize({width:1440,height:1000});
 
-  await page.goto(`${BASE}/w/DEMO26`, {waitUntil:"networkidle"});
+  await page.goto(`${BASE}/w/${TEST_SESSION}`, {waitUntil:"networkidle"});
   await expect(page.getByRole("heading",{name:/ورشة التمايز/})).toBeVisible();
   await screenshot(page,"01-join-desktop");
 
