@@ -35,8 +35,7 @@ Deno.serve(async (req: Request) => {
       if(action==="kwlr_control"){
         const authorization=req.headers.get("authorization")??"";
         const bearer=authorization.replace(/^Bearer\s+/i,"");
-        const authDb=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??serviceRole);
-        const {data:userData,error:authError}=await authDb.auth.getUser(bearer);
+        const {data:userData,error:authError}=await db.auth.getUser(bearer);
         if(authError||!userData.user)return json({error:"trainer_login_required"},403);
         const {data:profile}=await db.from("profiles").select("role").eq("id",userData.user.id).maybeSingle();
         const role=String(profile?.role??"").toLowerCase();
@@ -79,8 +78,7 @@ Deno.serve(async (req: Request) => {
       let permitted=false;
       if(isTrainer){
         const bearer=(req.headers.get("authorization")??"").replace(/^Bearer\s+/i,"");
-        const authDb=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??serviceRole);
-        const {data:userData}=await authDb.auth.getUser(bearer);
+        const {data:userData}=await db.auth.getUser(bearer);
         if(userData.user){
           const {data:profile}=await db.from("profiles").select("role").eq("id",userData.user.id).maybeSingle();
           permitted=session.created_by===userData.user.id||["admin","platform_admin","super_admin"].includes(String(profile?.role??"").toLowerCase());
