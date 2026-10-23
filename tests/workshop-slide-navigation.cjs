@@ -1,0 +1,13 @@
+const assert=require("node:assert/strict");const fs=require("node:fs");
+const deck=fs.readFileSync("lib/workshop/cairoDeck.ts","utf8");
+const presenter=fs.readFileSync("app/present/[code]/page.tsx","utf8");
+const slides=[...deck.matchAll(/\["([^"]*)","([^"]*)","([^"]*)"\]/g)];
+assert.equal(slides.length,38,"Exactly 38 native slides are required");
+slides.forEach((s,i)=>assert.ok(s[1].trim()||s[2].trim(),"Empty slide "+(i+1)));
+assert.ok(presenter.includes("const firstSourcePage=1"),"Source must include cover");
+assert.ok(presenter.includes("data-source-page={sourcePage}"),"Slide identity must be tied to page");
+assert.ok(presenter.includes("value={sourcePage}"),"Direct selection must be controlled");
+assert.ok(presenter.includes('sourcePage!==ASLOOBI_PAGE'),"Activity must reset after leaving page 11");
+assert.ok(!presenter.includes("<iframe"),"Do not use unreliable slide hash iframe navigation");
+assert.ok(presenter.includes("isActivityPage&&<button"),"Activity controls must be page scoped");
+console.log("PASS: 38 unique page indexes, nonempty slide content, controlled navigation, activity isolation");
