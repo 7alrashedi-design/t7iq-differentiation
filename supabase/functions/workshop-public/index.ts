@@ -22,6 +22,76 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const action = String(body.action ?? "");
 
+
+    // KWLR lives in its own session-scoped tables; it never touches Asloobi scores.
+    if (action === "kwlr_state" || action === "kwlr_control" || action === "kwlr_submit") {
+      const code=String(body.code??"").trim().toUpperCase();
+      if(!/^[A-Z0-9_-]{4,24}$/.test(code))return json({error:"invalid_code"},400);
+      const {data:session}=await db.from("workshop_sessions")
+        .select("id,status,created_by").eq("session_code",code).in("status",["open","live"]).maybeSingle();
+      if(!session)return json({error:"session_not_found"},404);
+      const {data:run,error:runError}=await db.from("workshop_kwlr_runs").select("*").eq("session_id",session.id).maybeSingle();
+      if(runError)throw runError;
+      if(action==="kwlr_control"){
+        const authorization=req.headers.get("authorization")??"";
+        const bearer=authorization.replace(/^Bearer\s+/i,"");
+        const authDb=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??serviceRole);
+        const {data:userData,error:authError}=await authDb.auth.getUser(bearer);
+        if(authError||!userData.user)return json({error:"trainer_login_required"},403);
+        const {data:profile}=await db.from("profiles").select("role").eq("id",userData.user.id).maybeSingle();
+        const role=String(profile?.role??"").toLowerCase();
+        if(session.created_by!==userData.user.id&&!["admin","platform_admin","super_admin"].includes(role))return json({error:"trainer_forbidden"},403);
+        const next=Number(body.stage);
+        if(!Number.isInteger(next)||next<0||next>4)return json({error:"invalid_stage"},400);
+        const mins:Record<number,number>={0:0,1:2,2:2,3:3,4:0};
+        const now=new Date();
+        const stageEnds=mins[next]?new Date(now.getTime()+mins[next]*60000).toISOString():null;
+        const payload={session_id:session.id,stage:next,stage_ends_at:stageEnds};
+        const {data:updated,error:writeError}=await db.from("workshop_kwlr_runs").upsert(payload,{onConflict:"session_id"}).select("*").single();
+        if(writeError)throw writeError;
+        return json({run:updated});
+      }
+      if(action==="kwlr_submit"){
+        if(!run||run.stage<1||run.stage>3)return json({error:"kwlr_closed"},403);
+        if(run.stage_ends_at&&new Date(run.stage_ends_at).getTime()<Date.now())return json({error:"time_expired"},403);
+        const token=String(body.participant_token??"");
+        const {data:participant}=await db.from("workshop_participants").select("id,session_id").eq("participant_token",token).eq("session_id",session.id).maybeSingle();
+        if(!participant)return json({error:"invalid_participant"},403);
+        const answer=String(body.response_text??"").trim();
+        if(!answer||answer.length>2000)return json({error:"invalid_response"},400);
+        let related_question_id=null;
+        if(run.stage===3&&body.related_question_id){
+          const {data:question}=await db.from("workshop_kwlr_entries").select("id").eq("id",String(body.related_question_id)).eq("run_id",run.id).eq("participant_id",participant.id).eq("stage",2).maybeSingle();
+          if(!question)return json({error:"invalid_question"},400);
+          related_question_id=question.id;
+        }
+        const {error:saveError}=await db.from("workshop_kwlr_entries").insert({run_id:run.id,participant_id:participant.id,stage:run.stage,response_text:answer,related_question_id});
+        if(saveError)throw saveError;
+        return json({saved:true});
+      }
+      const {data:entries,error:entryError}=run?await db.from("workshop_kwlr_entries")
+        .select("id,participant_id,stage,response_text,related_question_id").eq("run_id",run.id):{data:[],error:null};
+      if(entryError)throw entryError;
+      const isTrainer=Boolean(body.trainer_view);
+      let permitted=false;
+      if(isTrainer){
+        const bearer=(req.headers.get("authorization")??"").replace(/^Bearer\s+/i,"");
+        const authDb=createClient(url,Deno.env.get("SUPABASE_ANON_KEY")??serviceRole);
+        const {data:userData}=await authDb.auth.getUser(bearer);
+        if(userData.user){
+          const {data:profile}=await db.from("profiles").select("role").eq("id",userData.user.id).maybeSingle();
+          permitted=session.created_by===userData.user.id||["admin","platform_admin","super_admin"].includes(String(profile?.role??"").toLowerCase());
+        }
+        if(!permitted)return json({error:"trainer_forbidden"},403);
+      }
+      const counted=(entries??[]).reduce((acc:Record<string,number>,e:any)=>(acc[e.stage]=(acc[e.stage]??0)+1,acc),{});
+      const base={run:run??{stage:0,stage_ends_at:null},counts:counted};
+      if(isTrainer)return json({...base,entries:(entries??[]).map((e:any)=>({id:e.id,stage:e.stage,response_text:e.response_text,related_question_id:e.related_question_id})),unique_participants:new Set((entries??[]).map((e:any)=>e.participant_id)).size});
+      const token=String(body.participant_token??"");
+      const {data:participant}=await db.from("workshop_participants").select("id").eq("participant_token",token).eq("session_id",session.id).maybeSingle();
+      return json({...base,mine:participant?(entries??[]).filter((e:any)=>e.participant_id===participant.id).map((e:any)=>({id:e.id,stage:e.stage,response_text:e.response_text,related_question_id:e.related_question_id})):[]});
+    }
+
     if (action === "session") {
       const code = String(body.code ?? "").trim().toUpperCase();
       const { data, error } = await db.from("workshop_sessions")
