@@ -27,4 +27,7 @@ assert.ok(presenter.includes("عرض QR لنشاط KWLR"),"KWLR QR must appear i
 assert.ok(presenter.includes('page>=16&&page<=18'),"KWLR QR/results stay scoped to appropriate pages");
 assert.ok(presenter.includes('setShowKwlrJoin(false)'),"KWLR QR must be closable or reset");
 assert.ok(presenter.includes('setShowKwlrResults(false);setKwlrResults(null)'),"Clear participant results on revoked trainer authorization");
+assert.ok(presenter.includes('const requestId=++kwlrRequest.current'),"Results request must carry generation ID");
+assert.ok(presenter.includes('requestId!==kwlrRequest.current||requestedPage!==activePageRef.current'),"Ignore late results from other slide");
+assert.ok(presenter.includes('kwlrRequest.current+=1'),"Invalidate requests when slide or authorization changes");
 console.log("PASS: single Google Slides player, no unsynchronized local slide counter. Browser testing still required.");
