@@ -20,3 +20,23 @@ jobs:
             curl -L -sS --connect-timeout 8 --max-time 25 -o /tmp/slide-export.bin -w 'HTTP=%{http_code} content_type=%{content_type} bytes=%{size_download}\n' "$url" || true
             file --mime-type /tmp/slide-export.bin || true
           done
+
+      - name: Store canonical Slides PDF snapshot for reliable page synchronization
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --location --max-time 80 \
+            https://mihalnbzprdqaaprjkha.supabase.co/functions/v1/workshop-snapshot-importer \
+            -o /tmp/import-result.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/import-result.json'))
+          assert data.get('success') and data.get('bytes',0)>3000000,data
+          print('Canonical Google Slides snapshot imported, bytes:',data['bytes'])
+          print('Storage path:',data['bucket']+'/'+data['path'])
+          PY
+          curl --fail --show-error --silent --location --max-time 30 \
+            https://mihalnbzprdqaaprjkha.supabase.co/storage/v1/object/public/workshop-public-assets/google-slides-canonical-2026-10-23.pdf \
+            -o /tmp/canonical.pdf
+          file /tmp/canonical.pdf
+          test "$(head -c 4 /tmp/canonical.pdf)" = '%PDF'
+          test "$(stat -c%s /tmp/canonical.pdf)" -gt 3000000
