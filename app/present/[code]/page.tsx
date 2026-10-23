@@ -108,8 +108,8 @@ export default function ExactWorkshopPresentation(){
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
      {synced&&pageReady&&page>=16&&page<=18&&<button className="exactPrimary" onClick={()=>{setShowKwlrResults(false);setShowKwlrJoin(true)}}>عرض QR لنشاط KWLR</button>}
      {synced&&pageReady&&page>=16&&page<=18&&trainerVerified&&<button onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج KWLR</button>}
-     {isActivityPage&&trainerVerified&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
-     {isActivityPage&&trainerVerified&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
+     {isActivityPage&&authorized&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
+     {isActivityPage&&authorized&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
    </nav>
    {showControls&&<aside className="exactDeckControls">
       <b>أدوات المدرب — جلسة {code}</b>
