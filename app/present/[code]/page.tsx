@@ -26,6 +26,8 @@ export default function ExactWorkshopPresentation(){
  const [notice,setNotice]=useState("");
  const [refreshTime,setRefreshTime]=useState("");
  const [loading,setLoading]=useState(false);
+ const [kwlrResults,setKwlrResults]=useState<any>(null);
+ const [showKwlrResults,setShowKwlrResults]=useState(false);
  const joinUrl=typeof window!=="undefined"?location.origin+"/w/"+code:"";
  // Google Slides is the only visual slide renderer. Its native player owns slide navigation.
  // An embedded cross-origin player cannot reliably report its active slide to this app.
@@ -53,6 +55,13 @@ export default function ExactWorkshopPresentation(){
  useEffect(()=>{if(!synced)return;setPageReady(false);const controller=new AbortController();fetch("/api/workshop-slide?page="+page,{signal:controller.signal,cache:"no-store"}).then(res=>{if(!res.ok)throw new Error("image_failed");setPageReady(true)}).catch(()=>{if(!controller.signal.aborted){setSynced(false);setNotice("تعذر تحميل صفحة Google Slides المتزامنة؛ عاد العرض الأصلي دون عداد مضلل.")}});return()=>controller.abort()},[synced,page]);
  useEffect(()=>{let active=true;fetch("/api/workshop-slide?page=1",{cache:"no-store"}).then(res=>{if(active&&res.ok)setSynced(true)}).catch(()=>{});return()=>{active=false}},[]);
  useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
+ useEffect(()=>{if(!synced||page<16||page>18){setShowKwlrResults(false);setKwlrResults(null)}},[synced,page]);
+ async function fetchKwlrResults(){
+  if(!authorized||!session?.id){setNotice("يجب تسجيل الدخول بصفة المدرب المصرح له.");return}
+  const {data,error}=await db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}});
+  if(error||data?.error){setNotice("تعذر جلب نتائج KWLR المصرح بها لهذه الجلسة.");return}
+  setKwlrResults(data);setShowKwlrResults(true);setNotice("");
+ }
  async function startAsloobi(){
   if(!authorized||!session?.id){setNotice("يلزم دخول المدرب المخوّل لإدارة هذه الجلسة.");return}
   if(session.settings?.trainer_controlled_phases!==true){setNotice("فعّل التحكم المرحلي أولًا من إدارة الجلسة.");return}
@@ -70,6 +79,7 @@ export default function ExactWorkshopPresentation(){
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
     {synced?<img key={page} src={"/api/workshop-slide?page="+page} className="exactDeckIframe" style={{objectFit:"contain"}} alt={"صفحة "+page+" من عرض Google Slides الأصلي"} onLoad={()=>setPageReady(true)} onError={()=>{setSynced(false);setNotice("تعذر تحميل صورة الشريحة؛ استخدم مشغل Google Slides الأصلي.")}}/>:<iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /> }
+    {showKwlrResults&&synced&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="النتائج المجمعة لنشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrResults(false)} aria-label="إغلاق نتائج KWLR">×</button><h2>استجابات KWLR — {code}</h2><p>إجمالي الاستجابات الموثقة: {Object.values(kwlrResults?.counts??{}).reduce((s:number,v:any)=>s+Number(v),0)}</p><div style={{display:"flex",gap:12,flexWrap:"wrap",maxHeight:"65%",overflow:"auto"}}>{[1,2,3].map(stage=><section key={stage} style={{flex:"1 1 230px",background:"#eef8fb",padding:14,borderRadius:12}}><h3>{stage===1?"ماذا تعرف؟":stage===2?"ماذا تريد أن تعرف؟":"ماذا تعلمت؟"} ({kwlrResults?.counts?.[stage]??0})</h3>{(kwlrResults?.entries??[]).filter((x:any)=>x.stage===stage).map((x:any)=><p key={x.id} style={{fontSize:14,borderBottom:"1px solid #d4e1ea"}}>{x.response_text}</p>)}</section>)}</div><button className="exactPrimary" onClick={()=>void fetchKwlrResults()}>تحديث النتائج</button></div>}
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
       <button className="exactClose" onClick={()=>setActivity("none")} aria-label="إغلاق">×</button>
       {activity==="join"?<>
@@ -91,6 +101,7 @@ export default function ExactWorkshopPresentation(){
      {synced&&<select aria-label="انتقال مباشر للشريحة" value={page} onChange={e=>setPage(Number(e.target.value))}>{Array.from({length:38},(_,i)=><option key={i+1} value={i+1}>الشريحة {i+1}</option>)}</select>}
      <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
+     {synced&&page>=16&&page<=18&&<button onClick={()=>void fetchKwlrResults()}>نتائج KWLR</button>}
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
      {isActivityPage&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
    </nav>
