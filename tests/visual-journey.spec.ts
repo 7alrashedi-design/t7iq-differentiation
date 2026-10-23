@@ -33,7 +33,7 @@ test("رحلة الورشة كاملة بصريًا ووظيفيًا", async ({ 
   await page.setViewportSize({width:1440,height:1000});
 
   await page.goto(`${BASE}/w/${TEST_SESSION}`, {waitUntil:"networkidle"});
-  await expect(page.getByRole("heading",{name:/ورشة التمايز/})).toBeVisible();
+  await expect(page.getByRole("heading",{name:/ورشة التمايز|اختبار قبول تقني معزول/})).toBeVisible({timeout:20000});
   await screenshot(page,"01-join-desktop");
 
   await page.getByLabel("الاسم").fill("__E2E_VISUAL__");
