@@ -19,6 +19,8 @@ export default function ExactWorkshopPresentation(){
  const [session,setSession]=useState<any>(null);
  const [stats,setStats]=useState<Counts|null>(null);
  const [qr,setQr]=useState("");
+ const [kwlrQr,setKwlrQr]=useState("");
+ const [showKwlrJoin,setShowKwlrJoin]=useState(false);
  const [authorized,setAuthorized]=useState(false);
  const [embedLoaded,setEmbedLoaded]=useState(false);
  const [showControls,setShowControls]=useState(false);
@@ -49,13 +51,13 @@ export default function ExactWorkshopPresentation(){
   }catch{setStats(null);setNotice("تعذّر التحقق من الجلسة الحالية.")}
  },[code,db]);
  useEffect(()=>{void load();const t=setInterval(()=>void load(),4000);return()=>clearInterval(t)},[load]);
- useEffect(()=>{if(!code)return;void QRCode.toDataURL(location.origin+"/w/"+code,{width:460,margin:1}).then(setQr).catch(()=>{});},[code]);
+ useEffect(()=>{if(!code)return;void QRCode.toDataURL(location.origin+"/w/"+code,{width:460,margin:1}).then(setQr).catch(()=>{});void QRCode.toDataURL(location.origin+"/w/"+code+"/kwlr",{width:460,margin:1}).then(setKwlrQr).catch(()=>{});},[code]);
  useEffect(()=>{void db.auth.getUser().then(x=>setAuthorized(Boolean(x.data.user)));const {data}=db.auth.onAuthStateChange((_e,x)=>setAuthorized(Boolean(x?.user)));return()=>data.subscription.unsubscribe()},[db]);
  // Do not intercept arrow keys or claim that local state tracks Google's embedded player.
  useEffect(()=>{if(synced)setPageReady(false)},[synced,page]);
  useEffect(()=>{let active=true;fetch("/api/workshop-slide?page=1",{cache:"no-store"}).then(async res=>{if(!res.ok)throw new Error("unavailable");const data=await res.blob();if(active&&data.type.startsWith("image/"))setSynced(true)}).catch(()=>{});return()=>{active=false}},[]);
  useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
- useEffect(()=>{if(!synced||page<16||page>18){setShowKwlrResults(false);setKwlrResults(null)}},[synced,page]);
+ useEffect(()=>{if(!synced||!pageReady||page<16||page>18){setShowKwlrResults(false);setShowKwlrJoin(false);setKwlrResults(null)}},[synced,page,pageReady]);
  async function fetchKwlrResults(){
   if(!authorized||!session?.id){setNotice("يجب تسجيل الدخول بصفة المدرب المصرح له.");return}
   const {data,error}=await db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}});
@@ -79,6 +81,7 @@ export default function ExactWorkshopPresentation(){
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
     {synced?<img key={page} src={"/api/workshop-slide?page="+page} className="exactDeckIframe" style={{objectFit:"contain"}} alt={"صفحة "+page+" من عرض Google Slides الأصلي"} onLoad={()=>setPageReady(true)} onError={()=>{setSynced(false);setNotice("تعذر تحميل صورة الشريحة؛ استخدم مشغل Google Slides الأصلي.")}}/>:<iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /> }
+    {showKwlrJoin&&synced&&pageReady&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="الدخول إلى نشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrJoin(false)} aria-label="إغلاق">×</button><h2>نشاط KWLR — {code}</h2><p>يمسح المتدرب الرمز بعد الانضمام إلى جلسة الورشة.</p><div className="exactJoinCard">{kwlrQr&&<img src={kwlrQr} alt="رمز النشاط الخاص بجلسة KWLR الحالية"/>}<div><strong>{code}</strong><span>{typeof window!=="undefined"?location.origin+"/w/"+code+"/kwlr":""}</span><p>يتحكم المدرب بفتح المراحل K وW وL من صفحة الإدارة.</p><a href={session?.id?"/admin/workshops/"+session.id+"/kwlr":"#"} target="_blank" rel="noreferrer">لوحة إدارة النشاط</a></div></div><button className="exactPrimary" onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج الاستجابات</button></div>}
     {showKwlrResults&&synced&&pageReady&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="النتائج المجمعة لنشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrResults(false)} aria-label="إغلاق نتائج KWLR">×</button><h2>استجابات KWLR — {code}</h2><p>إجمالي الاستجابات الموثقة: {Object.values(kwlrResults?.counts??{}).reduce((s:number,v:any)=>s+Number(v),0)}</p><div style={{display:"flex",gap:12,flexWrap:"wrap",maxHeight:"65%",overflow:"auto"}}>{[1,2,3].map(stage=><section key={stage} style={{flex:"1 1 230px",background:"#eef8fb",padding:14,borderRadius:12}}><h3>{stage===1?"ماذا تعرف؟":stage===2?"ماذا تريد أن تعرف؟":"ماذا تعلمت؟"} ({kwlrResults?.counts?.[stage]??0})</h3>{(kwlrResults?.entries??[]).filter((x:any)=>x.stage===stage).map((x:any)=><p key={x.id} style={{fontSize:14,borderBottom:"1px solid #d4e1ea"}}>{x.response_text}</p>)}</section>)}</div><button className="exactPrimary" onClick={()=>void fetchKwlrResults()}>تحديث النتائج</button></div>}
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
       <button className="exactClose" onClick={()=>setActivity("none")} aria-label="إغلاق">×</button>
@@ -101,7 +104,8 @@ export default function ExactWorkshopPresentation(){
      {synced&&<select aria-label="انتقال مباشر للشريحة" disabled={!pageReady} value={page} onChange={e=>setPage(Number(e.target.value))}>{Array.from({length:38},(_,i)=><option key={i+1} value={i+1}>الشريحة {i+1}</option>)}</select>}
      <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
-     {synced&&pageReady&&page>=16&&page<=18&&<button onClick={()=>void fetchKwlrResults()}>نتائج KWLR</button>}
+     {synced&&pageReady&&page>=16&&page<=18&&<button className="exactPrimary" onClick={()=>{setShowKwlrResults(false);setShowKwlrJoin(true)}}>عرض QR لنشاط KWLR</button>}
+     {synced&&pageReady&&page>=16&&page<=18&&<button onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج KWLR</button>}
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
      {isActivityPage&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
    </nav>
