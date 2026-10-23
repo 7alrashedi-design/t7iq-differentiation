@@ -17,6 +17,7 @@ export default function ExactWorkshopPresentation(){
  const [stats,setStats]=useState<Counts|null>(null);
  const [qr,setQr]=useState("");
  const [authorized,setAuthorized]=useState(false);
+ const [embedLoaded,setEmbedLoaded]=useState(false);
  const [showControls,setShowControls]=useState(false);
  const [activity,setActivity]=useState<"none"|"join"|"results">("none");
  const [notice,setNotice]=useState("");
@@ -62,7 +63,7 @@ export default function ExactWorkshopPresentation(){
  const completed=stats?.totals.fingerprints??null;
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
-    <iframe className="exactDeckIframe" src={slideUrl} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+    <iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
       <button className="exactClose" onClick={()=>setActivity("none")} aria-label="إغلاق">×</button>
       {activity==="join"?<>
@@ -78,7 +79,7 @@ export default function ExactWorkshopPresentation(){
     </div>}
    </div>
    <nav className="exactDeckBar" aria-label="أدوات المدرب — تنقل الشرائح داخل Google Slides">
-     <span>التنقل بين الشرائح من شريط Google Slides داخل العرض، وليس من عداد منفصل.</span>
+     <span>{embedLoaded?"العرض من Google Slides • التنقل من أدوات Google":"تحميل Google Slides…"}</span>
      <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
@@ -86,7 +87,7 @@ export default function ExactWorkshopPresentation(){
    </nav>
    {showControls&&<aside className="exactDeckControls">
       <b>أدوات المدرب — جلسة {code}</b>
-      <small>المحتوى والتنقل في Google Slides. اختيار النشاط هنا يدوي، ولا يعني أن النظام قرأ رقم الشريحة في Google.</small>
+      <small>المحتوى والتنقل في Google Slides. اختيار النشاط يدوي ولا يثبت موضع الشريحة؛ تحقّق من الصفحة داخل Google قبل بدء أي نشاط.</small>
       <button onClick={()=>{setSelectedTool("asloobi");setActivity("none");setShowControls(false)}}>نشاط أسلوبي (الصفحة الأصلية 11)</button>
       <button onClick={()=>{setSelectedTool("kwlr");setActivity("none");setShowControls(false)}}>نشاط KWLR (الصفحات 16–18)</button>
       <button onClick={()=>{setSelectedTool("planner");setActivity("none");setShowControls(false)}}>تخطيط الوحدة (الصفحات 25–37)</button>
