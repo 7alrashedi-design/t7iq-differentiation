@@ -26,4 +26,5 @@ assert.ok(presenter.includes('pageReady?(page===11?'),"Do not expose activities 
 assert.ok(presenter.includes("عرض QR لنشاط KWLR"),"KWLR QR must appear in activity slide controls");
 assert.ok(presenter.includes('page>=16&&page<=18'),"KWLR QR/results stay scoped to appropriate pages");
 assert.ok(presenter.includes('setShowKwlrJoin(false)'),"KWLR QR must be closable or reset");
+assert.ok(presenter.includes('setShowKwlrResults(false);setKwlrResults(null)'),"Clear participant results on revoked trainer authorization");
 console.log("PASS: single Google Slides player, no unsynchronized local slide counter. Browser testing still required.");
