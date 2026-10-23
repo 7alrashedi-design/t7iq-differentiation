@@ -9,7 +9,8 @@ assert.ok(presenter.includes("embed?start=false&loop=false"),"Native Google Slid
 assert.ok(!presenter.includes("setSourcePage"),"Local navigation must not disagree with Google Slides");
 assert.ok(!presenter.includes("refpage_"),"No guessed slide IDs or hash navigation");
 assert.ok(!presenter.includes("الصفحة {sourcePage}"),"No unsynchronized slide counter");
-assert.ok(presenter.includes('selectedTool==="asloobi"'),"Activity activation must be explicit");
+assert.ok(presenter.includes('page===11?"asloobi"'),"Synced activity activates only at slide 11");
+assert.ok(presenter.includes('selectedTool'),"Fallback manual activity controls must remain available");
 assert.ok(presenter.includes("setActivity(\"none\")"),"Activity overlay must be closable");
 const source=fs.readFileSync("app/api/workshop-slide/route.ts","utf8");
 assert.ok(source.includes("GOOGLE_SLIDES_SERVICE_ACCOUNT_JSON"),"Server-only Google auth required");
