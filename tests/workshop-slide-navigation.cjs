@@ -23,4 +23,7 @@ assert.ok(presenter.includes("setSynced(false)"),"Fail closed to unsynchronized 
 assert.ok(presenter.includes('onLoad={()=>setPageReady(true)}'),"Only loaded image should mark a slide ready");
 assert.ok(presenter.includes('disabled={page>=38||!pageReady}'),"Block next during image transitions");
 assert.ok(presenter.includes('pageReady?(page===11?'),"Do not expose activities while image is loading");
+assert.ok(presenter.includes("عرض QR لنشاط KWLR"),"KWLR QR must appear in activity slide controls");
+assert.ok(presenter.includes('page>=16&&page<=18'),"KWLR QR/results stay scoped to appropriate pages");
+assert.ok(presenter.includes('setShowKwlrJoin(false)'),"KWLR QR must be closable or reset");
 console.log("PASS: single Google Slides player, no unsynchronized local slide counter. Browser testing still required.");
