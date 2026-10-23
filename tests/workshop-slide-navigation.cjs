@@ -20,4 +20,7 @@ assert.ok(source.includes("/thumbnail?"),"Must request canonical page thumbnails
 assert.ok(presenter.includes("setPage(p=>Math.min(38,p+1))"),"Synchronized next is bounded to 38");
 assert.ok(presenter.includes("page===11"),"Asloobi must be bound to exactly slide 11");
 assert.ok(presenter.includes("setSynced(false)"),"Fail closed to unsynchronized view if thumbnail API unavailable");
+assert.ok(presenter.includes('onLoad={()=>setPageReady(true)}'),"Only loaded image should mark a slide ready");
+assert.ok(presenter.includes('disabled={page>=38||!pageReady}'),"Block next during image transitions");
+assert.ok(presenter.includes('pageReady?(page===11?'),"Do not expose activities while image is loading");
 console.log("PASS: single Google Slides player, no unsynchronized local slide counter. Browser testing still required.");
