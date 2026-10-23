@@ -124,3 +124,13 @@
 .exactDeckControls a{color:#b3f3ec}.exactDeckControls small{color:#d9e7ed}
 .exactDeckNotice{position:fixed;top:12px;right:12px;background:#fff5cc;color:#77501b;padding:10px 15px;border-radius:9px;z-index:90;font-size:13px}
 @media(max-width:680px){.exactDeckBar{gap:4px;padding:5px}.exactDeckBar button{font-size:11px;padding:6px}.exactDeckBar span{font-size:11px}.exactJoinCard img{width:110px}.exactJoinCard span{font-size:12px}}
+
+/* Native deterministic 38-page presenter, keeps 16:9 on any projector. */
+.exactNativeStage{flex:none;width:min(100vw,177.777vh);height:min(calc(100dvh - 54px),56.25vw);max-height:calc(100dvh - 54px);aspect-ratio:16/9;box-shadow:0 18px 60px #0005}
+.exactNativeBody{padding:1.6% 8%;gap:.5vw;overflow:hidden;justify-content:center}
+.exactNativeBody h1{font-size:clamp(20px,2.5vw,43px);line-height:1.35}
+.exactNativeBody p{font-size:clamp(13px,1.25vw,22px);line-height:1.55;white-space:pre-line}
+.exactNativeBody:has(.rawasVisual:not(:empty)){justify-content:flex-start}
+.exactNativeBody .rawasVisual{margin-top:0}
+.exactDeckBar select{max-width:240px;border-radius:8px;background:#f5fcff;color:#174e6e;padding:7px;font-family:inherit}
+@media(max-width:700px){.exactNativeStage{width:100vw;height:56.25vw}.exactNativeBody{padding:2% 7%}.exactNativeBody h1{font-size:clamp(12px,3vw,20px)}.exactNativeBody p{font-size:clamp(9px,1.8vw,15px)}.exactDeckBar select{max-width:120px}}
