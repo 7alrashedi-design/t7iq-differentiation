@@ -16,7 +16,7 @@ export default function ExactWorkshopPresentation(){
  const [selectedTool,setSelectedTool]=useState<"none"|"asloobi"|"kwlr"|"planner">("none");
  const [synced,setSynced]=useState(true);
  const [page,setPage]=useState(1);
- const [pageReady,setPageReady]=useState(false);
+ const [renderedPage,setRenderedPage]=useState<number|null>(null);
  const [session,setSession]=useState<any>(null);
  const [stats,setStats]=useState<Counts|null>(null);
  const [qr,setQr]=useState("");
@@ -40,6 +40,7 @@ export default function ExactWorkshopPresentation(){
  // An embedded cross-origin player cannot reliably report its active slide to this app.
  const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit";
  const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000";
+ const pageReady=synced&&renderedPage===page;
  const activeTool=synced?(pageReady?(page===11?"asloobi":page>=16&&page<=18?"kwlr":page>=25&&page<=37?"planner":"none"):"none"):selectedTool;
  const isActivityPage=activeTool==="asloobi";
  const load=useCallback(async()=>{
@@ -59,7 +60,7 @@ export default function ExactWorkshopPresentation(){
  useEffect(()=>{if(!code)return;void QRCode.toDataURL(location.origin+"/w/"+code,{width:460,margin:1}).then(setQr).catch(()=>{});void QRCode.toDataURL(location.origin+"/w/"+code+"/kwlr",{width:460,margin:1}).then(setKwlrQr).catch(()=>{});},[code]);
  useEffect(()=>{void db.auth.getUser().then(x=>setAuthorized(Boolean(x.data.user)));const {data}=db.auth.onAuthStateChange((_e,x)=>setAuthorized(Boolean(x?.user)));return()=>data.subscription.unsubscribe()},[db]);
  // Do not intercept arrow keys or claim that local state tracks Google's embedded player.
- useEffect(()=>{if(synced)setPageReady(false)},[synced,page]);
+
  // The canonical Google Slides PDF snapshot is verified (38 pages) and provides one reliable slide identity on every device.
  useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
  useEffect(()=>{if(!synced||!pageReady||page<16||page>18){kwlrRequest.current+=1;setShowKwlrResults(false);setShowKwlrJoin(false);setKwlrResults(null)}},[synced,page,pageReady]);
@@ -89,7 +90,7 @@ export default function ExactWorkshopPresentation(){
  const completed=stats?.totals.fingerprints??null;
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
-    {synced?<SnapshotPdfSlide page={page} onReady={()=>setPageReady(true)} onFailure={()=>{setSynced(false);setPageReady(false);setNotice("تعذر تشغيل عارض الشرائح المصدرة من Google Slides؛ انتقلنا إلى مشغل Google الأصلي حفاظًا على المحتوى.")}}/>:<iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
+    {synced?<><SnapshotPdfSlide key={page} page={page} onReady={()=>setRenderedPage(page)} onFailure={()=>{setSynced(false);setRenderedPage(null);setNotice("تعذر تشغيل عارض الشرائح المصدرة من Google Slides؛ انتقلنا إلى مشغل Google الأصلي حفاظًا على المحتوى.")}}/>{!pageReady&&<div className="exactSlideLoading" role="status">جاري تجهيز الشريحة {page}...</div>}</>:<iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
     {showKwlrJoin&&synced&&pageReady&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="الدخول إلى نشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrJoin(false)} aria-label="إغلاق">×</button><h2>نشاط KWLR — {code}</h2><p>يمسح المتدرب الرمز بعد الانضمام إلى جلسة الورشة.</p><div className="exactJoinCard">{kwlrQr&&<img src={kwlrQr} alt="رمز النشاط الخاص بجلسة KWLR الحالية"/>}<div><strong>{code}</strong><span>{typeof window!=="undefined"?location.origin+"/w/"+code+"/kwlr":""}</span><p>يتحكم المدرب بفتح المراحل K وW وL من صفحة الإدارة.</p><a href={session?.id?"/admin/workshops/"+session.id+"/kwlr":"#"} target="_blank" rel="noreferrer">لوحة إدارة النشاط</a></div></div><button className="exactPrimary" onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج الاستجابات</button></div>}
     {showKwlrResults&&synced&&pageReady&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="النتائج المجمعة لنشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrResults(false)} aria-label="إغلاق نتائج KWLR">×</button><h2>استجابات KWLR — {code}</h2><p>إجمالي الاستجابات الموثقة: {Object.values(kwlrResults?.counts??{}).reduce((s:number,v:any)=>s+Number(v),0)}</p><p>الأسئلة المطروحة: {kwlrResults?.kwlr_progress?.questions??"—"} • المرتبطة بإجابات تعلم: {kwlrResults?.kwlr_progress?.linked_answered_questions??"—"} • غير المرتبطة: {kwlrResults?.kwlr_progress?.unlinked_questions??"—"}</p><p style={{fontSize:13}}>الارتباط بإجابة لا يُعد تصحيحًا علميًا تلقائيًا.</p><div style={{display:"flex",gap:12,flexWrap:"wrap",maxHeight:"65%",overflow:"auto"}}>{[1,2,3].map(stage=><section key={stage} style={{flex:"1 1 230px",background:"#eef8fb",padding:14,borderRadius:12}}><h3>{stage===1?"ماذا تعرف؟":stage===2?"ماذا تريد أن تعرف؟":"ماذا تعلمت؟"} ({kwlrResults?.counts?.[stage]??0})</h3>{(kwlrResults?.entries??[]).filter((x:any)=>x.stage===stage).map((x:any)=><p key={x.id} style={{fontSize:14,borderBottom:"1px solid #d4e1ea"}}>{x.response_text}</p>)}</section>)}</div><button className="exactPrimary" onClick={()=>void fetchKwlrResults()}>تحديث النتائج</button></div>}
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
