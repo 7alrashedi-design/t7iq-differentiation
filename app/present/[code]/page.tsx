@@ -13,6 +13,9 @@ export default function ExactWorkshopPresentation(){
  const code=String(params.code??"").toUpperCase();
  const db=useMemo(()=>getSupabaseBrowserClient(),[]);
  const [selectedTool,setSelectedTool]=useState<"none"|"asloobi"|"kwlr"|"planner">("none");
+ const [synced,setSynced]=useState(false);
+ const [page,setPage]=useState(1);
+ const [pageReady,setPageReady]=useState(false);
  const [session,setSession]=useState<any>(null);
  const [stats,setStats]=useState<Counts|null>(null);
  const [qr,setQr]=useState("");
@@ -28,7 +31,8 @@ export default function ExactWorkshopPresentation(){
  // An embedded cross-origin player cannot reliably report its active slide to this app.
  const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit";
  const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000";
- const isActivityPage=selectedTool==="asloobi";
+ const activeTool=synced?(page===11?"asloobi":page>=16&&page<=18?"kwlr":page>=25&&page<=37?"planner":"none"):selectedTool;
+ const isActivityPage=activeTool==="asloobi";
  const load=useCallback(async()=>{
   if(!code)return;
   try{
@@ -46,7 +50,9 @@ export default function ExactWorkshopPresentation(){
  useEffect(()=>{if(!code)return;void QRCode.toDataURL(location.origin+"/w/"+code,{width:460,margin:1}).then(setQr).catch(()=>{});},[code]);
  useEffect(()=>{void db.auth.getUser().then(x=>setAuthorized(Boolean(x.data.user)));const {data}=db.auth.onAuthStateChange((_e,x)=>setAuthorized(Boolean(x?.user)));return()=>data.subscription.unsubscribe()},[db]);
  // Do not intercept arrow keys or claim that local state tracks Google's embedded player.
- useEffect(()=>{if(selectedTool!=="asloobi")setActivity("none")},[selectedTool]);
+ useEffect(()=>{if(!synced)return;setPageReady(false);const controller=new AbortController();fetch("/api/workshop-slide?page="+page,{signal:controller.signal,cache:"no-store"}).then(res=>{if(!res.ok)throw new Error("image_failed");setPageReady(true)}).catch(()=>{if(!controller.signal.aborted){setSynced(false);setNotice("تعذر تحميل صفحة Google Slides المتزامنة؛ عاد العرض الأصلي دون عداد مضلل.")}});return()=>controller.abort()},[synced,page]);
+ useEffect(()=>{let active=true;fetch("/api/workshop-slide?page=1",{cache:"no-store"}).then(res=>{if(active&&res.ok)setSynced(true)}).catch(()=>{});return()=>{active=false}},[]);
+ useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
  async function startAsloobi(){
   if(!authorized||!session?.id){setNotice("يلزم دخول المدرب المخوّل لإدارة هذه الجلسة.");return}
   if(session.settings?.trainer_controlled_phases!==true){setNotice("فعّل التحكم المرحلي أولًا من إدارة الجلسة.");return}
@@ -63,7 +69,7 @@ export default function ExactWorkshopPresentation(){
  const completed=stats?.totals.fingerprints??null;
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
-    <iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+    {synced?<img key={page} src={"/api/workshop-slide?page="+page} className="exactDeckIframe" style={{objectFit:"contain"}} alt={"صفحة "+page+" من عرض Google Slides الأصلي"} onLoad={()=>setPageReady(true)} onError={()=>{setSynced(false);setNotice("تعذر تحميل صورة الشريحة؛ استخدم مشغل Google Slides الأصلي.")}}/>:<iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /> }
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
       <button className="exactClose" onClick={()=>setActivity("none")} aria-label="إغلاق">×</button>
       {activity==="join"?<>
@@ -79,7 +85,10 @@ export default function ExactWorkshopPresentation(){
     </div>}
    </div>
    <nav className="exactDeckBar" aria-label="أدوات المدرب — تنقل الشرائح داخل Google Slides">
-     <span>{embedLoaded?"العرض من Google Slides • التنقل من أدوات Google":"تحميل Google Slides…"}</span>
+     <span>{synced?("Google Slides • الشريحة "+page+" / 38"+(pageReady?"":" • تحميل")):(embedLoaded?"عرض Google Slides الأصلي • التنقل من أدوات Google":"تحميل Google Slides…")}</span>
+     {synced&&<button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page<=1}>السابق</button>}
+     {synced&&<button onClick={()=>setPage(p=>Math.min(38,p+1))} disabled={page>=38}>التالي</button>}
+     {synced&&<select aria-label="انتقال مباشر للشريحة" value={page} onChange={e=>setPage(Number(e.target.value))}>{Array.from({length:38},(_,i)=><option key={i+1} value={i+1}>الشريحة {i+1}</option>)}</select>}
      <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
@@ -87,13 +96,13 @@ export default function ExactWorkshopPresentation(){
    </nav>
    {showControls&&<aside className="exactDeckControls">
       <b>أدوات المدرب — جلسة {code}</b>
-      <small>المحتوى والتنقل في Google Slides. اختيار النشاط يدوي ولا يثبت موضع الشريحة؛ تحقّق من الصفحة داخل Google قبل بدء أي نشاط.</small>
-      <button onClick={()=>{setSelectedTool("asloobi");setActivity("none");setShowControls(false)}}>نشاط أسلوبي (الصفحة الأصلية 11)</button>
-      <button onClick={()=>{setSelectedTool("kwlr");setActivity("none");setShowControls(false)}}>نشاط KWLR (الصفحات 16–18)</button>
-      <button onClick={()=>{setSelectedTool("planner");setActivity("none");setShowControls(false)}}>تخطيط الوحدة (الصفحات 25–37)</button>
+      <small>{synced?"التنقل مرتبط بصفحة محددة من Google Slides؛ تظهر أدوات الأنشطة بحسب رقم الصفحة.":"في مشغل Google المضمّن، النشاط يدوي ولا يمكن ضمان رقم الصفحة النشطة."}</small>
+      {!synced&&<button onClick={()=>{setSelectedTool("asloobi");setActivity("none");setShowControls(false)}}>نشاط أسلوبي (الصفحة الأصلية 11)</button>}
+      {!synced&&<button onClick={()=>{setSelectedTool("kwlr");setActivity("none");setShowControls(false)}}>نشاط KWLR (الصفحات 16–18)</button>}
+      {!synced&&<button onClick={()=>{setSelectedTool("planner");setActivity("none");setShowControls(false)}}>تخطيط الوحدة (الصفحات 25–37)</button>}
       <button onClick={()=>{setSelectedTool("none");setActivity("none");setShowControls(false)}}>إنهاء وضع النشاط والعودة للعرض</button>
-      {selectedTool==="kwlr"&&session?.id&&<a href={"/admin/workshops/"+session.id+"/kwlr"} target="_blank" rel="noreferrer">فتح إدارة KWLR</a>}
-      {selectedTool==="planner"&&<a href="/admin/training/bloom-planner" target="_blank" rel="noreferrer">فتح مخطط بلوم</a>}
+      {activeTool==="kwlr"&&session?.id&&<a href={"/admin/workshops/"+session.id+"/kwlr"} target="_blank" rel="noreferrer">فتح إدارة KWLR</a>}
+      {activeTool==="planner"&&<a href="/admin/training/bloom-planner" target="_blank" rel="noreferrer">فتح مخطط بلوم</a>}
       {isActivityPage&&activity!=="none"&&<span>المتدربون: {total??"—"} • أتموا: {completed??"—"} • آخر تحديث: {refreshTime||"—"}</span>}
       <a href={deckUrl} target="_blank" rel="noreferrer">تحرير العرض الأصلي في Google Slides</a>
       <a href={session?.id?"/admin/workshops/"+session.id:"/trainer"} target="_blank" rel="noreferrer">إدارة الورشة</a>
