@@ -20,7 +20,11 @@ assert.ok(source.includes("/thumbnail?"),"Must request canonical page thumbnails
 assert.ok(presenter.includes("setPage(p=>Math.min(38,p+1))"),"Synchronized next is bounded to 38");
 assert.ok(presenter.includes("page===11"),"Asloobi must be bound to exactly slide 11");
 assert.ok(presenter.includes("setSynced(false)"),"Fail closed to unsynchronized view if thumbnail API unavailable");
-assert.ok(presenter.includes('onLoad={()=>setPageReady(true)}'),"Only loaded image should mark a slide ready");
+const pdfRenderer=fs.readFileSync("app/present/[code]/SnapshotPdfSlide.tsx","utf8");
+assert.ok(presenter.includes('onReady={()=>setPageReady(true)}'),"Only a rendered snapshot page marks a slide ready");
+assert.ok(pdfRenderer.includes("await task.promise"),"PDF page render must fully complete before onReady");
+assert.ok(pdfRenderer.includes("doc.numPages!==38"),"Canonical Google snapshot must contain 38 pages");
+assert.ok(pdfRenderer.includes("workshop-public-assets/google-slides-canonical-2026-10-23.pdf"),"Snapshot must come from exported Google Slides");
 assert.ok(presenter.includes('disabled={page>=38||!pageReady}'),"Block next during image transitions");
 assert.ok(presenter.includes('pageReady?(page===11?'),"Do not expose activities while image is loading");
 assert.ok(presenter.includes("عرض QR لنشاط KWLR"),"KWLR QR must appear in activity slide controls");
@@ -30,4 +34,4 @@ assert.ok(presenter.includes('setShowKwlrResults(false);setKwlrResults(null)'),"
 assert.ok(presenter.includes('const requestId=++kwlrRequest.current'),"Results request must carry generation ID");
 assert.ok(presenter.includes('requestId!==kwlrRequest.current||requestedPage!==activePageRef.current'),"Ignore late results from other slide");
 assert.ok(presenter.includes('kwlrRequest.current+=1'),"Invalidate requests when slide or authorization changes");
-console.log("PASS: single Google Slides player, no unsynchronized local slide counter. Browser testing still required.");
+console.log("PASS: canonical Google Slides snapshot, deterministic navigation, asynchronous page readiness and activity scoping.");
