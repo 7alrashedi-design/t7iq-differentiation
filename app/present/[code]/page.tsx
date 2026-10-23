@@ -33,7 +33,7 @@ export default function ExactWorkshopPresentation(){
  // An embedded cross-origin player cannot reliably report its active slide to this app.
  const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit";
  const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000";
- const activeTool=synced?(page===11?"asloobi":page>=16&&page<=18?"kwlr":page>=25&&page<=37?"planner":"none"):selectedTool;
+ const activeTool=synced&&pageReady?(page===11?"asloobi":page>=16&&page<=18?"kwlr":page>=25&&page<=37?"planner":"none"):selectedTool;
  const isActivityPage=activeTool==="asloobi";
  const load=useCallback(async()=>{
   if(!code)return;
@@ -101,7 +101,7 @@ export default function ExactWorkshopPresentation(){
      {synced&&<select aria-label="انتقال مباشر للشريحة" value={page} onChange={e=>setPage(Number(e.target.value))}>{Array.from({length:38},(_,i)=><option key={i+1} value={i+1}>الشريحة {i+1}</option>)}</select>}
      <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
-     {synced&&page>=16&&page<=18&&<button onClick={()=>void fetchKwlrResults()}>نتائج KWLR</button>}
+     {synced&&pageReady&&page>=16&&page<=18&&<button onClick={()=>void fetchKwlrResults()}>نتائج KWLR</button>}
      {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
      {isActivityPage&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
    </nav>
