@@ -19,7 +19,7 @@ jobs:
             https://mihalnbzprdqaaprjkha.supabase.co/storage/v1/object/public/workshop-public-assets/google-slides-canonical-2026-10-23.pdf \
             -o /tmp/canonical.pdf
           test "$(head -c 4 /tmp/canonical.pdf)" = '%PDF'
-          actual_pages="$(pdfinfo /tmp/canonical.pdf | awk '/^Pages:/ {print $2}')"
+          actual_pages="$(file /tmp/canonical.pdf)"
           echo "Canonical Google Slides export has $actual_pages pages"
-          test "$actual_pages" = 38
+          echo "$actual_pages" | grep -q "38 page(s)"
           test "$(stat -c%s /tmp/canonical.pdf)" -gt 3000000
