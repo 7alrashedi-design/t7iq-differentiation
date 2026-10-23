@@ -15,4 +15,8 @@ assert.match(participant,/kwlr_submit/);
 assert.match(trainer,/kwlr_control/);
 assert.match(planner,/export const bloomLevels/);
 for(const category of ["W","O","V","T","K"])assert.match(planner,new RegExp("\\b"+category+":\\{label:"));
+assert.match(api,/linked_answered_questions/);
+assert.match(api,/unlinked_questions/);
+assert.match(api,/answeredQuestionIds/);
+assert.match(trainer,/kwlr_progress/);
 console.log("PASS: KWLR activity table isolation, staged API gates, trainer controls, Bloom catalogs (static checks only)");
