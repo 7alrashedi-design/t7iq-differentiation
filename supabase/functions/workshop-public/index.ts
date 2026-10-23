@@ -44,6 +44,7 @@ Deno.serve(async (req: Request) => {
         if(!Number.isInteger(next)||next<0||next>4)return json({error:"invalid_stage"},400);
         const prior=Number(run?.stage??0);
         if(next!==prior && next!==prior+1)return json({error:"kwlr_stage_must_advance_in_order"},409);
+        if(next===prior+1&&prior>=1&&prior<=3&&run?.stage_ends_at&&new Date(run.stage_ends_at).getTime()>Date.now())return json({error:"kwlr_current_stage_still_running"},409);
         if(prior===4&&next!==4)return json({error:"kwlr_completed_new_session_required"},409);
         const mins:Record<number,number>={0:0,1:2,2:2,3:3,4:0};
         const now=new Date();
