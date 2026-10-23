@@ -1,0 +1,18 @@
+const assert=require("node:assert/strict"),fs=require("node:fs");
+const read=p=>fs.readFileSync(p,"utf8");
+const migration=read("supabase/migrations/20261023_workshop_kwlr.sql");
+const api=read("supabase/functions/workshop-public/index.ts");
+const planner=read("lib/workshop/bloomPlanner.ts");
+const participant=read("app/w/[code]/kwlr/page.tsx");
+const trainer=read("app/admin/workshops/[id]/kwlr/page.tsx");
+assert.match(migration,/unique\(session_id\)/);
+assert.match(migration,/enable row level security/);
+assert.match(api,/eq\("session_id",session.id\)/);
+assert.match(api,/eq\("participant_token",token\)/);
+assert.match(api,/kwlr_stage_must_advance_in_order/);
+assert.match(api,/related_question_id/);
+assert.match(participant,/kwlr_submit/);
+assert.match(trainer,/kwlr_control/);
+assert.match(planner,/export const bloomLevels/);
+for(const category of ["W","O","V","T","K"])assert.match(planner,new RegExp("\\b"+category+":\\{label:"));
+console.log("PASS: KWLR activity table isolation, staged API gates, trainer controls, Bloom catalogs (static checks only)");
