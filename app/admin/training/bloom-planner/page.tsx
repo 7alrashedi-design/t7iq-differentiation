@@ -1,0 +1,31 @@
+"use client";
+import {useEffect,useMemo,useState} from "react";
+import Link from "next/link";
+import {bloomLevels,productCategories,initialRows,normalizeTopic,type PlanningRow,type ProductCategory} from "@/lib/workshop/bloomPlanner";
+const STORAGE_KEY="t7iq-bloom-planner-draft-v1";
+export default function BloomUnitPlanner(){
+ const [topic,setTopic]=useState("الأعداد"),[subject,setSubject]=useState("الرياضيات"),[periods,setPeriods]=useState(""),[rows,setRows]=useState<PlanningRow[]>(()=>initialRows("الأعداد")),[mode,setMode]=useState<"teacher"|"student">("teacher"),[message,setMessage]=useState("");
+ useEffect(()=>{try{const d=localStorage.getItem(STORAGE_KEY);if(!d)return;const v=JSON.parse(d);if(typeof v.topic==="string"&&Array.isArray(v.rows)&&v.rows.length===6){setTopic(v.topic);setSubject(v.subject||"");setPeriods(v.periods||"");setRows(v.rows)}}catch{setMessage("تعذر قراءة المسودة المحلية.")}},[]);
+ const finished=useMemo(()=>rows.filter(r=>r.verb&&r.product&&r.objective).length,[rows]);
+ function update(index:number,patch:Partial<PlanningRow>){setRows(prev=>prev.map((r,i)=>i===index?{...r,...patch}:r))}
+ function changeTopic(t:string){setTopic(t);setRows(r=>normalizeTopic(r,t))}
+ function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({topic,subject,periods,rows}));setMessage("حُفظت مسودة التخطيط على هذا الجهاز فقط، ولم تُرسل إلى المشاركين أو قاعدة البيانات.")}catch{setMessage("تعذر حفظ المسودة المحلية.")}}
+ function exportJson(){const blob=new Blob([JSON.stringify({topic,subject,periods,rows,mode},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="bloom-unit-plan.json";a.click();URL.revokeObjectURL(url)}
+ return <main className="bloomPlanner" dir="rtl"><style>{`
+ .bloomPlanner{min-height:100vh;background:#eff8fb;padding:30px;font-family:'El Messiri',Tahoma,sans-serif;color:#235b80}.bloomPlanner h1{font-size:clamp(25px,3vw,40px);margin:8px 0}.bloomPlanner .sub{color:#536c7c}.bloomToolbar{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;margin:22px 0}.bloomPlanner label{display:flex;flex-direction:column;gap:5px;font-weight:bold}.bloomPlanner input,.bloomPlanner select,.bloomPlanner textarea{font:inherit;max-width:100%;border:1px solid #b5d9eb;border-radius:8px;background:white;padding:9px;color:#145478}.bloomPlanner button{font:inherit;border:0;border-radius:8px;background:#1487a2;color:#fff;padding:10px 18px;cursor:pointer}.bloomPlanner button.secondary{background:#326b94}.bloomPlanner .sheet{overflow:auto;background:white;border-radius:15px;box-shadow:0 10px 30px #1959781a}.bloomPlanner table{width:100%;border-collapse:collapse;min-width:960px}.bloomPlanner th{background:#438dcc;color:white;padding:12px;border:2px solid white}.bloomPlanner td{background:#e3f2fc;padding:8px;border:2px solid white;vertical-align:top}.bloomPlanner tbody tr:nth-child(2n) td{background:#d1e6f6}.bloomPlanner td:first-child{background:#4b94ce!important;color:white;font-weight:bold;min-width:90px}.bloomPlanner td select,.bloomPlanner td input,.bloomPlanner td textarea{width:100%;min-width:115px}.bloomPlanner small{color:#4b6d86}.bloomPlanner .status{background:white;padding:10px;margin-top:18px;border-radius:9px}@media print{.bloomToolbar,.back,.noPrint,button,.sub{display:none!important}.bloomPlanner{background:white;padding:0}.bloomPlanner .sheet{box-shadow:none}.bloomPlanner table{min-width:0;font-size:10px}.bloomPlanner td{padding:4px}}
+ `}</style>
+ <Link className="back" href="/admin/workshops">العودة للورش</Link>
+ <h1>تخطيط وحدة دراسية وفق تصنيف بلوم المعدل</h1>
+ <p className="sub">ورقة عمل تحريرية مبنية على المساعدين (1) للأفعال و(2) للمنتجات. المثال الأصلي: وحدة الأعداد. يمكن تغيير الموضوع دون استبدال أنشطة الورشة الأصلية.</p>
+ <div className="bloomToolbar">
+ <label>عنوان الوحدة<input value={topic} onChange={e=>changeTopic(e.target.value)} /></label>
+ <label>المادة<input value={subject} onChange={e=>setSubject(e.target.value)} /></label>
+ <label>عدد الحصص<input inputMode="numeric" value={periods} onChange={e=>setPeriods(e.target.value)}/></label>
+ <label>صياغة الهدف<select value={mode} onChange={e=>setMode(e.target.value as "teacher"|"student")}><option value="teacher">المعلم – مخاطب</option><option value="student">الطالب – متكلم</option></select></label>
+ <button onClick={save}>حفظ المسودة</button><button className="secondary" onClick={()=>window.print()}>طباعة</button><button className="secondary" onClick={exportJson}>تصدير JSON</button>
+ </div>
+ <p className="sub">اكتمل {finished} من 6 مستويات. تُصاغ الأهداف يدويًا، ولا يملأ النظام أهدافًا أو معايير غير موثقة آليًا.</p>
+ <div className="sheet"><table><thead><tr><th>مستوى بلوم</th><th>العملية: الفعل</th><th>المحتوى</th><th>نوع المنتج</th><th>المنتج</th><th>المعيار / الهدف ({mode==="teacher"?"مخاطب":"متكلم"})</th></tr></thead><tbody>{rows.map((row,i)=>{const level=bloomLevels[i];return <tr key={level.id}><td>{level.label}</td><td><select aria-label={"الفعل "+level.label} value={row.verb} onChange={e=>update(i,{verb:e.target.value})}><option value="">اختر الفعل</option>{level.verbs.map(v=><option key={v}>{v}</option>)}</select></td><td><input aria-label={"المحتوى "+level.label} value={row.content} onChange={e=>update(i,{content:e.target.value})}/></td><td><select aria-label={"نوع المنتج "+level.label} value={row.category} onChange={e=>update(i,{category:e.target.value as ProductCategory,product:""})}>{(Object.entries(productCategories) as [ProductCategory,{label:string;items:readonly string[]}][]).map(([key,v])=><option key={key} value={key}>{v.label}</option>)}</select></td><td><select aria-label={"المنتج "+level.label} value={row.product} onChange={e=>update(i,{product:e.target.value})}><option value="">اختر المنتج</option>{productCategories[row.category].items.map(v=><option key={v}>{v}</option>)}</select></td><td><textarea rows={2} value={row.objective} aria-label={"الهدف "+level.label} placeholder={mode==="teacher"?"أن ... (بصيغة المخاطب)":"أن ... (بصيغة المتكلم)"} onChange={e=>update(i,{objective:e.target.value})}/></td></tr>})}</tbody></table></div>
+ <p className="status" role="status">{message||"البيانات محلية في هذا النموذج حاليًا، وليست نتائج جلسة أو إجابات المشاركين."}</p>
+ </main>
+}

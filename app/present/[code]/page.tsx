@@ -1,34 +1,46 @@
 "use client";
-import {useCallback,useEffect,useMemo,useState} from "react";
+import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {useParams} from "next/navigation";
 import QRCode from "qrcode";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
 import "./cairo.css";
 
 const deckId="1pLBZx1olhefO_lGhEkecRSW3yQTXhoJgZ5achnxvLD0";
-const firstSourcePage=2, lastSourcePage=38;
-const ASLOOBI_PAGE=11;
+
 type Counts={totals:{participants:number;fingerprints:number;products:number};distribution:Record<string,number>};
 export default function ExactWorkshopPresentation(){
  const params=useParams<{code:string}>();
  const code=String(params.code??"").toUpperCase();
  const db=useMemo(()=>getSupabaseBrowserClient(),[]);
- const [sourcePage,setSourcePage]=useState(2);
+ const [selectedTool,setSelectedTool]=useState<"none"|"asloobi"|"kwlr"|"planner">("none");
+ const [synced,setSynced]=useState(false);
+ const [page,setPage]=useState(1);
+ const [pageReady,setPageReady]=useState(false);
  const [session,setSession]=useState<any>(null);
  const [stats,setStats]=useState<Counts|null>(null);
  const [qr,setQr]=useState("");
+ const [kwlrQr,setKwlrQr]=useState("");
+ const [showKwlrJoin,setShowKwlrJoin]=useState(false);
  const [authorized,setAuthorized]=useState(false);
+ const [trainerVerified,setTrainerVerified]=useState(false);
+ const [embedLoaded,setEmbedLoaded]=useState(false);
  const [showControls,setShowControls]=useState(false);
  const [activity,setActivity]=useState<"none"|"join"|"results">("none");
  const [notice,setNotice]=useState("");
  const [refreshTime,setRefreshTime]=useState("");
  const [loading,setLoading]=useState(false);
+ const [kwlrResults,setKwlrResults]=useState<any>(null);
+ const kwlrRequest=useRef(0);
+ const activePageRef=useRef(page);
+ activePageRef.current=page;
+ const [showKwlrResults,setShowKwlrResults]=useState(false);
  const joinUrl=typeof window!=="undefined"?location.origin+"/w/"+code:"";
- const slideId="refpage_"+String(sourcePage).padStart(3,"0");
- const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000#slide=id."+slideId;
- const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit#slide=id."+slideId;
- const isActivityPage=sourcePage===ASLOOBI_PAGE;
- const activePhase=session?.settings?.trainer_controlled_phases===true?Number(session.settings.active_phase??0):3;
+ // Google Slides is the only visual slide renderer. Its native player owns slide navigation.
+ // An embedded cross-origin player cannot reliably report its active slide to this app.
+ const deckUrl="https://docs.google.com/presentation/d/"+deckId+"/edit";
+ const slideUrl="https://docs.google.com/presentation/d/"+deckId+"/embed?start=false&loop=false&delayms=600000";
+ const activeTool=synced?(pageReady?(page===11?"asloobi":page>=16&&page<=18?"kwlr":page>=25&&page<=37?"planner":"none"):"none"):selectedTool;
+ const isActivityPage=activeTool==="asloobi";
  const load=useCallback(async()=>{
   if(!code)return;
   try{
@@ -43,10 +55,23 @@ export default function ExactWorkshopPresentation(){
   }catch{setStats(null);setNotice("تعذّر التحقق من الجلسة الحالية.")}
  },[code,db]);
  useEffect(()=>{void load();const t=setInterval(()=>void load(),4000);return()=>clearInterval(t)},[load]);
- useEffect(()=>{if(!code)return;void QRCode.toDataURL(location.origin+"/w/"+code,{width:460,margin:1}).then(setQr).catch(()=>{});},[code]);
+ useEffect(()=>{if(!code)return;void QRCode.toDataURL(location.origin+"/w/"+code,{width:460,margin:1}).then(setQr).catch(()=>{});void QRCode.toDataURL(location.origin+"/w/"+code+"/kwlr",{width:460,margin:1}).then(setKwlrQr).catch(()=>{});},[code]);
  useEffect(()=>{void db.auth.getUser().then(x=>setAuthorized(Boolean(x.data.user)));const {data}=db.auth.onAuthStateChange((_e,x)=>setAuthorized(Boolean(x?.user)));return()=>data.subscription.unsubscribe()},[db]);
- useEffect(()=>{const onKey=(e:KeyboardEvent)=>{if((e.target as HTMLElement)?.closest("input,textarea,select"))return;if(e.key==="ArrowLeft")setSourcePage(p=>Math.min(lastSourcePage,p+1));if(e.key==="ArrowRight")setSourcePage(p=>Math.max(firstSourcePage,p-1));if(e.key.toLowerCase()==="f")void document.documentElement.requestFullscreen?.().catch(()=>{})};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[]);
- useEffect(()=>{if(sourcePage!==ASLOOBI_PAGE)setActivity("none")},[sourcePage]);
+ // Do not intercept arrow keys or claim that local state tracks Google's embedded player.
+ useEffect(()=>{if(synced)setPageReady(false)},[synced,page]);
+ useEffect(()=>{let active=true;fetch("/api/workshop-slide?page=1",{cache:"no-store"}).then(async res=>{if(!res.ok)throw new Error("unavailable");const data=await res.blob();if(active&&data.type.startsWith("image/"))setSynced(true)}).catch(()=>{});return()=>{active=false}},[]);
+ useEffect(()=>{if(!isActivityPage)setActivity("none")},[isActivityPage]);
+ useEffect(()=>{if(!synced||!pageReady||page<16||page>18){kwlrRequest.current+=1;setShowKwlrResults(false);setShowKwlrJoin(false);setKwlrResults(null)}},[synced,page,pageReady]);
+ useEffect(()=>{if(!authorized||!code){kwlrRequest.current+=1;setTrainerVerified(false);setShowKwlrResults(false);setKwlrResults(null);return}let live=true;db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}}).then(({data,error})=>{if(live){const allowed=!error&&!data?.error;setTrainerVerified(allowed);if(!allowed){setShowKwlrResults(false);setKwlrResults(null)}}}).catch(()=>{if(live){setTrainerVerified(false);setShowKwlrResults(false);setKwlrResults(null)}});return()=>{live=false}},[authorized,code,db]);
+ async function fetchKwlrResults(){
+  if(!trainerVerified||!session?.id){setNotice("النتائج متاحة للمدرب المصرح له فقط.");return}
+  const requestId=++kwlrRequest.current;
+  const requestedPage=activePageRef.current;
+  const {data,error}=await db.functions.invoke("workshop-public",{body:{action:"kwlr_state",code,trainer_view:true}});
+  if(requestId!==kwlrRequest.current||requestedPage!==activePageRef.current)return;
+  if(error||data?.error){setKwlrResults(null);setShowKwlrResults(false);setNotice("تعذر جلب نتائج KWLR المصرح بها لهذه الجلسة.");return}
+  setKwlrResults(data);setShowKwlrResults(true);setNotice("");
+ }
  async function startAsloobi(){
   if(!authorized||!session?.id){setNotice("يلزم دخول المدرب المخوّل لإدارة هذه الجلسة.");return}
   if(session.settings?.trainer_controlled_phases!==true){setNotice("فعّل التحكم المرحلي أولًا من إدارة الجلسة.");return}
@@ -63,7 +88,9 @@ export default function ExactWorkshopPresentation(){
  const completed=stats?.totals.fingerprints??null;
  return <main className="exactDeckRoot" dir="rtl">
    <div className="exactDeckPage">
-    <iframe key={slideId} className="exactDeckIframe" src={slideUrl} title={`الصفحة الأصلية ${sourcePage} من العرض المرجعي`} allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>
+    {synced?<img key={page} src={"/api/workshop-slide?page="+page} className="exactDeckIframe" style={{objectFit:"contain"}} alt={"صفحة "+page+" من عرض Google Slides الأصلي"} onLoad={()=>setPageReady(true)} onError={()=>{setSynced(false);setNotice("تعذر تحميل صورة الشريحة؛ استخدم مشغل Google Slides الأصلي.")}}/>:<iframe className="exactDeckIframe" src={slideUrl} onLoad={()=>setEmbedLoaded(true)} title="العرض الأصلي في Google Slides — التنقل داخل العرض من Google" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /> }
+    {showKwlrJoin&&synced&&pageReady&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="الدخول إلى نشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrJoin(false)} aria-label="إغلاق">×</button><h2>نشاط KWLR — {code}</h2><p>يمسح المتدرب الرمز بعد الانضمام إلى جلسة الورشة.</p><div className="exactJoinCard">{kwlrQr&&<img src={kwlrQr} alt="رمز النشاط الخاص بجلسة KWLR الحالية"/>}<div><strong>{code}</strong><span>{typeof window!=="undefined"?location.origin+"/w/"+code+"/kwlr":""}</span><p>يتحكم المدرب بفتح المراحل K وW وL من صفحة الإدارة.</p><a href={session?.id?"/admin/workshops/"+session.id+"/kwlr":"#"} target="_blank" rel="noreferrer">لوحة إدارة النشاط</a></div></div><button className="exactPrimary" onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج الاستجابات</button></div>}
+    {showKwlrResults&&synced&&pageReady&&page>=16&&page<=18&&<div className="exactActivityLayer" role="dialog" aria-label="النتائج المجمعة لنشاط KWLR"><button className="exactClose" onClick={()=>setShowKwlrResults(false)} aria-label="إغلاق نتائج KWLR">×</button><h2>استجابات KWLR — {code}</h2><p>إجمالي الاستجابات الموثقة: {Object.values(kwlrResults?.counts??{}).reduce((s:number,v:any)=>s+Number(v),0)}</p><p>الأسئلة المطروحة: {kwlrResults?.kwlr_progress?.questions??"—"} • المرتبطة بإجابات تعلم: {kwlrResults?.kwlr_progress?.linked_answered_questions??"—"} • غير المرتبطة: {kwlrResults?.kwlr_progress?.unlinked_questions??"—"}</p><p style={{fontSize:13}}>الارتباط بإجابة لا يُعد تصحيحًا علميًا تلقائيًا.</p><div style={{display:"flex",gap:12,flexWrap:"wrap",maxHeight:"65%",overflow:"auto"}}>{[1,2,3].map(stage=><section key={stage} style={{flex:"1 1 230px",background:"#eef8fb",padding:14,borderRadius:12}}><h3>{stage===1?"ماذا تعرف؟":stage===2?"ماذا تريد أن تعرف؟":"ماذا تعلمت؟"} ({kwlrResults?.counts?.[stage]??0})</h3>{(kwlrResults?.entries??[]).filter((x:any)=>x.stage===stage).map((x:any)=><p key={x.id} style={{fontSize:14,borderBottom:"1px solid #d4e1ea"}}>{x.response_text}</p>)}</section>)}</div><button className="exactPrimary" onClick={()=>void fetchKwlrResults()}>تحديث النتائج</button></div>}
     {activity!=="none"&&isActivityPage&&<div className="exactActivityLayer">
       <button className="exactClose" onClick={()=>setActivity("none")} aria-label="إغلاق">×</button>
       {activity==="join"?<>
@@ -78,24 +105,32 @@ export default function ExactWorkshopPresentation(){
       </>}
     </div>}
    </div>
-   <nav className="exactDeckBar" aria-label="أدوات المدرب">
-     <button onClick={()=>setSourcePage(p=>Math.max(firstSourcePage,p-1))} disabled={sourcePage===firstSourcePage}>السابق</button>
-     <span>الصفحة {sourcePage-1} / 37</span>
-     <button onClick={()=>setSourcePage(p=>Math.min(lastSourcePage,p+1))} disabled={sourcePage===lastSourcePage}>التالي</button>
-     {isActivityPage&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
-     {isActivityPage&&<button onClick={()=>setActivity("results")}>نتائج أسلوبي</button>}
+   <nav className="exactDeckBar" aria-label="أدوات المدرب — تنقل الشرائح داخل Google Slides">
+     <span>{synced?("Google Slides • الشريحة "+page+" / 38"+(pageReady?"":" • تحميل")):(embedLoaded?"عرض Google Slides الأصلي • التنقل من أدوات Google":"تحميل Google Slides…")}</span>
+     {synced&&<button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page<=1||!pageReady}>السابق</button>}
+     {synced&&<button onClick={()=>setPage(p=>Math.min(38,p+1))} disabled={page>=38||!pageReady}>التالي</button>}
+     {synced&&<select aria-label="انتقال مباشر للشريحة" disabled={!pageReady} value={page} onChange={e=>setPage(Number(e.target.value))}>{Array.from({length:38},(_,i)=><option key={i+1} value={i+1}>الشريحة {i+1}</option>)}</select>}
+     <button onClick={()=>setShowControls(v=>!v)}>أدوات الأنشطة</button>
      <button onClick={()=>void document.documentElement.requestFullscreen?.().catch(()=>{})}>ملء الشاشة</button>
-     <button onClick={()=>setShowControls(v=>!v)}>خيارات</button>
+     {synced&&pageReady&&page>=16&&page<=18&&<button className="exactPrimary" onClick={()=>{setShowKwlrResults(false);setShowKwlrJoin(true)}}>عرض QR لنشاط KWLR</button>}
+     {synced&&pageReady&&page>=16&&page<=18&&trainerVerified&&<button onClick={()=>{setShowKwlrJoin(false);void fetchKwlrResults()}}>نتائج KWLR</button>}
+     {isActivityPage&&authorized&&<button className="exactPrimary" onClick={()=>void startAsloobi()} disabled={loading}>بدء أسلوبي وعرض QR</button>}
+     {isActivityPage&&authorized&&<button onClick={()=>setActivity("results")} disabled={!stats}>نتائج أسلوبي</button>}
    </nav>
    {showControls&&<aside className="exactDeckControls">
-      <b>جلسة {code}</b><small>{session?.title??"لم تُحمّل الجلسة بعد"}</small>
-      <span>آخر تحديث: {refreshTime||"—"}</span>
-      <span>متدربون: {total??"—"} • استكملوا: {completed??"—"}</span>
-      <span>المرحلة المفتوحة: {activePhase}</span>
-      <a href={deckUrl} target="_blank" rel="noreferrer">فتح الصفحة الأصلية في Google Slides</a>
+      <b>أدوات المدرب — جلسة {code}</b>
+      <small>{synced?"التنقل مرتبط بصفحة محددة من Google Slides؛ تظهر أدوات الأنشطة بحسب رقم الصفحة.":"في مشغل Google المضمّن، النشاط يدوي ولا يمكن ضمان رقم الصفحة النشطة."}</small>
+      {!synced&&<button onClick={()=>{setSelectedTool("asloobi");setActivity("none");setShowControls(false)}}>نشاط أسلوبي (الصفحة الأصلية 11)</button>}
+      {!synced&&<button onClick={()=>{setSelectedTool("kwlr");setActivity("none");setShowControls(false)}}>نشاط KWLR (الصفحات 16–18)</button>}
+      {!synced&&<button onClick={()=>{setSelectedTool("planner");setActivity("none");setShowControls(false)}}>تخطيط الوحدة (الصفحات 25–37)</button>}
+      <button onClick={()=>{setSelectedTool("none");setActivity("none");setShowControls(false)}}>إنهاء وضع النشاط والعودة للعرض</button>
+      {activeTool==="kwlr"&&session?.id&&<a href={"/admin/workshops/"+session.id+"/kwlr"} target="_blank" rel="noreferrer">فتح إدارة KWLR</a>}
+      {activeTool==="planner"&&<a href="/admin/training/bloom-planner" target="_blank" rel="noreferrer">فتح مخطط بلوم</a>}
+      {isActivityPage&&activity!=="none"&&<span>المتدربون: {total??"—"} • أتموا: {completed??"—"} • آخر تحديث: {refreshTime||"—"}</span>}
+      <a href={deckUrl} target="_blank" rel="noreferrer">تحرير العرض الأصلي في Google Slides</a>
       <a href={session?.id?"/admin/workshops/"+session.id:"/trainer"} target="_blank" rel="noreferrer">إدارة الورشة</a>
       <button onClick={()=>setShowControls(false)}>إغلاق</button>
-    </aside>}
+   </aside>}
     {notice&&<p role="status" className="exactDeckNotice">{notice}</p>}
  </main>;
 }
