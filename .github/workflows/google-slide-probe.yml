@@ -1,0 +1,22 @@
+name: Google Slides image accessibility probe
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/google-slide-probe.yml"
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check direct export of the canonical Google slides (no credentials)
+        shell: bash
+        run: |
+          set -e
+          for slide_id in h23522bd9a010cb02_0_2 refpage_003 h23522bd9a010cb02_20_7 h23522bd9a010cb02_0_117 refpage_002; do
+            url="https://docs.google.com/presentation/d/1pLBZx1olhefO_lGhEkecRSW3yQTXhoJgZ5achnxvLD0/export/png?pageid=$slide_id"
+            printf "%s  " "$slide_id"
+            curl -L -sS --connect-timeout 8 --max-time 25 -o /tmp/slide-export.bin -w 'HTTP=%{http_code} content_type=%{content_type} bytes=%{size_download}\n' "$url" || true
+            file --mime-type /tmp/slide-export.bin || true
+          done
