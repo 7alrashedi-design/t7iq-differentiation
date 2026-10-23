@@ -4,6 +4,7 @@ import {useParams} from "next/navigation";
 import Link from "next/link";
 import QRCode from "qrcode";
 import {getSupabaseBrowserClient} from "@/lib/supabase/client";
+import {impressionismReading} from "@/lib/workshop/impressionismReading";
 const labels=["استعداد النشاط","K — ماذا تعرف؟","W — ماذا تريد أن تعرف؟","L — ماذا تعلمت؟","R — الأسئلة غير المجابة"];
 const durations=[0,120,120,180,0];
 export default function KWLRTrainer(){
@@ -46,7 +47,7 @@ export default function KWLRTrainer(){
    {stage===0?<><p>اعرض الباركود للمتدربين وابدأ السؤال الأول عند جاهزيتهم.</p>{qr&&<img src={qr} alt="رمز دخول متدربي جلسة KWLR" width={200} height={200}/>}</>:null}
    {stage===1&&<p>اكتب كل ما تعرفه مسبقًا عن المدرسة الانطباعية. المدة دقيقتان. لن يظهر نص القراءة في هذه المرحلة.</p>}
    {stage===2&&<p>دوّن جميع الأسئلة التي تريد أن تعرف إجاباتها عن المدرسة الانطباعية. المدة دقيقتان؛ سؤال واحد في كل إرسال.</p>}
-   {stage===3&&<p>اقرأ النص الكامل على جهازك، ثم أجب عن الأسئلة التي وضعتها في المرحلة الثانية. المدة ثلاث دقائق.</p>}
+   {stage===3&&<><p>اقرأ النص الكامل على جهازك، ثم أجب عن الأسئلة التي وضعتها في المرحلة الثانية. المدة ثلاث دقائق.</p><article aria-label="النص القرائي للمرحلة الثالثة" style={{maxHeight:"45vh",overflowY:"auto",lineHeight:1.85,padding:17,borderRadius:12,background:"#f2f9fc",textAlign:"right"}}>{impressionismReading.map((para,i)=>i===0||i===7?<h3 key={i}>{para}</h3>:<p key={i}>{para}</p>)}</article></>}
    {stage===4&&<p>الأسئلة الآتية لم يربط أصحابها بها إجابات. ناقشها وصنّفها إلى مهام تعلم لاحق أو أسئلة بحثية.</p>}
    {stage>=1&&stage<=3&&remaining>0?<p style={{background:"#eaf6ff",padding:15,borderRadius:12}}>الاستجابات تُستقبل الآن. <strong>ستعرض القائمة على الشاشة تلقائيًا عند انتهاء المؤقت.</strong></p>:null}
    {finished&&<p style={{background:"#e1f8ea",padding:13,borderRadius:10}}>انتهى الوقت. تظهر النتائج الآن؛ يمكن للمدرب فتح المرحلة التالية.</p>}
