@@ -11,4 +11,12 @@ assert.ok(!presenter.includes("refpage_"),"No guessed slide IDs or hash navigati
 assert.ok(!presenter.includes("الصفحة {sourcePage}"),"No unsynchronized slide counter");
 assert.ok(presenter.includes('selectedTool==="asloobi"'),"Activity activation must be explicit");
 assert.ok(presenter.includes("setActivity(\"none\")"),"Activity overlay must be closable");
+const source=fs.readFileSync("app/api/workshop-slide/route.ts","utf8");
+assert.ok(source.includes("GOOGLE_SLIDES_SERVICE_ACCOUNT_JSON"),"Server-only Google auth required");
+assert.ok(source.includes("presentations.readonly"),"Slides API permission must be read-only");
+assert.ok(source.includes("getThumbnail")===false,"Thumbnail uses documented REST path");
+assert.ok(source.includes("/thumbnail?"),"Must request canonical page thumbnails");
+assert.ok(presenter.includes("setPage(p=>Math.min(38,p+1))"),"Synchronized next is bounded to 38");
+assert.ok(presenter.includes("page===11"),"Asloobi must be bound to exactly slide 11");
+assert.ok(presenter.includes("setSynced(false)"),"Fail closed to unsynchronized view if thumbnail API unavailable");
 console.log("PASS: single Google Slides player, no unsynchronized local slide counter. Browser testing still required.");
